@@ -45,6 +45,7 @@ enfuse_SOURCES = functoraccessor.hxx rect2d.hxx stride.hxx \
                  enfuse.h enfuse.cc fixmath.h \
                  global.h mga.h numerictraits.h \
                  opencl.h opencl.cc opencl_vigra.h \
+                 opencl_exposure_weight.h opencl_exposure_weight.cc \
                  openmp_def.h openmp_lock.h openmp_vigra.h \
                  pyramid.h \
                  alternativepercentage.h alternativepercentage.cc \

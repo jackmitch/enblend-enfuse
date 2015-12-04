@@ -102,7 +102,7 @@
 \newcommand*{\classictimes}{\mbox{$\times$}}
 \newcommand*{\commonpart}{\texorpdfstring{\mbox{$^{\textsf{c}}$}}{}} % Chapters, sections, etc. occurring on both manuals
 \newcommand*{\extraheadingsep}{\ifhevea\relax\else\rule{0pt}{3ex}\fi} % was: \rigidbaselineskip
-\newcommand*{\feasiblebreak}{\ifhevea\relax\else\discretionary{}{}{}\fi}
+\newcommand*{\feasiblebreak}{\ifhevea\relax\else\linebreak[1]\fi}
 \newcommand*{\itemend}{\ifhevea \relax\else \leavevmode\newline \fi}
 \newcommand*{\oldstylefirst}{\mbox{$1^{\mathrm{st}}$}}
 \newcommand*{\oldstylesecond}{\mbox{$2^{\mathrm{nd}}$}}
@@ -332,8 +332,8 @@
 \fi
 
 
-%% Extra floating objects: exemplars.  We cannot use `example', because this name is taken in
-%% Reference-Manual style.
+%% Extra floating objects: exemplars.  We cannot use `example', because the macro-name is used
+%% in `Reference-Manual' style.
 \ifhevea
   \input{exemplar.hva}
   \renewcommand{\exemplarname}{Example}

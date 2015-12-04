@@ -17,6 +17,11 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
+// Note: The functionality encoded in this C++-file does *not* require
+// "variable_power.cl", an OpenCL-file which defines the same weight
+// function using the OpenCL-extension mechanism of Enfuse.
+
+
 #include <algorithm>              // std::max()
 #include <cerrno>                 // errno
 #include <cmath>                  // macro M_LN2, std::exp(), std::abs(), std::pow()

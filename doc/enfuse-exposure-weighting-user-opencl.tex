@@ -1,0 +1,304 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\subsection[User-Defined \acronym{OpenCL} Functions]{\label{sec:user-defined-opencl-functions}%
+  \genidx{weighting!exposure!user-defined!\acronym{OpenCL}}%
+  User-Defined \acronym{OpenCL} Exposure Weighting Functions}
+
+See also \sectionName~\ref{sec:user-defined-dynlink-functions} above on defining C++-weighting
+functions via dynamic linking.
+
+
+\subsubsection[Introduction]{\label{sec:user-defined-opencl-functions-introduction}%
+  \genidx{weighting!exposure!\acronym{OpenCL} introduction}%
+  Introduction}
+
+\genidx{\acronym{GPGPU}}%
+\genidx{\acronym{OpenCL}}%
+
+So what has \acronym{OpenCL} to do with user-defined exposure weighting functions?  Every
+\acronym{OpenCL} system working on top of a \acronym{GPGPU} comes with a compiler and a linker
+specifically tailored for the \acronym{GPGPU}.  Both tools are hidden in one or more libraries
+of the respective graphics card.  \App{} reaps the benefits from these libraries already having
+been installed and uses the \acronym{OpenCL}-host interface to compile, link and execute
+\acronym{OpenCL}-programs on the \acronym{GPGPU}.
+
+In brief, if \appcmd{} has been built with \acronym{OpenCL} support, the system has all
+necessary libraries installed, the user can feed \acronym{OpenCL}-source code -- actually a
+C-dialect -- to \App{} without the need to install and maintain all the tools to compile
+\appcmd{} itself as in the previously described method of dynamic linking.
+
+The ability of \acronym{GPGPU}s to crunch humongous amounts of data is unimportant here.
+
+\noindent\restrictednote{\acronym{OpenCL}-enabled versions only.}
+
+\optidx{--exposure-weight-function}%
+\optidx{--gpu}%
+For \App{} executables compiled with \acronym{OpenCL} support (see
+Section~\fullref{sec:finding-out-details} on how to check this feature), \App{} can work with
+user-defined exposure weighting functions, passed with the long form of
+option~\option{--exposure-weight-function} after \acronym{GPU}-support has been requested with
+option~\option{--gpu}.  \App{} compiles, links and evaluables the exposure weight function
+identifed by \metavar{SYMBOL} from \metavar{OPENCL-SOURCE}:
+
+\begin{literal}
+  --gpu --exposure-weight-function=\metavar{OPENCL-SOURCE}:\feasiblebreak
+  \metavar{SYMBOL}\optional{:\feasiblebreak
+    \metavar{ARGUMENT}\optional{:\dots}}%
+  \optidx{--exposure-weight-function}
+\end{literal}
+
+If \metavar{SYMBOL} is not found in \metavar{OPENCL-SOURCE} or does not define a suitable
+function, \app{} aborts with an extensive error message.  In
+\exampleName~\ref{ex:opencl-userweight-error} we supply a wrong \metavar{SYMBOL} called
+\sample{foobar}, whereas \filename{variable\_power.cl} -- one of the supplied examples --
+actually defines \sample{weight}.
+
+\begin{exemplar}[htbp]
+  \begin{maxipage}
+    \centering
+    \begin{terminal}
+\$ enfuse --gpu --exposure-weight-function=variable\_power.cl:foobar image-[0-9].tif \\
+enfuse: info: chose OpenCL platform \#2, NVIDIA Corporation, NVIDIA CUDA, device \#1 \\
+enfuse: invalid binary \\
+enfuse: note: build status \\
+enfuse: note:~~~~~error (status-code = -2) \\
+enfuse: note: build options \\
+enfuse: note: ~~~~-cl-nv-verbose \bslash \\
+~~~~~~~~~~~~~~~~~~-cl-single-precision-constant \bslash \\
+~~~~~~~~~~~~~~~~~~-I/usr/local/share/enblend/kernels  \bslash \\
+~~~~~~~~~~~~~~~~~~-I/usr/share/enblend/kernels \bslash \\
+~~~~~~~~~~~~~~~~~~-DENFUSE\_FWHM\_GAUSSIAN=2.354820f \bslash \\
+~~~~~~~~~~~~~~~~~~-DENFUSE\_OPTIMUM\_Y=0.5f \bslash \\
+~~~~~~~~~~~~~~~~~~-DENFUSE\_USER\_WEIGHT\_FUNCTION=foobar \bslash \\
+~~~~~~~~~~~~~~~~~~-DENFUSE\_WIDTH=0.2f \\
+enfuse: note: build log \\
+enfuse: note:~~~~~ptxas fatal: Unresolved extern function 'foobar'
+    \end{terminal}
+  \end{maxipage}
+
+  \caption[\acronym{OpenCL} uer-weight error]{%
+    \label{ex:opencl-userweight-error}%
+    Error output of \App{} for an invalid (here: unknown) user-defined \acronym{OpenCL}
+    exposure-weight function.}
+\end{exemplar}
+
+
+\subsubsection[\acronym{OpenCL} Coding Guidelines]{\label{sec:opencl-coding-guidelines}%
+  \genidx{coding guidelines!\acronym{OpenCL}}%
+  \acronym{OpenCL} Coding Guidelines}
+
+\begin{enumerate}
+\item
+  Define a weight-function with following signature
+  \begin{cxxlisting}
+float weight(float y);
+  \end{cxxlisting}
+  in a text file.  It takes a luminance in the normalized interval~$(0, 1)$ and returns the
+  weight.  This function name will become \metavar{SYMBOL} at the \App{} command line.
+
+\item
+  Pass filename~\metavar{OPENCL-SOURCE} of the text file and the function name~\metavar{SYMBOL}
+  to \App{} as shown above.
+
+  \genidx{environment variable!ENBLEND\_OPENCL\_PATH@\envvar{ENBLEND\_OPENCL\_PATH}}%
+\item
+  \metavar{OPENCL-SOURCE} can include (\code{\#include "\dots"}) other files.  The include path
+  is \envvar{ENBLEND\_OPENCL\_PATH}.  Note that the environment variable starts with
+  ``ENBLEND'', not ``ENFUSE''.
+
+\item
+  All \metavar{ARGUMENT}s are converted to preprocessor symbols (\code{\#define \dots}) and
+  passed to the \acronym{OpenCL}-compiler when it processes \metavar{OPENCL-SOURCE}.  For
+  example, adding an \metavar{ARGUMENT} like \sample{EXPONENT=1.25} will add
+  \sample{-DEXPONENT=1.25} to the compiler options, which is equivalent to saying
+  \begin{cxxlisting}
+#define EXPONENT 1.25
+  \end{cxxlisting}
+  at the top of \metavar{OPENCL-SOURCE}.
+
+  To make the \metavar{ARGUMENT}s optional at the \app{} command line use the
+  \begin{cxxlisting}
+#ifndef ARGUMENT
+#define ARGUMENT ...
+#endif
+  \end{cxxlisting}
+  idiom in the source code and supply a reasonable default.
+
+  \genidx{OpenCL helpers@\acronym{OpenCL} helpers}
+\item
+  \App{} supplies a set of preprocessor symbols and functions to each user-defined function.
+  They ease writing weight functions.  Everyone starts with \sample{ENFUSE\_} (preprocessor
+  symbols) or \sample{enfuse\_} (functions) to avoid name collisions and shadowing.
+
+  \begin{codelist}
+    \genidx{OpenCL helpers@\acronym{OpenCL} helpers!ENFUSE-OPTIMUM-Y@\code{ENFUSE\_OPTIMUM\_Y}}%
+    \gensee{ENFUSE-OPTIMUM-Y@\code{ENFUSE\_OPTIMUM\_Y}}{\acronym{OpenCL} helpers, \code{ENFUSE\_OPTIMUM\_Y}}%
+    \genidx{exposure!optimum}%
+    \optidx{--exposure-optimum}%
+  \item[ENFUSE\_OPTIMUM\_Y]\itemend The value of the optimum luminance in the normalized
+    luminance interval.  The user sets this value with option~\option{--exposure-optimum}
+    (default:~\val{val:minimum-exposure-optimum}, see \fullref{opt:exposure-optimum}).
+
+    \genidx{OpenCL helpers@\acronym{OpenCL} helpers!ENFUSE-WIDTH@\code{ENFUSE\_WIDTH}}%
+    \gensee{ENFUSE-WIDTH@\code{ENFUSE\_WIDTH}}{\acronym{OpenCL} helpers, \code{ENFUSE\_WIDTH}}%
+    \genidx{exposure!weight}%
+    \optidx{--exposure-width}%
+  \item[ENFUSE\_WIDTH]\itemend The characteristic width of the weight function.  Set this value
+    at the command line with option~\option{--exposure-width}
+    (default:~\val{val:default-exposure-width}, see \fullref{opt:exposure-width}).
+
+    \genidx{OpenCL helpers@\acronym{OpenCL} helpers!ENFUSE-FWHM-GAUSSIAN@\code{ENFUSE\_FWHM\_GAUSSIAN}}%
+    \gensee{ENFUSE-FWHM-GAUSSIAN@\code{ENFUSE\_FWHM\_GAUSSIAN}}%
+           {\acronym{OpenCL} helpers, \code{ENFUSE\_FWHM\_GAUSSIAN}}%
+  \item[ENFUSE\_FWHM\_GAUSSIAN]\itemend Shorthand for the width of \App's first ever weight
+    function.  Use the value to rescale the width of the newly written user function to make it
+    bahave like a predefined one with respect to the width.
+
+    The actual value, $2 \sqrt{2 \log(2)}$, is approximately 2.35482.
+
+    \genidx{OpenCL helpers@\acronym{OpenCL} helpers!enfuse-normalized-luminance@\code{enfuse\_normalized\_luminance}}%
+    \gensee{enfuse-normalized-luminance@\code{enfuse\_normalized\_luminance}}%
+           {\acronym{OpenCL} helpers, \code{enfuse\_normalized\_luminance}}%
+  \item[enfuse\_normalized\_luminance]\itemend Helper function which implements
+    \equationabbr~\ref{equ:linear-luminance-transform}.
+    \begin{cxxlisting}
+float enfuse_normalized_luminance(float y)
+{
+    return (y - ENFUSE_OPTIMUM_Y) / ENFUSE_WIDTH;
+}
+    \end{cxxlisting}
+  \end{codelist}
+\end{enumerate}
+
+\begin{geeknote}
+  The weight function's signature being so simple and weight functions usually also being simple
+  none of the language-specific features like, for example, \code{local}-\slash\code{global}
+  address spaces, synchronization or vector-data types are requied to write useful weight
+  functions.
+\end{geeknote}
+
+Examples~\ref{ex:opencl-generalized-gaussian-weight} and
+\ref{ex:variable-opencl-exposure-weight-function} show how weight functions can be constructed
+using \acronym{OpenCL}.  Example~\ref{ex:opencl-generalized-gaussian-weight} implements
+\[
+    w(z) = \exp\left(-|z|^{\mathtt{EXPONENT}}\right),
+\]
+where $\code{EXPONENT} = 2$ obviously duplicates the pre-defined \propername{Gaussian} weight,
+\equationabbr~\ref{equ:weight:gauss}.
+
+\begin{exemplar}[htbp]
+  \begin{cxxlisting}
+#ifndef EXPONENT
+#define EXPONENT 2.0f
+#endif
+
+float weight(float y)
+{
+    return exp(-pow(fabs(enfuse_normalized_luminance(y)),
+                    EXPONENT));
+}
+  \end{cxxlisting}
+
+  \caption[Generalized \propername{Gauss} weight function]{%
+    \label{ex:opencl-generalized-gaussian-weight}%
+    Generalized \propername{Gauss} weight function written in \acronym{OpenCL}.  Note the
+    definition of a default parameter, \code{EXPONENT}.}
+\end{exemplar}
+
+Say \exampleName~\ref{ex:opencl-generalized-gaussian-weight} is stored in
+\filename{generalized\_gaussian.cl} and reachable via an element in
+\envvar{ENBLEND\_OPENCL\_PATH} then is can be used as
+\begin{literal}
+  \app{} --gpu --exposure-weight-function=\feasiblebreak
+  generalized\_gaussian.cl:\feasiblebreak
+  weight \dots
+\end{literal}
+or
+\begin{literal}
+  \app{} --gpu --exposure-weight-function=\feasiblebreak
+  generalized\_gaussian.cl:\feasiblebreak
+  weight:\feasiblebreak
+  1.5 \dots
+\end{literal}
+
+\exampleName~\ref{ex:variable-opencl-exposure-weight-function} implements the same variable
+weight as \exampleName~\ref{ex:variable-dynamic-exposure-weight-function} without the parameter
+checks:
+\[
+    w(z) =
+    \left\{
+      \begin{array}{cl}
+        1 - |z|^{\mathtt{EXPONENT}} & \mbox{if } |z| \leq 1 \\
+        0                         & \mbox{otherwise.}
+      \end{array}
+    \right.
+\]
+
+\begin{exemplar}[htbp]
+  \begin{cxxlisting}
+#ifndef M_LN2
+#define M_LN2 0.69314718f
+#endif
+
+#ifndef EXPONENT
+#define EXPONENT 2.0f
+#endif
+
+float normalized_luminance(float y)
+{
+    const float fwhm = 2.0f / exp(M_LN2 / EXPONENT);
+
+    return enfuse_normalized_luminance(y) *
+           (fwhm / ENFUSE_FWHM_GAUSSIAN);
+}
+
+float variable_power_weight(float y)
+{
+    return max(1.0f - pow(fabs(normalized_luminance(y)),
+                          EXPONENT),
+               0.0f);
+}
+  \end{cxxlisting}
+
+  \caption[\acronym{OpenCL} exposure weight function with an extra argument]{%
+    \label{ex:variable-opencl-exposure-weight-function}%
+    \acronym{OpenCL} exposure weight function with extra argument~\code{EXPONENT} that defaults
+    to 2.  Also compare with \exampleName~\ref{ex:variable-dynamic-exposure-weight-function} for
+    the implementation of almost the same functionality using dynamic linking.}
+\end{exemplar}
+
+Say \exampleName~\ref{ex:variable-opencl-exposure-weight-function} is stored in
+\filename{variable\_power.cl} and reachable via an element in
+\envvar{ENBLEND\_OPENCL\_PATH} then is can be used as
+\begin{literal}
+  \app{} --gpu --exposure-weight-function=\feasiblebreak
+  variable\_power.cl:\feasiblebreak
+  variable\_power\_weight \dots
+\end{literal}
+or
+\begin{literal}
+  \app{} --gpu --exposure-weight-function=\feasiblebreak
+  variable\_power.cl:\feasiblebreak
+  variable\_power\_weight:\feasiblebreak
+  3 \dots
+\end{literal}
+
+\optidx{--exposure-weight}%
+\optidx{--exposure-optimum}%
+\optidx{--exposure-width}%
+The options~\option{--exposure-weight}, \option{--exposure-optimum} and
+\option{--exposure-width} work as expected for user-defined functions, too.
+
+\begin{quote}
+  All debts have now been paid.  --
+  \genidx{Linea@\propername{Linea}}%
+  \gensee{Ke'ra@\propername{Ke'ra}}{\propername{Linea}}%
+  \propername{Linea}, Destroyer of Worlds (\propername{Ke'ra})
+\end{quote}
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:

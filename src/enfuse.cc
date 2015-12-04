@@ -1882,22 +1882,6 @@ process_options(int argc, char** argv)
         failed = true;
     }
 
-    if (WExposure > 0.0)
-    {
-        ExposureWeightFunction =
-            exposure_weight::make_weight_function(ExposureWeightFunctionName,
-                                                  ExposureWeightFunctionArguments.begin(),
-                                                  ExposureWeightFunctionArguments.end(),
-                                                  ExposureOptimum, ExposureWidth);
-        if (!exposure_weight::check_weight_function(ExposureWeightFunction))
-        {
-            std::cerr << command
-                      << ": unusable exposure weight function \"" << ExposureWeightFunctionName << "\""
-                      << std::endl;
-            failed = true;
-        }
-    }
-
     if (failed) {
         exit(1);
     }
@@ -1958,6 +1942,22 @@ process_options(int argc, char** argv)
         initialize_gpu_subsystem(preferredGPUPlatform, preferredGPUDevice);
     }
 #endif // OPENCL
+
+    if (WExposure > 0.0)
+    {
+        ExposureWeightFunction =
+            exposure_weight::make_weight_function(ExposureWeightFunctionName,
+                                                  ExposureWeightFunctionArguments.begin(),
+                                                  ExposureWeightFunctionArguments.end(),
+                                                  ExposureOptimum, ExposureWidth);
+        if (!exposure_weight::check_weight_function(ExposureWeightFunction))
+        {
+            std::cerr << command
+                      << ": unusable exposure weight function \"" << ExposureWeightFunctionName << "\""
+                      << std::endl;
+            exit(1);
+        }
+    }
 
     return optind;
 }

@@ -50,6 +50,9 @@ Unreleased.  Current line of development.
   compiled with OpenCL support and the necessary drivers and or
   libraries must be installed on the host system.
 
+- Enfuse can access the OpenCL compiler to allow for user-defined
+  exposure weighting functions specified in OpenCl (source) files.
+
 
 ** New Commandline Options
 
