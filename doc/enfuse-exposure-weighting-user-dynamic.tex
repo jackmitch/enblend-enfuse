@@ -226,7 +226,7 @@ struct Linear : public ExposureWeight {
                                    arguments_begin, arguments_end);
     }
 
-    double weight(double y) const override {
+    double weight(double y) override {
         const double z = std::fabs(normalize(y));
         return z <= 1.0 ? 1.0 - z : 0.0;
     }
@@ -271,7 +271,7 @@ template <int n> struct TemplatedPower : public ExposureWeight {
                                    arguments_begin, arguments_end);
     }
 
-    double weight(double y) const override {
+    double weight(double y) override {
         return std::max(1.0 - ipower<n>(std::fabs(normalize(y))), 0.0);
     }
 };
@@ -319,7 +319,7 @@ public:
         } else {
             char* tail;
             errno = 0;
-            exponent = strtod(*arguments_begin.c_str(), &tail);
+            exponent = strtod(arguments_begin->c_str(), &tail);
             if (*tail != 0 || errno != 0) {
                 throw super::error("non-numeric exponent");
             }
@@ -333,7 +333,7 @@ public:
                           arguments_begin, arguments_end);
     }
 
-    double weight(double y) const override {
+    double weight(double y) override {
       return std::max(1.0 - std::pow(std::fabs(normalize(y)), exponent),
                       0.0);
     }
