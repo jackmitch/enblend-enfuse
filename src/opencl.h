@@ -41,6 +41,11 @@
 #define __CL_ENABLE_EXCEPTIONS
 
 #if defined(HAVE_CL_CL_HPP)
+#if defined(_WIN32)
+// CL/cl.hpp does include also windows.h
+// but we don't want the min/max macros
+#define NOMINMAX
+#endif
 #include <CL/cl.hpp>
 #elif defined(HAVE_OPENCL_CL_HPP)
 #include <OpenCL/cl.hpp>
@@ -76,7 +81,11 @@ namespace std
     template <typename t>
     inline static
     const t
+#if (defined _MSC_VER) && (_MSC_VER <= 1800)
+    as_const(t&& x)
+#else
     as_const(t&& x) noexcept(noexcept(t(x)))
+#endif
     {
         return x;
     }
