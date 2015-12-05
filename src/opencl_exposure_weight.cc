@@ -404,7 +404,7 @@ namespace opencl_exposure_weight
             assert(y >= 0.0);
             assert(y <= 1.0);
 
-            return weight_samples_[std::lround(y * static_cast<double>(number_of_samples_))];
+            return weight_samples_[std::lround(y * static_cast<double>(number_of_samples_ - 1))];
         }
 
     private:
