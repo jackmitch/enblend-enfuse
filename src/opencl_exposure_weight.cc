@@ -302,7 +302,12 @@ namespace opencl_exposure_weight
 
             for (auto p : ocl::construct_search_path())
             {
-                for (auto d : ocl::split_string(p, ':'))
+#ifdef _WIN32
+#define PATHS_DELIMITER ';'
+#else
+#define PATHS_DELIMITER ':'
+#endif
+                for (auto d : ocl::split_string(p, PATHS_DELIMITER))
                 {
                     build_options << "-I" << d << " ";
                 }
