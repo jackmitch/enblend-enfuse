@@ -62,6 +62,21 @@ Some notes on the required arguments of this option:
     For details of the search algorithm consult the manual page of dlopen(3).
   \end{restrictedmaterial}
 
+  \medskip
+
+  \begin{restrictedmaterial}{Windows}
+    If \metavar{SHARED-OBJECT} specifies an absolute filename, this file is used.
+    Otherwise it searches in the following directories in given order:
+    \begin{enumerate}  
+      \item The directory from which \app{} is loaded.
+      \item The system directory. 
+      \item The Windows directory.
+      \item The current directory.
+      \item The directories that are listed in the PATH environment variable.
+    \end{enumerate}
+    For more details consult the manual page of LoadLibrary.
+  \end{restrictedmaterial}
+
 \item
   There is no way knowing which of the symbols inside of \metavar{SHARED-OBJECT} are suitable
   for \metavar{SYMBOL} without knowledge of source code of \metavar{SHARED-OBJECT}.
