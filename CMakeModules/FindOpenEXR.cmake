@@ -23,7 +23,6 @@ IF (NOT WIN32 OR MINGW)
   
   PKGCONFIG(OpenEXR _OpenEXRIncDir _OpenEXRLinkDir _OpenEXRLinkFlags _OpenEXRCflags)
 ENDIF (NOT WIN32 OR MINGW)
-  include(FindLibraryForCPU)
   FIND_PATH(OPENEXR_INCLUDE_DIR ImfRgbaFile.h
      ${_OpenEXRIncDir}
      ${_OpenEXRIncDir}/OpenEXR/
@@ -33,105 +32,64 @@ ENDIF (NOT WIN32 OR MINGW)
      ${SOURCE_BASE_DIR}/Deploy/include/OpenEXR
   )
   
-  find_library_for_cpu(OPENEXR_HALF_LIBRARY NAMES Half
+  include(FindLibraryWithDebug)
+  find_library_with_debug(OPENEXR_HALF_LIBRARY 
+    WIN32_DEBUG_POSTFIX d
+    NAMES Half
     PATHS
-    ${_OPENEXRLinkDir}
-    ${SYSTEM_LIB_DIRS}
-    ${SOURCE_BASE_DIR}/Deploy/lib/HuginRelease
-    ${SOURCE_BASE_DIR}/Deploy/lib/Release
+      ${_OPENEXRLinkDir}
+      ${SYSTEM_LIB_DIRS}
+      ${SOURCE_BASE_DIR}/Deploy/lib/
+      ${SOURCE_BASE_DIR}/Deploy/lib/Release
   )
 
-  find_library_for_cpu(OPENEXR_IEX_LIBRARY
+  find_library_with_debug(OPENEXR_IEX_LIBRARY
+    WIN32_DEBUG_POSTFIX d
     NAMES Iex-2_2 Iex
     PATHS
-    ${_OPENEXRLinkDir}
-    ${SYSTEM_LIB_DIRS}
-    ${SOURCE_BASE_DIR}/Deploy/lib/HuginRelease
-    ${SOURCE_BASE_DIR}/Deploy/lib/Release
+      ${_OPENEXRLinkDir}
+      ${SYSTEM_LIB_DIRS}
+      ${SOURCE_BASE_DIR}/Deploy/lib/
+      ${SOURCE_BASE_DIR}/Deploy/lib/Release
   )
 
-  find_library_for_cpu(OPENEXR_ILMTHREAD_LIBRARY NAMES IlmThread-2_2 IlmThread
+  find_library_with_debug(OPENEXR_ILMTHREAD_LIBRARY 
+    WIN32_DEBUG_POSTFIX d
+    NAMES IlmThread-2_2 IlmThread
     PATHS
-    ${_OPENEXRLinkDir}
-    ${SYSTEM_LIB_DIRS}
-    ${SOURCE_BASE_DIR}/Deploy/lib/HuginRelease
-    ${SOURCE_BASE_DIR}/Deploy/lib/Release
+      ${_OPENEXRLinkDir}
+      ${SYSTEM_LIB_DIRS}
+      ${SOURCE_BASE_DIR}/Deploy/lib/
+      ${SOURCE_BASE_DIR}/Deploy/lib/Release
   )
   
-  find_library_for_cpu(OPENEXR_IMATH_LIBRARY NAMES Imath-2_2 Imath
+  find_library_with_debug(OPENEXR_IMATH_LIBRARY 
+    WIN32_DEBUG_POSTFIX d
+    NAMES Imath-2_2 Imath
     PATHS
-    ${_OPENEXRLinkDir}
-    ${SYSTEM_LIB_DIRS}
-    ${SOURCE_BASE_DIR}/Deploy/lib/HuginRelease
-    ${SOURCE_BASE_DIR}/Deploy/lib/Release
+      ${_OPENEXRLinkDir}
+      ${SYSTEM_LIB_DIRS}
+      ${SOURCE_BASE_DIR}/Deploy/lib/
+      ${SOURCE_BASE_DIR}/Deploy/lib/Release
   )
   
   
-  find_library_for_cpu(OPENEXR_ILMIMF_LIBRARY NAMES IlmImf-2_2 IlmImf 
+  find_library_with_debug(OPENEXR_ILMIMF_LIBRARY 
+    WIN32_DEBUG_POSTFIX d
+    NAMES IlmImf-2_2 IlmImf 
     PATHS
-    ${_OPENEXRLinkDir}
-    ${SYSTEM_LIB_DIRS}
-    ${SOURCE_BASE_DIR}/Deploy/lib/HuginRelease
-    ${SOURCE_BASE_DIR}/Deploy/lib/Release
+      ${_OPENEXRLinkDir}
+      ${SYSTEM_LIB_DIRS}
+      ${SOURCE_BASE_DIR}/Deploy/lib/
+      ${SOURCE_BASE_DIR}/Deploy/lib/Release
   )
-
-  find_library_for_cpu(OPENEXR_HALF_LIBRARY_DEBUG NAMES Half
-    PATHS
-    ${_OPENEXRLinkDir}
-    ${SYSTEM_LIB_DIRS}
-    ${SOURCE_BASE_DIR}/Deploy/lib/HuginDebug
-    ${SOURCE_BASE_DIR}/Deploy/lib/Debug
-  )
-
-  find_library_for_cpu(OPENEXR_IEX_LIBRARY_DEBUG
-    NAMES Iex-2_2 Iex
-    PATHS
-    ${_OPENEXRLinkDir}
-    ${SYSTEM_LIB_DIRS}
-    ${SOURCE_BASE_DIR}/Deploy/lib/HuginDebug
-    ${SOURCE_BASE_DIR}/Deploy/lib/Debug
-  )
-
-  find_library_for_cpu(OPENEXR_ILMTHREAD_LIBRARY_DEBUG NAMES IlmThread-2_2 IlmThread
-    PATHS
-    ${_OPENEXRLinkDir}
-    ${SYSTEM_LIB_DIRS}
-    ${SOURCE_BASE_DIR}/Deploy/lib/HuginDebug
-    ${SOURCE_BASE_DIR}/Deploy/lib/Debug
-  )
-  
-  find_library_for_cpu(OPENEXR_IMATH_LIBRARY_DEBUG NAMES Imath-2_2 Imath
-    PATHS
-    ${_OPENEXRLinkDir}
-    ${SYSTEM_LIB_DIRS}
-    ${SOURCE_BASE_DIR}/Deploy/lib/HuginDebug
-    ${SOURCE_BASE_DIR}/Deploy/lib/Debug
-  )
-  
-  find_library_for_cpu(OPENEXR_ILMIMF_LIBRARY_DEBUG NAMES IlmImf-2_2 IlmImf 
-    PATHS
-    ${_OPENEXRLinkDir}
-    ${SYSTEM_LIB_DIRS}
-    ${SOURCE_BASE_DIR}/Deploy/lib/HuginDebug
-    ${SOURCE_BASE_DIR}/Deploy/lib/Debug
-  )
-  
   
   if (OPENEXR_INCLUDE_DIR AND OPENEXR_IMATH_LIBRARY AND OPENEXR_ILMIMF_LIBRARY AND OPENEXR_IEX_LIBRARY AND OPENEXR_HALF_LIBRARY)
      set(OPENEXR_FOUND TRUE)
      if (OPENEXR_ILMTHREAD_LIBRARY)
-#       set(OPENEXR_LIBRARIES ${OPENEXR_IMATH_LIBRARY} ${OPENEXR_ILMIMF_LIBRARY} ${OPENEXR_IEX_LIBRARY} ${OPENEXR_HALF_LIBRARY} ${OPENEXR_ILMTHREAD_LIBARY} CACHE STRING "The libraries needed to use OpenEXR")
-       if (MSVC)
-         set(OPENEXR_LIBRARIES optimized ${OPENEXR_IMATH_LIBRARY} optimized ${OPENEXR_ILMIMF_LIBRARY} optimized ${OPENEXR_IEX_LIBRARY} optimized ${OPENEXR_HALF_LIBRARY} optimized ${OPENEXR_ILMTHREAD_LIBRARY} debug  ${OPENEXR_IMATH_LIBRARY_DEBUG} debug ${OPENEXR_ILMIMF_LIBRARY_DEBUG} debug ${OPENEXR_IEX_LIBRARY_DEBUG} debug ${OPENEXR_HALF_LIBRARY_DEBUG} debug ${OPENEXR_ILMTHREAD_LIBRARY_DEBUG} CACHE STRING "Libraries needed for OpenEXR")
-       else (MSVC)
-         set(OPENEXR_LIBRARIES ${OPENEXR_IMATH_LIBRARY} ${OPENEXR_ILMIMF_LIBRARY} ${OPENEXR_IEX_LIBRARY} ${OPENEXR_HALF_LIBRARY} ${OPENEXR_ILMTHREAD_LIBRARY})
-       endif (MSVC)
+       set(OPENEXR_LIBRARIES ${OPENEXR_IMATH_LIBRARY} ${OPENEXR_ILMIMF_LIBRARY} ${OPENEXR_IEX_LIBRARY} ${OPENEXR_HALF_LIBRARY} ${OPENEXR_ILMTHREAD_LIBRARY} CACHE STRING "The libraries needed to use OpenEXR")
      else (OPENEXR_ILMTHREAD_LIBRARY)
-       if (MSVC)
-         set(OPENEXR_LIBRARIES optimized ${OPENEXR_IMATH_LIBRARY} optimized ${OPENEXR_ILMIMF_LIBRARY} optimized ${OPENEXR_IEX_LIBRARY} optimized ${OPENEXR_HALF_LIBRARY}  debug ${OPENEXR_IMATH_LIBRARY_DEBUG} debug ${OPENEXR_ILMIMF_LIBRARY_DEBUG} debug ${OPENEXR_IEX_LIBRARY_DEBUG} debug ${OPENEXR_HALF_LIBRARY_DEBUG} CACHE STRING "The libraries needed to use OpenEXR")
-       else (MSVC)
-         set(OPENEXR_LIBRARIES ${OPENEXR_IMATH_LIBRARY} ${OPENEXR_ILMIMF_LIBRARY} ${OPENEXR_IEX_LIBRARY} ${OPENEXR_HALF_LIBRARY} CACHE STRING "The libraries needed to use OpenEXR")
-       endif (MSVC)
+       set(OPENEXR_LIBRARIES ${OPENEXR_IMATH_LIBRARY} ${OPENEXR_ILMIMF_LIBRARY} ${OPENEXR_IEX_LIBRARY} ${OPENEXR_HALF_LIBRARY} CACHE STRING "The libraries needed to use OpenEXR")
      endif (OPENEXR_ILMTHREAD_LIBRARY)
   endif (OPENEXR_INCLUDE_DIR AND OPENEXR_IMATH_LIBRARY AND OPENEXR_ILMIMF_LIBRARY AND OPENEXR_IEX_LIBRARY AND OPENEXR_HALF_LIBRARY)
   
@@ -154,12 +112,6 @@ ENDIF (NOT WIN32 OR MINGW)
      OPENEXR_IMATH_LIBRARY 
      OPENEXR_IEX_LIBRARY 
      OPENEXR_HALF_LIBRARY
-     OPENEXR_ILMTHREAD_LIBRARY 
-	 OPENEXR_ILMIMF_LIBRARY_DEBUG
-	 OPENEXR_IMATH_LIBRARY_DEBUG
-	 OPENEXR_IEX_LIBRARY_DEBUG
-	 OPENEXR_HALF_LIBRARY_DEBUG
-	 OPENEXR_ILMTHREAD_LIBRARY_DEBUG
-  )
+     OPENEXR_ILMTHREAD_LIBRARY )
   
 endif (OPENEXR_INCLUDE_DIR AND OPENEXR_LIBRARIES)

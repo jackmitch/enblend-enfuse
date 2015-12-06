@@ -37,6 +37,7 @@
 
 IF(WIN32)
   SET(GSL_POSSIBLE_ROOT_DIRS
+    ${SOURCE_BASE_DIR}/gsl
     ${SOURCE_BASE_DIR}/gsl-1.17
     ${SOURCE_BASE_DIR}/gsl-1.16
     ${SOURCE_BASE_DIR}/gsl-1.15
@@ -48,13 +49,16 @@ IF(WIN32)
     DOC "GSL header include dir"
     )
   
-  FIND_LIBRARY(GSL_GSL_LIBRARY
+  include(FindLibraryWithDebug)
+  find_library_with_debug(GSL_GSL_LIBRARY
+    WIN32_DEBUG_POSTFIX d    
     NAMES gsl libgsl
     PATHS  ${GSL_POSSIBLE_ROOT_DIRS}
     PATH_SUFFIXES lib
     DOC "GSL library dir" )  
   
-  FIND_LIBRARY(GSL_GSLCBLAS_LIBRARY
+  find_library_with_debug(GSL_GSLCBLAS_LIBRARY
+    WIN32_DEBUG_POSTFIX d    
     NAMES gslcblas libgslcblas cblas
     PATHS  ${GSL_POSSIBLE_ROOT_DIRS}
     PATH_SUFFIXES lib

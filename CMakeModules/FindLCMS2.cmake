@@ -7,6 +7,7 @@ ELSE(NOT WIN32)
         /usr
         ${SOURCE_BASE_DIR}
       PATH_SUFFIXES
+        lcms2-2.7
         lcms2-2.6
         lcms2-2.5
     )
@@ -19,7 +20,8 @@ ELSE(NOT WIN32)
         ${LCMS2_ROOT_DIR}/include
     )
 
-    FIND_LIBRARY(LCMS2_LIBRARIES
+    include(FindLibraryWithDebug)
+    find_library_with_debug(LCMS2_LIBRARIES
       WIN32_DEBUG_POSTFIX d    
       NAMES lcms2 lcms2_static
       PATHS /usr/local/include /usr/include ${LCMS2_ROOT_DIR}/Lib/MS
