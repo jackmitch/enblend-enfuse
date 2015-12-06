@@ -189,9 +189,6 @@ ELSEIF(WIN32)
   ENDIF(MSVC)
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
-#check some header and functions
-include(ConfigureChecks.cmake)
-
 # Required Libraries first
 FIND_PACKAGE(LCMS2 REQUIRED)
 ADD_DEFINITIONS(-DHAVE_LIBLCMS2)
@@ -226,7 +223,11 @@ if(WIN32)
 endif()
 
 # Boost headers are required
-FIND_PACKAGE(Boost REQUIRED)
+FIND_PACKAGE(Boost 1.55 REQUIRED)
+
+#check some header and functions
+include(ConfigureChecks.cmake)
+
 # Boost Filesystem is optional
 IF(NOT HAVE_STD_FILESYSTEM)
   FIND_PACKAGE(Boost COMPONENTS filesystem system)
