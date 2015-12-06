@@ -49,13 +49,11 @@
 #ifdef HAVE_STD_FILESYSTEM
 #include <filesystem>
 typedef std::tr2::sys::path basic_path;
-#define GETPATHSTRING(x) (x)
 #else
 #ifdef HAVE_BOOST_FILESYSTEM
 #include <boost/filesystem.hpp>
 
 typedef boost::filesystem::path basic_path;
-#define GETPATHSTRING(x) (x).string()
 #endif
 #endif
 
@@ -86,7 +84,7 @@ extractDirname(const std::string& aFilename)
 {
 #if defined HAVE_STD_FILESYSTEM || defined HAVE_BOOST_FILESYSTEM
     const basic_path path(aFilename);
-    const std::string directory(path.branch_path().string());
+    const std::string directory(path.parent_path().string());
     return directory.empty() ? DOT : directory;
 #else
     const std::string::size_type separator = aFilename.rfind(PATH_SEPARATOR);
@@ -100,7 +98,7 @@ extractBasename(const std::string& aFilename)
 {
 #if defined HAVE_STD_FILESYSTEM || defined HAVE_BOOST_FILESYSTEM
     const basic_path path(aFilename);
-    return GETPATHSTRING(path.leaf());
+    return path.filename().string();
 #else
     const std::string::size_type separator = aFilename.rfind(PATH_SEPARATOR);
     return
@@ -116,7 +114,7 @@ extractFilename(const std::string& aFilename)
 {
 #if defined HAVE_STD_FILESYSTEM || defined HAVE_BOOST_FILESYSTEM
     const basic_path path(aFilename);
-    return basename(path);
+    return path.stem().string();
 #else
     const std::string::size_type separator = aFilename.rfind(PATH_SEPARATOR);
     const std::string::size_type dot = aFilename.rfind(DOT);
@@ -140,7 +138,7 @@ extractExtension(const std::string& aFilename)
 {
 #if defined HAVE_STD_FILESYSTEM || defined HAVE_BOOST_FILESYSTEM
     const basic_path path(aFilename);
-    return extension(path);
+    return path.extension().string();
 #else
     const std::string::size_type dot = aFilename.rfind(DOT);
     return
@@ -184,7 +182,7 @@ removeDotDotsBoost(const basic_path& aPath)
         }
         else
         {
-            directories.push_back(GETPATHSTRING(*p));
+            directories.push_back(p->string());
         }
     }
     basic_path result;
