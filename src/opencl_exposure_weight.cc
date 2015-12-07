@@ -42,6 +42,16 @@ extern cl::Context* GPUContext;
 
 namespace opencl_exposure_weight
 {
+    bool
+    is_opencl_file(const std::string& a_source_file_name)
+    {
+        const std::string::size_type size = a_source_file_name.size();
+
+        return size >= 3 && (a_source_file_name.rfind(".cl") == size - 3 ||
+                             a_source_file_name.rfind(".CL") == size - 3);
+    }
+
+
 #ifdef OPENCL
     class UserWeightFunction : public ocl::BuildableFunction
     {
@@ -171,10 +181,11 @@ namespace opencl_exposure_weight
             cl::Buffer weight_buffer(context_, CL_MEM_READ_WRITE, raw_size);
 
             const size_t group_size = work_group_size(32U);
-            const size_t m = size % group_size;
             const size_t n = size / group_size;
 
 #ifdef DEBUG_OPENCL
+            const size_t m = size % group_size;
+
             std::cout <<
                 "+ UserWeightFunction::evaluate: size = " << size << " -> raw-size = " << raw_size << "\n" <<
                 "+ UserWeightFunction::evaluate: work_group_size_ = " << work_group_size_ << "\n" <<
@@ -389,7 +400,7 @@ namespace opencl_exposure_weight
             user_weight_function_->evaluate(luminances.begin(), luminances.end(),
                                             std::back_inserter(weight_samples_));
 
-#if 1
+#ifdef DEBUG_OPENCL
             for (size_t i = 0U; i != weight_samples_.size(); ++i)
             {
                 std::cout <<
@@ -415,30 +426,6 @@ namespace opencl_exposure_weight
         size_t number_of_samples_;
         std::vector<double> weight_samples_;
     }; // class OpenCLUserExposureWeight
-
-
-    // If the beginning of `a_source_file_name' do not contain any
-    // null-character we assume it is an OpenCL-source file.
-    bool
-    is_opencl_file(const std::string& a_source_file_name)
-    {
-        const std::streamsize buffer_size = 256U;
-        std::ifstream source(a_source_file_name, std::ios::binary);
-        std::unique_ptr<char[]> buffer(new char[buffer_size]);
-
-        source.read(buffer.get(), buffer_size);
-        const std::streamsize actual_size = source.gcount();
-
-        for (std::streamsize i = 0U; i != actual_size; ++i)
-        {
-            if (buffer[i] == '\0')
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
 
 
     ExposureWeight*

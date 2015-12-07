@@ -33,14 +33,13 @@ The ability of \acronym{GPGPU}s to crunch humongous amounts of data is unimporta
 
 \noindent\restrictednote{\acronym{OpenCL}-enabled versions only.}
 
-\optidx{--exposure-weight-function}%
-\optidx{--gpu}%
-For \App{} executables compiled with \acronym{OpenCL} support (see
-Section~\fullref{sec:finding-out-details} on how to check this feature), \App{} can work with
-user-defined exposure weighting functions, passed with the long form of
-option~\option{--exposure-weight-function} after \acronym{GPU}-support has been requested with
-option~\option{--gpu}.  \App{} compiles, links and evaluables the exposure weight function
-identifed by \metavar{SYMBOL} from \metavar{OPENCL-SOURCE}:
+\optidx{--exposure-weight-function}% \optidx{--gpu}% For \App{} executables compiled with
+\acronym{OpenCL} support (see Section~\fullref{sec:finding-out-details} on how to check this
+feature), \App{} can work with user-defined exposure weighting functions, passed with the long
+form of option~\option{--exposure-weight-function} after \acronym{GPU}-support has been
+requested with option~\option{--gpu}.  \App{} compiles, links and evaluables the exposure weight
+function identifed by \metavar{SYMBOL} from \metavar{OPENCL-SOURCE}, where
+\metavar{OPENCL-SOURCE} has extension~\filename{.cl}:
 
 \begin{literal}
   --gpu --exposure-weight-function=\metavar{OPENCL-SOURCE}:\feasiblebreak
@@ -99,8 +98,8 @@ float weight(float y);
   weight.  This function name will become \metavar{SYMBOL} at the \App{} command line.
 
 \item
-  Pass filename~\metavar{OPENCL-SOURCE} of the text file and the function name~\metavar{SYMBOL}
-  to \App{} as shown above.
+  Pass filename~\metavar{OPENCL-SOURCE} (with extension~\filename{.cl}) of the text file and the
+  function name~\metavar{SYMBOL} to \App{} as shown above.
 
   \genidx{environment variable!ENBLEND\_OPENCL\_PATH@\envvar{ENBLEND\_OPENCL\_PATH}}%
 \item

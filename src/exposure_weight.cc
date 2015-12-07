@@ -27,12 +27,10 @@
 
 #include "dynamic_loader.h"     // HAVE_DYNAMICLOADER_IMPL
 #include "opencl.h"             // macro OPENCL
+#include "opencl_exposure_weight.h"
 
 #include "exposure_weight.h"
 
-#ifdef OPENCL
-#include "opencl_exposure_weight.h"
-#endif
 
 
 extern const std::string command;
@@ -164,36 +162,56 @@ namespace exposure_weight
         else
         {
 #if defined(HAVE_DYNAMICLOADER_IMPL) && defined(OPENCL)
+#ifdef DEBUG
             std::cerr << "+ make_weight_function: HAVE_DYNAMICLOADER_IMPL && OPENCL" << std::endl;
+#endif
             if (opencl_exposure_weight::is_opencl_file(name))
             {
-                std::cerr << "+ make_weight_function: \"" << name << "\" is source file" << std::endl;
-                // initialize_gpu_subsystem();
                 return opencl_exposure_weight::make_weight_function(name,
                                                                     arguments_begin, arguments_end,
                                                                     y_optimum, width);
             }
             else
             {
-                std::cerr << "+ make_weight_function: \"" << name << "\" is a shared object" << std::endl;
                 return make_dynamic_weight_function(name,
                                                     arguments_begin, arguments_end,
                                                     y_optimum, width);
             }
 #elif defined(OPENCL)
+#ifdef DEBUG
             std::cerr << "+ make_weight_function: OPENCL only" << std::endl;
-            return opencl_exposure_weight::make_weight_function(name,
-                                                                arguments_begin, arguments_end,
-                                                                y_optimum, width);
+#endif
+            if (opencl_exposure_weight::is_opencl_file(name))
+            {
+                return opencl_exposure_weight::make_weight_function(name,
+                                                                    arguments_begin, arguments_end,
+                                                                    y_optimum, width);
+            }
+            else
+            {
+                std::cerr << command << ": OpenCL source file required" << << std::endl;
+                exit(1);
+            }
 #elif defined(HAVE_DYNAMICLOADER_IMPL)
+#ifdef DEBUG
             std::cerr << "+ make_weight_function: HAVE_DYNAMICLOADER_IMPL only" << std::endl;
-            return make_dynamic_weight_function(name,
-                                                arguments_begin, arguments_end,
-                                                y_optimum, width);
+#endif
+            if (opencl_exposure_weight::is_opencl_file(name))
+            {
+                std::cerr << command << ": shared-object file (aka dynamic library) required" << std::endl;
+                exit(1);
+            }
+            else
+            {
+                return make_dynamic_weight_function(name,
+                                                    arguments_begin, arguments_end,
+                                                    y_optimum, width);
+            }
 #else
-            std::cerr << command << ": unknown built-in exposure weight function \"" << name << "\"\n"
-                      << command << ": note: this binary has no support for dynamic loading of\n"
-                      << command << ": note: exposure weight functions" << std::endl;
+            std::cerr <<
+                command << ": unknown built-in exposure weight function \"" << name << "\"\n" <<
+                command << ": note: this binary has no support for dynamic loading of\n" <<
+                command << ": note: exposure weight functions" << std::endl;
             exit(1);
 #endif
         }
