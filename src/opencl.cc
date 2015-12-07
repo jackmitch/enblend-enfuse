@@ -113,9 +113,11 @@ namespace ocl
 
 #if defined(OPENCL)
 
+#define UNINITIALIZED_OPENCL_ERROR_CODE -7927
+
     runtime_error::runtime_error(const std::string& a_message) :
         std::runtime_error(a_message),
-        opencl_error_(CL_SUCCESS)
+        opencl_error_(UNINITIALIZED_OPENCL_ERROR_CODE)
     {}
 
 
@@ -198,6 +200,8 @@ namespace ocl
         case CL_INVALID_MIP_LEVEL: return "invalid MIP level";
         case CL_INVALID_GLOBAL_WORK_SIZE: return "invalid global work size";
         case CL_INVALID_PROPERTY: return "invalid property";
+
+        case UNINITIALIZED_OPENCL_ERROR_CODE: return "no further pending OpenCL errors";
 
         default:
             std::ostringstream error_code;
@@ -977,8 +981,8 @@ namespace ocl
         if (!file)
         {
             std::ostringstream message;
-            message << "file not found; missing \"" << a_filename << "\"";
-            throw ocl::runtime_error(message.str());
+            message << "file not found: missing \"" << a_filename << "\"";
+            throw std::runtime_error(message.str());
         }
         else
         {
