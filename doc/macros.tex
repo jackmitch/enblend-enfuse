@@ -291,18 +291,26 @@
 
 %% Literal text as e.g. the contents of a text file.
 \newenvironment{literal}%
-               {\pagebreak[1]\begin{divstyle}{literal}%
-                   \begin{trivlist}{}{\ifhevea\relax\else\topsep=0pt\fi}\item\relax
-                     \RaggedRight\frenchspacing\ttfamily}%
-               {\end{trivlist}\end{divstyle}}
+{\pagebreak[1]\begin{divstyle}{literal}%
+    \begin{trivlist}{}{\ifhevea\relax\else\topsep=0pt\fi}\item\relax
+      \RaggedRight\frenchspacing\ttfamily}%
+{\end{trivlist}\end{divstyle}}
 
 
 %% Description list for summarizing options.
-\newenvironment{optionsummary}
+\newenvironment{optionsummary}%
 {\medskip\pagebreak[1]\par\noindent\strong{Summary of influential options}%
 \begin{list}{}{\ifhevea\relax\else\topsep=0pt\leftmargin=4em\fi
     \renewcommand{\makelabel}[1]{\option{##1}:\ }}}%
 {\end{list}}
+
+
+%% Specially grouped quote.
+\newenvironment{sgquote}
+{\smallskip\begin{flushright}%
+\def\Author##1{\mbox{##1}}%        Do not break the name of the author of the quote.
+\def\Quote##1{{\itshape ##1}}}%    Typeset the quote itself in italics.
+{\end{flushright}\smallskip}
 
 
 %% Markup for material that applies only to a particular application, this is either Enblend or
