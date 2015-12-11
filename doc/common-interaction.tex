@@ -561,6 +561,12 @@ linked with \appcmd.
   search path, \appcmd{} came with internalized \acronym{OpenCL} sources and neither needs nor
   uses \envvar{ENBLEND\_OPENCL\_PATH}.
 
+  \ifenfuse
+    \restrictednote{\application{Enfuse} only.} \command{enfuse} uses the environment variable
+    \envvar{ENBLEND\_OPENCL\_PATH} as search path for User-Defined \acronym{OpenCL} Exposure 
+    Weighting Functions. (see \sectionName~\fullref{sec:user-defined-opencl-functions}).
+  \fi
+    
   Note that the environment variable is called \envvar{ENBLEND\_OPENCL\_PATH} for \emph{both}
   applications, even for \command{enfuse}!
 
