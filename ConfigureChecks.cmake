@@ -209,10 +209,12 @@ check_cxx_source_compiles(
 check_cxx_source_compiles(
   "
     #include <filesystem>
+    #include <string>
     
     int main()
     {
       std::tr2::sys::path filepath;
+      std::string s=filepath.filename().string();
       return 0;    
     };
   "
