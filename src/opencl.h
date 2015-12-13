@@ -653,7 +653,7 @@ namespace ocl
 
         const cl::Program& program() override
         {
-            wait();
+            this->wait();
             return super::program();
         }
 
