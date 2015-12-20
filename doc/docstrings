@@ -79,7 +79,7 @@ sub insert_docstring {
     my ($docstrings, $data) = @_;
 
     my $key = $data->{KEY};
-    my $value = $data->{VALUE};
+    #-- my $value = $data->{VALUE};  # currently unused
 
     die "$COMMAND_NAME: empty key at $data->{FILENAME}:$data->{LINENUMBER};\n" unless $key;
 

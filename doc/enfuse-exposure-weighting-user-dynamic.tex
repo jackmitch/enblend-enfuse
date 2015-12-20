@@ -23,8 +23,8 @@ On operating systems, where dynamic linking (or synonymously: dynamic loading) o
 possible, for \App{} executables compiled with dynamic-linking support (see
 Section~\fullref{sec:finding-out-details} on how to check this feature), \App{} can work with
 user-defined exposure weighting functions, passed with the long form of
-option~\option{--exposure-weight-function} and load the exposure weight function identifed by
-\metavar{SYMBOL} from \metavar{SHARED-OBJECT}:
+option~\option{--exposure-weight-function}, load the exposure weight function identified by
+\metavar{SYMBOL} from \metavar{SHARED-OBJECT} and optionally pass some \metavar{ARGUMENT}s:
 
 \begin{literal}
   --exposure-weight-function=\metavar{SHARED-OBJECT}:\feasiblebreak
@@ -33,16 +33,16 @@ option~\option{--exposure-weight-function} and load the exposure weight function
   \optidx{--exposure-weight-function}
 \end{literal}
 
-Some notes on the required arguments of this option:
+Some notes on the arguments of this option:
 
 \begin{itemize}
   \genidx{environment variable!LD\_LIBRARY\_PATH@\envvar{LD\_LIBRARY\_PATH}}%
   \gensee{LD\_LIBRARY\_PATH@\envvar{LD\_LIBRARY\_PATH}}%
          {environment variable, \envvar{LD\_LIBRARY\_PATH}}%
 \item
-  \metavar{SHARED-OBJECT} is a filename (typically ending in \filename{.so} or \filename{.dll})
-  and depending on the operating system and the dynamic-loader implementation compiled into
-  \App{}, \metavar{SHARED-OBJECT} may or may not require a path.
+  \metavar{SHARED-OBJECT} is a filename (typically ending in \filename{.so} or \filename{.dll}).
+  Depending on the operating system and the dynamic-loader implementation compiled into \appcmd,
+  \metavar{SHARED-OBJECT} may or may not require a path.
 
   \begin{restrictedmaterial}{Linux}
     If \metavar{SHARED-OBJECT} does not contain a slash (\sample{/}), the dynamic loader
@@ -58,28 +58,55 @@ Some notes on the required arguments of this option:
       \app{} --exposure-weight-function=\feasiblebreak ./SHARED-OBJECT:\dots
     \end{literal}
 
-    \genidx{dlopen}%
-    For details of the search algorithm consult the manual page of dlopen(3).
+    \genidx{dlopen (Linux)}%
+    For details of the search algorithm please consult the manual page of dlopen(3).
   \end{restrictedmaterial}
 
-  \medskip
+  \smallskip
 
   \begin{restrictedmaterial}{Windows}
-    If \metavar{SHARED-OBJECT} specifies an absolute filename, this file is used.
-    Otherwise it searches in the following directories in given order:
-    \begin{enumerate}  
-      \item The directory from which \app{} is loaded.
-      \item The system directory. 
-      \item The Windows directory.
-      \item The current directory.
-      \item The directories that are listed in the PATH environment variable.
+    If \metavar{SHARED-OBJECT} specifies an absolute filename, exactly this file is used.
+    Otherwise \App{} searches in the following directories and in this order:
+
+    \begin{enumerate}
+    \item The directory from which \appcmd{} is loaded.
+    \item The system directory.
+    \item The Windows directory.
+    \item The current directory.
+    \item The directories that are listed in the \envvar{PATH}~environment variable.
     \end{enumerate}
-    For more details consult the manual page of LoadLibrary.
+
+    \genidx{LoadLibrary (Windows)}%
+    For details consult the manual page of LoadLibrary.
   \end{restrictedmaterial}
 
 \item
   There is no way knowing which of the symbols inside of \metavar{SHARED-OBJECT} are suitable
   for \metavar{SYMBOL} without knowledge of source code of \metavar{SHARED-OBJECT}.
+
+\item
+  A weight function has access to additional \metavar{ARGUMENT}s passed in by appending them
+  after \metavar{SYMBOL} with the usual delimiters.  How these \metavar{ARGUMENT}s are
+  interpreted and how many of them are required is encoded in the weight-function.  \App{}
+  supports \metavar{ARGUMENT}s; it neither restricts their number nor their type.
+
+  \begin{geeknote}%
+    \optidx{--exposure-optimum}%
+    \optidx{--exposure-width}%
+    Usually, neither the exposure optimum
+    (\option{--exposure-optimum}=\feasiblebreak\metavar{OPTIMUM}) nor the width
+    (\option{--exposure-width}=\feasiblebreak\metavar{WIDTH}) of the exposure function are
+    \metavar{ARGUMENT}s, because they are always explicitly passed on to any exposure weight
+    function.
+  \end{geeknote}
+
+  For example, assuming \filename{variable\_power.cc} of the supplied examples was compiled to
+  \filename{variable\_power.so}, we can override the default exponent of 2 with
+
+  \begin{literal}
+    \app{} --exposure-weight-function=\bslash \\
+    ~~~~~~~~~variable\_power.so:vpower:1.8 \dots
+  \end{literal}
 \end{itemize}
 
 
@@ -220,8 +247,8 @@ Between chair and keyboard:
 \exampleName~\ref{ex:simple-dynamic-exposure-weight-function} shows the C++-code of a suitable
 extension.  If \App{} has been compiled with support for user-defined weight functions, the
 examples presented here should have been duplicated in
-directory~\filename{\val*{val:DATAROOTDIR}/enfuse/xweight} along with a \acronym{GNU}-Makefile
-called \filename{Makefile.userweight}.
+directory~\filename{\val*{val:DATAROOTDIR}/\feasiblebreak enfuse/\feasiblebreak xweight} along
+with a \acronym{GNU}-Makefile called \filename{Makefile.userweight}.
 
 
 \begin{exemplar}[htbp]
@@ -410,8 +437,7 @@ these two functions are the prime candidates for optimization.
   \end{codelist}
 
   Finally, the weight function can be selected by its \metavar{SYMBOL}~name in the
-  \metavar{SHARED-OBJECT}.  The function has access to additional \metavar{ARGUMENT}s passed in
-  with the option.\footnote{Build-in weight functions never take additional arguments.}
+  \metavar{SHARED-OBJECT}.
 
   \begin{literal}
     \app{} --exposure-weight-function=dynexp.so:linear\dots
