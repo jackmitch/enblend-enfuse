@@ -91,7 +91,7 @@ add_custom_command(
 if(WIN32)
   SET(INSTALL_SHARE "share")
 else()
-  SET(INSTALL_SHARE "${CMAKE_INSTALL_PREFIX}/$&%_/share")
+  SET(INSTALL_SHARE "${CMAKE_INSTALL_PREFIX}/share")
 endif()
 # replace invalid characters for latex
 string(REGEX REPLACE "([$&%_^{}])" "\\\\\\1" INSTALL_SHARE "${INSTALL_SHARE}")
