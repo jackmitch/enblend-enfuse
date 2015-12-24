@@ -1886,12 +1886,6 @@ process_options(int argc, char** argv)
         exit(1);
     }
 
-    if (parameter::as_boolean("dump-exposure-weight-function", false)) {
-        const int n = parameter::as_integer("exposure-weight-function-points", 21);
-        exposure_weight::dump_weight_function(ExposureWeightFunction, std::min(std::max(n, 10), 10000));
-        exit(0);
-    }
-
     switch (print_only_task)
     {
     case VERSION_ONLY:
@@ -1957,6 +1951,13 @@ process_options(int argc, char** argv)
                       << std::endl;
             exit(1);
         }
+    }
+
+    if (parameter::as_boolean("dump-exposure-weight-function", false))
+    {
+        const int n = parameter::as_integer("exposure-weight-function-points", 21);
+        exposure_weight::dump_weight_function(ExposureWeightFunction, std::min(std::max(n, 10), 10000));
+        exit(0);
     }
 
     return optind;
