@@ -1944,12 +1944,28 @@ process_options(int argc, char** argv)
                                                   ExposureWeightFunctionArguments.begin(),
                                                   ExposureWeightFunctionArguments.end(),
                                                   ExposureOptimum, ExposureWidth);
-        if (!exposure_weight::check_weight_function(ExposureWeightFunction))
+
+        const exposure_weight::weight_function_check_t check_result =
+            exposure_weight::check_weight_function(ExposureWeightFunction);
+        if (check_result != exposure_weight::OK)
         {
-            std::cerr << command
-                      << ": unusable exposure weight function \"" << ExposureWeightFunctionName << "\""
-                      << std::endl;
-            exit(1);
+            std::cerr << command <<
+                ": unusable exposure weight function \"" << ExposureWeightFunctionName << "\"\n";
+
+            switch (check_result)
+            {
+            case exposure_weight::NEGATIVE:
+                std::cerr << command << ": note: at least one weight is negative" << std::endl;
+                exit(1);
+
+            case exposure_weight::NON_UNIT:
+                std::cerr << command << ": note: at least one weight is larger than one" << std::endl;
+                exit(1);
+
+            case exposure_weight::DEGENERATE:
+                std::cerr << command << ": note: too many zeros" << std::endl;
+                exit(1);
+            }
         }
     }
 

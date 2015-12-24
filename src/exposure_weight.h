@@ -37,7 +37,9 @@ namespace exposure_weight
                                          ExposureWeight::argument_const_iterator arguments_end,
                                          double y_optimum, double width);
     void dump_weight_function(ExposureWeight* weight_function, int n);
-    bool check_weight_function(ExposureWeight* weight_function, int n = 65536);
+
+    typedef enum {OK, NEGATIVE, NON_UNIT, DEGENERATE} weight_function_check_t;
+    weight_function_check_t check_weight_function(ExposureWeight* weight_function, int n = 65536);
 
     struct Gaussian : public ExposureWeight
     {

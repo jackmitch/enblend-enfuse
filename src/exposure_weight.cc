@@ -233,27 +233,32 @@ namespace exposure_weight
     }
 
 
-    bool
+    weight_function_check_t
     check_weight_function(ExposureWeight* weight_function, int n)
     {
         assert(n >= 2);
+        int zero_count = 0;
 
-        omp::atomic_t number_of_faults = omp::atomic_t();
-
-#ifdef OPENMP
-#pragma omp parallel for
-#endif
         for (int i = 0; i < n; ++i)
         {
             const double y = static_cast<double>(i) / static_cast<double>(n - 1);
             const double w = weight_function->weight(y);
 
-            if (w < 0.0 || w >= 1.0)
+            if (w < 0.0)
             {
-                ++number_of_faults;
+                return NEGATIVE;
+            }
+            else if (w > 1.0)
+            {
+                return NON_UNIT;
+            }
+
+            if (w >= 0.0 && w <= std::numeric_limits<double>::denorm_min())
+            {
+                ++zero_count;
             }
         }
 
-        return number_of_faults == omp::atomic_t();
+        return zero_count == n ? DEGENERATE : OK;
     }
 } // namespace exposure_weight
