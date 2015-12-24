@@ -183,13 +183,15 @@ Between chair and keyboard:
   \begin{itemize}
   \item
     Domain: define \code{weight} for normalized luminance values~\metavar{y} from zero to one
-    including both interval ends.
+    including both interval ends: $0 \le y \le 1$.
 
   \item
-    Image: Let the \code{weight}s fall in the interval from zero to one.
+    Image: Let the \code{weight}~$w$ fall in the interval from zero to one: $0 \le w \le 1$.
+    The \code{weight}s can be all the same, $w = \mbox{const}$.  This is, they can encode a
+    constant weight, as long as the constant is not zero.
 
-    \App{} checks this property and refuses to continue if the weight is outside the required
-    range.
+    \App{} checks this property and refuses to continue if any weight is outside the required
+    range or all weights are zero.
 
   \item
     (Optionally) Rescale the \metavar{WIDTH} of the function to match the \acronym{FWHM} of
@@ -365,8 +367,8 @@ public:
             if (*tail != 0 || errno != 0) {
                 throw super::error("non-numeric exponent");
             }
-            if (exponent <= 0.0 || exponent > 10.0) {
-                throw super::error("exponent out of range ]0, 10]");
+            if (exponent <= 0.0 || exponent > 4.0) {
+                throw super::error("exponent out of range (0, 4]");
             }
         }
 
@@ -376,8 +378,7 @@ public:
     }
 
     double weight(double y) override {
-      return std::max(1.0 - std::pow(std::fabs(normalize(y)), exponent),
-                      0.0);
+      return std::max(1.0 - std::pow(std::fabs(normalize(y)), exponent), 0.0);
     }
 
 private:

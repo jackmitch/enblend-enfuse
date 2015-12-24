@@ -52,9 +52,9 @@ public:
             {
                 throw super::error("non-numeric exponent");
             }
-            if (exponent <= 0.0 || exponent > 10.0)
+            if (exponent <= 0.0 || exponent > 4.0)
             {
-                throw super::error("exponent out of range ]0, 10]");
+                throw super::error("exponent out of range (0, 4]");
             }
         }
 
