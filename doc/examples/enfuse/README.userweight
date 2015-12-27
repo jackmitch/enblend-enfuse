@@ -6,37 +6,37 @@ that all of these are loaded with
 
 * linear.cc
   This is a very simple weight function with a roof-like shape.
-  Function "linear" does not take any extra argument.
+  Function "linear" does not take any extra ARGUMENT.
 
 * fixed_power.cc
   This module defines three power-weights "power2", "power3" and
   "power4" in the form (1 - Y^n), where n is 2, 3, and 4.  All are
   derived from the same template class FixedPower.  None of the
-  functions take any extra argument.
+  functions take any extra ARGUMENT.
 
 * templated_power.cc
   This module duplicates the functionality of "fixed_power.cc" to
   define the weights "tpower2", "tpower3" and "tpower4".  However, it
   uses a recursively evaluating template class to implement the
   integral power function.  Again, none of the functions take any
-  extra argument.
+  extra ARGUMENT.
 
 * variable_power.cc
   Here, we define the single weight function "vpower", which
-  implements (1 - Y^N), where N as a free parameter.  Of course the
-  functionality is a super-set of "power#", and "tpower#", allowing
-  even for fractional exponents N.
+  implements (1 - Y^N), where N is a free parameter and ARGUMENT.  Of
+  course the functionality is a super-set of "power#", and "tpower#",
+  allowing even for fractional exponents N.
 
 * sinc.cc
-  This module defines two weight function based on the truncated,
+  This module defines two weight functions based on the truncated,
   scaled sinc function:
                  / sin(Pi * Y) / (Pi * Y)  for Y <> 0 and |Y| < 1
       sinc(Y) := |           1             for Y == 0
                  \           0             for |Y| >= 1
-  The simple weight "sinc" takes no extra parameters.
+  The simple weight "sinc" takes no extra ARGUMENT.
 
   The second function, "power_sinc", implements sinc(Y^N)^M, where N
-  and M act as free parameters.
+  and M act as free parameters and are ARGUMENTs.
 
 - tabular.cc
   Linearly interpolate weights between given (Y, w)-pairs.  The pairs
@@ -69,7 +69,7 @@ code.
 To inspect any exposure-weight function (not just dynamically loaded)
 pass
         --parameter=dump-exposure-weight-function
-to Enfuse.  This instructs Enfuse to evaluate at 21 [default]
+to Enfuse.  This option instructs Enfuse to evaluate at 21 [default]
 equidistant points in the interval 0..1, print a three-column report
 to standard output and exit.  Column #1 is the integral point index
 starting at zero, column #2 is the point at which the function was

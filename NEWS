@@ -83,7 +83,7 @@ Unreleased.  Current line of development.
 
   Some examples of user-defined weight functions and a rudimentary
   GNUmakefile to build them get installed in
-          DATAROOTDIR/share/enfuse/user-weight.
+          DOCDIR/examples/enfuse.
 
 - The old Enfuse options `--exposure-mu' and `--exposure-sigma' got
   siblings called `--exposure-optimum' and `--exposure-width'

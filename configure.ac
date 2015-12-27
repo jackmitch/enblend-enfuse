@@ -592,11 +592,10 @@ CFLAGS="$CFLAGS $CL_CFLAGS"
 CXXFLAGS="$CXXFLAGS $CL_CFLAGS"
 LIBS="$LIBS $CL_LIBS"
 
-AC_CONFIG_FILES([share/Makefile
-                 share/enfuse/Makefile.userweight
-                 share/enfuse/Makefile])
-
-AC_CONFIG_FILES([doc/Makefile])
+AC_CONFIG_FILES([doc/Makefile
+                 doc/examples/Makefile
+                 doc/examples/enfuse/Makefile
+                 doc/examples/enfuse/Makefile.userweight])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile

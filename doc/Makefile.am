@@ -1,3 +1,6 @@
+SUBDIRS = examples
+
+
 .NOTPARALLEL:
 
 
@@ -314,7 +317,7 @@ SHOW_LATEX2HTML_LOG = \
 	$(docstrings_verbose)$(DOCSTRINGS) key-value \
             UPDATED '$(shell $(UPDATED_ON) $(UPDATED_ON_FLAGS) $(FILES))' \
             VERSION '$(VERSION)' \
-            DATAROOTDIR '$(datarootdir)' > $@
+            DOCDIR '$(docdir)' > $@
 
 
 ########################################################################

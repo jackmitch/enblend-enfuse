@@ -6,7 +6,7 @@ if BUILD_DOC
   MAYBE_DOC = doc
 endif
 
-SUBDIRS = share src $(MAYBE_DOC)
-DIST_SUBDIRS = share src doc
+SUBDIRS = src $(MAYBE_DOC)
+DIST_SUBDIRS = src doc
 
 ACLOCAL_AMFLAGS = -I m4
