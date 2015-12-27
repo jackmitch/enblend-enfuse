@@ -1965,6 +1965,9 @@ process_options(int argc, char** argv)
             case exposure_weight::DEGENERATE:
                 std::cerr << command << ": note: too many zeros" << std::endl;
                 exit(1);
+
+            case exposure_weight::OK:
+                throw never_reached("case indicates OK in error handler switch-expression");
             }
         }
     }
