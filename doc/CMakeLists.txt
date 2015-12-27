@@ -409,3 +409,6 @@ install(FILES
     DESTINATION ${DocumentsDirectory}
 )
 endif()
+
+# install examples for enfuse weights
+add_subdirectory(examples/enfuse)
