@@ -174,7 +174,7 @@ AS_IF([test "$with_dl" != no],
            fi
        fi])
 AC_SUBST(DL_IMPLEMENTATION)
-AM_CONDITIONAL([DYNAMIC_EXPOSURE_WEIGHTS], [test "$with_dl" = yes])
+AM_CONDITIONAL([DYNAMIC_EXPOSURE_WEIGHTS], [test "$enable_dynload" = yes])
 
 # Checks for header files.
 AC_HEADER_DIRENT
