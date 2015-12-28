@@ -563,7 +563,7 @@ namespace ocl
             }
         }
 
-#ifdef PREFER_SEPARATE_OPENCL_SOURCE
+#if defined PREFER_SEPARATE_OPENCL_SOURCE || defined ENFUSE_SOURCE
         {
             const std::vector<std::string> paths(construct_search_path());
 
@@ -582,7 +582,8 @@ namespace ocl
             }
             std::cout << "\n";
         }
-#endif // PREFER_SEPARATE_OPENCL_SOURCE
+#endif // PREFER_SEPARATE_OPENCL_SOURCE || ENFUSE_SOURCE
+        return true;
     }
 
 
