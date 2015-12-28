@@ -1,0 +1,35 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\section[Command-Line Options]{\label{sec:options}%
+  \genidx[\rangebeginlocation]{options}%
+  Command-Line Options}
+
+In this section we group the options as the command-line help
+\begin{terminal}
+  \$ \app{} --help
+\end{terminal}
+does and sort them alphabetically within their groups.  For an alphabetic list of \emph{all}
+options consult the \flexipageref{Option Index}{sec:option-index}.
+
+\appcmd{} accepts arguments to any option in uppercase as well as in lowercase letters.  For
+example, \sample{deflate}, \sample{Deflate} and \sample{DEFLATE} as arguments to the
+\option{--compression}~option described below all instruct \appcmd{} to use the
+\propername{Deflate} compression scheme.  This manual denotes all arguments in lowercase for
+consistency.
+
+\input{common-common-options}
+\input{common-advanced-options}
+\input{enblend-mask-generation-options}
+\input{common-expert-options}
+\input{enblend-expert-mask-generation-options}
+\input{common-information-options}
+\input{enblend-flow-charts}
+
+\genidx[\rangeendlocation]{options}
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:

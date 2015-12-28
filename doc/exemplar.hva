@@ -1,0 +1,26 @@
+%% -*- latex -*-
+
+
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+%% Additional floating environment `exemplar'.
+%% Modeled closely after Hevea's original code.
+
+
+\setenvclass{exemplar}{exemplar}
+
+\newcommand{\@exrule}{\begin{center}\@hr{.8\linewidth}{2pt}\end{center}}
+
+\newcounter{exemplar}
+\renewcommand{\theexemplar}{\thesection.\arabic{exemplar}}
+
+\newcommand{\exemplarname}{Exemplar}
+
+\newenvironment{exemplar}[1][]
+{\@forcecommand{\caption}[2][]{\hva@caption{exemplar}{##2}}%
+\@open@quote{\envclass@attr{exemplar}}\@exrule}
+{\@exrule\@close@quote}
+
+\newenvironment{exemplar*}[1][]{\begin{exemplar}[#1]}{\end{exemplar}}

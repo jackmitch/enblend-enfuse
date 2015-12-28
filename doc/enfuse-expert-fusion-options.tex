@@ -1,0 +1,542 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\subsection[Expert Fusion Options]{\label{sec:expert-fusion-options}%
+  \genidx[\rangebeginlocation]{expert fusion options}%
+  \genidx{options!fusion for experts}%
+  Expert Fusion Options}
+
+Expert fusion options control details of contrast-weight algorithms and they set ultimate
+cutoffs for entropy and exposure fusion.
+
+\begin{codelist}
+  \label{opt:contrast-edge-scale}%
+  \optidx[\defininglocation]{--contrast-edge-scale}%
+  \genidx{Laplacian-of-Gaussian@\propername{Laplacian}-of-\propername{Gaussian}}%
+\item[\itempar{--contrast-edge-scale=\metavar{EDGE-SCALE}\optional{:\feasiblebreak
+      \metavar{LCE-SCALE}:\feasiblebreak\metavar{LCE-FACTOR}}}]\itemend
+  A non-zero value for \metavar{EDGE-SCALE} switches on the
+  \propername{Laplacian}\hyp{}of\hyp{}\propername{Gaussian}
+  (\acronym{LoG}\gensee{LoG@\acronym{LoG}}{\propername{Laplacian}-of-\propername{Gaussian}})
+  edge detection algorithm.  \metavar{EDGE-SCALE} is the radius of the \propername{Gaussian}
+  used in the search for edges.  Default: \val{val:default-edge-scale}~pixels.
+
+  \genidx{contrast!local enhancement}%
+  \gensee{local contrast enhancement}{contrast, local enhancement}%
+  \gensee{LCE@\acronym{LCE}}{local contrast enhancement}%
+  A positive \metavar{LCE-SCALE} turns on local contrast enhancement (\acronym{LCE}) before the
+  \acronym{LoG} edge detection.  \metavar{LCE-SCALE} is the radius of the \propername{Gaussian}
+  used in the enhancement step, \metavar{LCE-FACTOR} is the weight factor (``strength'').
+  \App{} calculates the \metavar{enhanced} values of the \metavar{original} ones with
+
+  \begin{adalisting}
+enhanced :=
+    (1 + LCE-FACTOR) * original -
+    LCE-FACTOR * GaussianSmooth(original,
+                                LCE-SCALE).
+  \end{adalisting}
+
+  \metavar{LCE-SCALE} defaults to \val{val:default-lce-scale}~pixels and \metavar{LCE-FACTOR}
+  defaults to \val{val:default-lce-factor}.  Append \sample{\%} to \metavar{LCE-SCALE} to
+  specify the radius as a percentage of \metavar{EDGE-SCALE}.  Append \sample{\%} to
+  \metavar{LCE-FACTOR} to specify the weight as a percentage.
+
+
+  \label{opt:contrast-min-curvature}%
+  \optidx[\defininglocation]{--contrast-min-curvature}%
+  \genidx{contrast!minimum curvature}%
+\item[--contrast-min-curvature=\metavar{CURVATURE}]\itemend
+  Define the minimum \metavar{CURVATURE} for the \acronym{LoG} edge detection.  Default:
+  \val{val:default-minimum-curvature}.  Append a \sample{\%} to specify the minimum curvature
+  relative to maximum pixel value in the source image (for example 255 or~65535).
+
+  A positive value makes \App{} use the local contrast data (controlled with
+  option~\option{--contrast-window-size}) for curvatures less than \metavar{CURVATURE} and
+  \acronym{LoG} data for values above it.
+
+  A negative value truncates all curvatures less than $-\metavar{CURVATURE}$ to zero.  Values
+  above \metavar{CURVATURE} are left unchanged.  This effectively suppresses weak edges.
+
+
+  \label{opt:contrast-window-size}%
+  \optidx[\defininglocation]{--contrast-window-size}%
+  \genidx{contrast!window size}%
+  \gensee{window size!contrast}{contrast, window size}%
+\item[--contrast-window-size=\metavar{SIZE}]\itemend
+  Set the window \metavar{SIZE} for local contrast analysis.  The window will be a square of
+  $\metavar{SIZE} \times \metavar{SIZE}$~pixels.  If given an even \metavar{SIZE}, \App{} will
+  automatically use the next odd number.
+
+  For contrast analysis \metavar{SIZE} values larger than 5~pixels might result in a blurry
+  composite image.  Values of 3 and~5~pixels have given good results on focus stacks.
+
+  Valid range: $\metavar{SIZE} \geq \val{val:minimum-contrast-window-size}$, default:
+  \val{val:default-contrast-window-size}~pixels.
+
+  See also \sectionName~\ref{sec:fusion-options}, options \option{--contrast-weight}~and
+  \option{--hard-mask} below.
+
+
+  \label{opt:entropy-cutoff}%
+  \optidx[\defininglocation]{--entropy-cutoff}%
+  \genidx{entropy!cutoff}%
+  \gensee{cutoff entropy}{entropy, cutoff}%
+\item[--entropy-cutoff=\metavar{LOWER-CUTOFF}\optional{:\metavar{UPPER-CUTOFF}}]\itemend
+  Define a cutoff function~$Y'$ for the normalized luminance~$Y$ by \metavar{LOWER-CUTOFF} and
+  \metavar{UPPER-CUTOFF}, which gets applied (only) before the local-entropy calculation.
+  \metavar{LOWER-CUTOFF} is the value below which pixels are mapped to pure black when
+  calculating the local entropy of the pixel's surroundings.  Optionally also define the
+  \metavar{UPPER-CUTOFF} value above which pixels are mapped to pure white.
+
+  \begin{equation}\label{equ:luminance-entropy-cutoff}
+  Y' = \left\{
+  \begin{array}{ll}
+    0 & \quad \mbox{for }Y \le \metavar{LOWER-CUTOFF}, \\
+    1 & \quad \mbox{for }Y \ge \metavar{UPPER-CUTOFF}\mbox{ and} \\
+    Y & \quad \mbox{otherwise.}
+  \end{array}
+  \right.
+  \end{equation}
+
+  Also see \sectionName~\fullref{sec:local-entropy-weighting} for an explanation of local
+  entropy.  \figureName~\fullref{fig:entropy-cutoff} shows an example for the luminance mapping.
+
+  Note that the entropy cutoff does not apply directly to the local-entropy~$H$ of a pixel or
+  its weight~$w_H$, but the luminance image that get fed into the local-entropy weight
+  calculation.  However, assigning \emph{constant} values to extreme shadows or highlights
+  in general decreases their local entropy, thereby reducing the pixels' weights.
+
+  For color images \metavar{LOWER-CUTOFF} and \metavar{UPPER-CUTOFF} are applied separately and
+  independently to each channel.
+
+  Append a \sample{\%}-sign to specify the cutoff relative to maximum pixel value in the source
+  image (for example 255 or~65535).  Negative \metavar{UPPER-CUTOFF} values indicate the maximum
+  minus the absolute \metavar{UPPER-CUTOFF} value; the same holds for negative percentages.
+
+  Defaults: \val{val:default-entropy-lower-cutoff} for \metavar{LOWER-CUTOFF} and
+  \val{val:default-entropy-upper-cutoff} for \metavar{UPPER-CUTOFF}, that is, all pixels' values
+  are taken into account.
+
+  \begin{figure}[htbp]
+    \begin{maxipage}
+      \centering
+      \includeimage{entropy-cutoff}
+    \end{maxipage}
+
+    \caption[Entropy cutoff function]{\label{fig:entropy-cutoff}%
+      Modified lightness~$Y'$, \equationabbr~\ref{equ:luminance-entropy-cutoff}, for
+      $\metavar{LOWER-CUTOFF} = 5\%$ and $\metavar{UPPER-CUTOFF} = 90\%$, which are rather
+      extreme values.}
+  \end{figure}
+
+  \begin{geeknote}
+    Note that a high \metavar{LOWER-CUTOFF} value lightens the resulting image, as dark and
+    presumably noisy pixels are averaged with \emph{equal} weights.  With
+    $\metavar{LOWER-CUTOFF} = 0$, the default, on the other hand, ``noise'' might be interpreted
+    as high entropy and the noisy pixels get a high weight, which in turn renders the resulting
+    image darker.  Analogously, a low \metavar{UPPER-CUTOFF} darkens the output image.
+  \end{geeknote}
+
+  \label{opt:entropy-window-size}%
+  \optidx[\defininglocation]{--entropy-window-size}%
+  \genidx{entropy!window size}%
+  \gensee{window size!entropy}{entropy, window size}%
+\item[--entropy-window-size=\metavar{SIZE}]\itemend
+  Window \metavar{SIZE} for local entropy analysis.  The window will be a square of
+  $\metavar{SIZE} \times \metavar{SIZE}$~pixels.
+
+  In the entropy calculation \metavar{SIZE} values of 3 to~7 yield an acceptable compromise of
+  the locality of the information and the significance of the local entropy value itself.
+
+  Valid range: $\metavar{SIZE} \geq \val{val:minimum-entropy-window-size}$, default:
+  \val{val:default-entropy-window-size}~pixels.
+
+  If given an even \metavar{SIZE} \App{} will automatically use the next-larger odd number.
+
+
+  \label{opt:exposure-cutoff}%
+  \optidx[\defininglocation]{--exposure-cutoff}%
+  \genidx{exposure!cutoff}%
+  \gensee{cutoff!exposure}{exposure, cutoff}%
+\item[\itempar{--exposure-cutoff=\metavar{LOWER-CUTOFF}\optional{:\feasiblebreak
+      \metavar{UPPER\hyp{}CUTOFF}\optional{:\feasiblebreak
+        \metavar{LOWER\hyp{}PROJECTOR}:\feasiblebreak
+        \metavar{UPPER\hyp{}PROJECTOR}}}}]\itemend
+  Define an exposure-cutoff function by the luminances \metavar{LOWER-CUTOFF} and
+  \metavar{UPPER-CUTOFF}.  Pixels below the lower or above the upper cutoff get a weight of
+  exactly zero irrespective of the active exposure-weight function.
+
+  For color images the values of \metavar{LOWER-CUTOFF} and \metavar{UPPER-CUTOFF} refer to the
+  gray-scale projection as selected with \metavar{LOWER\hyp{}PROJECTOR} and
+  \metavar{UPPER\hyp{}PROJECTOR}.  This is similar to option~\option{--gray-projector}.
+
+  Append a \sample{\%}-sign to specify the cutoff relative to maximum pixel value in the source
+  image (for example 255 or~65535).  Negative \metavar{UPPER-CUTOFF} values indicate the maximum
+  minus the absolute \metavar{UPPER-CUTOFF} value; the same holds for negative percentages.
+
+  \begin{geeknote}
+    The impact of this option is similar, but not identical to transforming \emph{all} input
+    images with \uref{\imagemagickorg}{ImageMagick's}\appidx{ImageMagick}
+    \command{convert}\prgidx{convert} (see \appendixName~\fullref{sec:helpful-programs}) prior
+    to fusing with the commands demonstrated in
+    \exampleName~\ref{ex:imagemagick-convert-cutoff}.
+
+    \begin{exemplar}[htbp]
+      \begin{terminal}
+        \$ convert IMAGE \bslash \\
+        ~~~~~~~~~~~\bslash( +clone -threshold LOWER-CUTOFF \bslash) \bslash \\
+        ~~~~~~~~~~~-compose copy\_opacity -composite \bslash \\
+        ~~~~~~~~~~~MASKED-IMAGE
+      \end{terminal}
+
+      \smallskip
+
+      \begin{terminal}
+        \$ convert IMAGE \bslash \\
+        ~~~~~~~~~~~\bslash( \bslash \\
+        ~~~~~~~~~~~~~~~\bslash( IMAGE -threshold LOWER-CUTOFF \bslash) \bslash \\
+        ~~~~~~~~~~~~~~~\bslash( IMAGE -threshold UPPER-CUTOFF -negate \bslash) \bslash \\
+        ~~~~~~~~~~~~~~~-compose multiply -composite \bslash \\
+        ~~~~~~~~~~~\bslash) \bslash \\
+        ~~~~~~~~~~~-compose copy\_opacity -composite \bslash \\
+        ~~~~~~~~~~~MASKED-IMAGE
+      \end{terminal}
+
+      \caption[\application{ImageMagick} for exposure cutoff]{\label{ex:imagemagick-convert-cutoff}%
+        Using \application{ImageMagick} for exposure cutoff operations.  The first example only
+        applies a lower cutoff, wherease the second one applies both a lower and an upper cutoff
+        to the images.}
+    \end{exemplar}
+
+    Transforming some or all input images as shown in the example gives the user more
+    flexibility because the thresholds can be chosen for each image individually.
+  \end{geeknote}
+
+  The option allows to specify projection operators as in option~\option{--gray-projector} for
+  the \metavar{LOWER-CUTOFF} and \metavar{UPPER-CUTOFF} thresholds.
+
+  This option can be helpful if the user wants to exclude underexposed or overexposed pixels
+  from the fusing process in \emph{all} of the input images.  The values of
+  \metavar{LOWER-CUTOFF} and \metavar{UPPER-CUTOFF} as well as the gray-scale projector
+  determine which pixels are considered ``underexposed'' or ``overexposed''.  As any change of
+  the exposure-weight curve this option changes the brightness of the resulting image:
+  increasing \metavar{LOWER-CUTOFF} lightens the final image and lowering \metavar{UPPER-CUTOFF}
+  darkens it.
+
+  Defaults: \val{val:default-exposure-lower-cutoff} for \metavar{LOWER-CUTOFF} and
+  \val{val:default-exposure-upper-cutoff} for \metavar{UPPER-CUTOFF}, that is, all pixels'
+  values are weighted according to the ``uncut'' exposure-weight curve.
+
+  \figureName~\ref{fig:exposure-cutoff} shows an example.
+
+  The gray-scale projectors \metavar{LOWER-PROJECTOR} and \metavar{UPPER\hyp{}PROJECTOR} default
+  to \sample{\val{val:default-exposure-lower-cutoff-projector}} and
+  \sample{\val{val:default-exposure-upper-cutoff-projector}}, which are usually the best choices
+  for effective cutoff operations on the respective ends.
+
+  \begin{figure}
+    \begin{maxipage}
+      \centering
+      \includeimage{exposure-cutoff}
+    \end{maxipage}
+
+    \caption[Exposure cutoff function]{\label{fig:exposure-cutoff}%
+      Exposure weight~$w_Y$ after an exposure-cutoff of $\metavar{LOWER-CUTOFF} = 5\%$ and
+      $\metavar{UPPER-CUTOFF} = 97\%$ was applied to a \propername{Gaussian} with the
+      $\metavar{optimum} = 0.5$ and $\metavar{width} = 0.2$.}
+  \end{figure}
+
+  Note that the application of the respective cutoffs is completely independent of the actual
+  shape of the exposure weight function.
+
+  If a set of images stubbornly refuses to ``react'' to this option, look at their histograms to
+  verify the cutoff actually falls into populated ranges of the histograms.  In the absence of
+  an image manipulation program like \uref{\gimporg}{\application{The Gimp}}\appidx{Gimp},
+  \uref{\imagemagickorg}{ImageMagick's}\appidx{ImageMagick} can be used to generate
+  \uref{\imagemagickorgusagefileshistogram}{histograms}, like, for example,
+
+  \begin{terminal}
+    \$ convert -define histogram:unique-colors=false \bslash \\
+    ~~~~~~~~~~~IMAGE histogram:- | \bslash \\
+    ~~~~~~~display
+  \end{terminal}
+
+  The syntax of this option is flexible enough to combine ease of use and precision, as
+  \tableName~\ref{tab:flexible-exposure-cutoff} demonstrates.
+
+  \begin{table}[htbp]
+    \begin{maxipage}
+      \begin{tabular}{p{.3\linewidth}lp{.3\linewidth}}
+        \hline
+        \multicolumn{1}{c|}{Task} &
+        \multicolumn{1}{c|}{Cutoff Setting} &
+        \multicolumn{1}{c}{Effect} \\
+        \hline\extraheadingsep
+        Suppress some noise. & \option{--exposure-cutoff=5\%} & The percentage makes the cutoff
+        specification channel-width agnostic. \\
+
+        Shave off pure white pixels. & \option{--exposure-cutoff=0:-1} & This cutoff
+        specification only works for integral pixels, but it will set the weight of the very
+        brightest pixels to zero. \\
+
+        Shave off bright white pixels. & \option{--exposure-cutoff=0:-1\%} & Here we exclude the
+        brightest 1\% of pixels form the exposure fusion no matter whether the image is encoded
+        with integers or floating-point numbers. \\
+
+        Suppress some noise and shave off pure white pixels. & \option{--exposure-cutoff=5\%:-1}
+        & Combine the effects of lower and upper cutoff, while mixing relative and absolute
+        specifications.
+      \end{tabular}
+    \end{maxipage}
+
+    \caption[Flexible exposure cutoff]{\label{tab:flexible-exposure-cutoff}%
+      Some possible exposure-cutoff settings and their effects on the exposure weights.}
+  \end{table}
+
+
+  \label{opt:exposure-weight-function}%
+  \optidx[\defininglocation]{--exposure-weight-function}%
+  \genidx{weight!function!exposure}%
+  \gensee{exposure weight!function}{weight, function, exposure}%
+\item[\itempar{--exposure-weight-function=\metavar{WEIGHT-FUNCTION}~\textrm{(\oldstylefirst~form)}
+    \\ --exposure-weight-function=\metavar{SHARED-OBJECT}:\feasiblebreak
+    \metavar{SYMBOL}\optional{:\feasiblebreak
+      \metavar{ARGUMENT}\optional{:\dots}}~\textrm{(\oldstylesecond~form)}}]\itemend
+  First form: override the default (\sample{\val{val:exposure-weight-function}}) exposure weight
+  function and use one of the weight-functions in
+  \tableName~\fullref{tab:exposure-weight-functions}.
+
+  \restrictednote{Versions with dynamic-linking support only.}  See
+  \sectionName~\fullref{sec:finding-out-details} on how to check for this feature.
+
+  \genidx{shared object}%
+  \gensee{object!shared}{shared object}%
+  \noindent Second form: dynamically load \metavar{SHARED-OBJECT} and use \metavar{SYMBOL} as
+  user-defined exposure weight function.  Optionally pass the user-defined function
+  \metavar{ARGUMENT}s.
+
+  \begin{geeknote}
+    \genidx{dynamic library}%
+    \gensee{library!dynamic}{dynamic library}%
+    Depending on the operating system environment, a ``shared object'' is sometimes also called
+    a ``dynamic library''.
+  \end{geeknote}
+
+  \genidx{exposure weight!linear transform}%
+
+  In \tableName~\ref{tab:exposure-weight-functions} the variable~$w_{\mathrm{exp}}$ denotes the
+  exposure weight and $z$ represents the normalized luminance~$Y$ linearly transformed by the
+  exposure optimum~$Y_{\mathrm{opt}}$ (option~\option{--exposure-optimum}) and \metavar{width}
+  (option~\option{--exposure-width}) according to the linear transform
+  \begin{equation}\label{equ:linear-luminance-transform}
+  z = \frac{Y - Y_{\mathrm{opt}}}{\mathit{width}}.
+  \end{equation}
+
+ \genidx{exposure weight function!full width half maximum}%
+ \genidx{exposure weight function!\acronym{FWHM}}%
+ \genidx{full width half maximum}%
+ \gensee{FWHM@\acronym{FWHM}}{full width half maximum}%
+ Internally \App{} uses a rescaled \metavar{width} that gives all weight functions the same full
+ width at half of the maximum (\acronym{FWHM}), also see \figureName~\ref{fig:exposure-weights}.
+ This means for the user that changing the exposure function neither changes the optimum
+ exposure nor the width.
+
+  \begin{table}[htbp]
+    \begin{codelist}
+      \genidx{exposure weight function!gauss}%
+      \genidx{exposure weight function!gaussian}%
+    \item[\itempar{gauss \\ gaussian}]\itemend
+      The original exposure weight function of \App{} and the only one up to version~4.1.
+      \begin{equation}\label{equ:weight:gauss}
+      w_{\mathrm{exp}} = \exp\left({-z^2 / 2}\right)
+      \end{equation}
+
+      \genidx{exposure weight function!lorentz}%
+      \genidx{exposure weight function!lorentzian}%
+    \item[\itempar{lorentz \\ lorentzian}]\itemend
+      Lorentz curve.
+      \begin{equation}\label{equ:weight:lorentz}
+      w_{\mathrm{exp}} = \frac{1}{1 + z^2 / 2}
+      \end{equation}
+
+      \genidx{exposure weight function!halfsine}%
+      \genidx{exposure weight function!half-sine}%
+    \item[\itempar{halfsine \\ half-sine}]\itemend
+      Upper half-wave of a sine; exactly zero outside.
+      \begin{equation}\label{equ:weight:halfsine}
+      w_{\mathrm{exp}} =
+      \left\{\begin{array}{cl}
+      \cos(z) & \mbox{if } |z| \leq \pi/2 \\
+      0       & \mbox{otherwise.}
+      \end{array}\right.
+      \end{equation}
+
+      \genidx{exposure weight function!fullsine}%
+      \genidx{exposure weight function!full-sine}%
+    \item[\itempar{fullsine \\ full-sine}]\itemend
+      Full sine-wave shifted upwards by one to give all positive weights; exactly zero outside.
+      \begin{equation}\label{equ:weight:fullsine}
+      w_{\mathrm{exp}} =
+      \left\{\begin{array}{cl}
+      (1 + \cos(z)) / 2 & \mbox{if } |z| \leq \pi \\
+      0                 & \mbox{otherwise.}
+      \end{array} \right.
+      \end{equation}
+
+      \genidx{exposure weight function!bisquare}%
+      \genidx{exposure weight function!bi-square}%
+    \item[\itempar{bisquare \\ bi-square}]\itemend
+      Quartic function.
+      \begin{equation}\label{equ:weight:bisquare}
+      w_{\mathrm{exp}} =
+      \left\{
+      \begin{array}{cl}
+        1 - z^4 & \mbox{if } |z| \leq 1 \\
+        0       & \mbox{otherwise.}
+      \end{array}
+      \right.
+      \end{equation}
+    \end{codelist}
+
+    \caption[Exposure weight functions]{\label{tab:exposure-weight-functions}%
+      \genidx[\summarylocation]{exposure weight function}%
+      Predefined exposure weight functions.  For a graphical comparison see
+      \figureName~\ref{fig:exposure-weights}.}
+  \end{table}
+
+  For a detailed explanation of all the weight functions
+  \sectionName~\fullref{sec:exposure-weighting}.
+
+  If this option is given more than once, the last instance wins.
+
+
+  \label{opt:gray-projector}%
+  \optidx[\defininglocation]{--gray-projector}%
+  \genidx{gray projector}%
+  \gensee{projector to grayscale}{gray projector}%
+\item[--gray-projector=\metavar{PROJECTOR}]\itemend
+  Use gray projector~\metavar{PROJECTOR} for conversion of \acronym{RGB} images to grayscale:
+  \[
+  (R, G, B) \rightarrow Y.
+  \]
+
+  In this version of \App{}, the option is effective for exposure weighting and local contrast
+  weighting and \metavar{PROJECTOR} defaults to \sample{\val{val:default-grayscale-accessor}}.
+
+  Valid values for \metavar{PROJECTOR} are:
+
+  \begin{codelist}
+    \genidx{gray projector!anti-value@\code{anti-value}}%
+    \gensee{anti-value gray projector@\code{anti-value} gray projector}%
+           {gray projector, \code{anti-value}}%
+  \item[anti-value]\itemend
+    Do the opposite of the \sample{value} projector: take the minimum of all color channels.
+    \[
+    Y = \min(R, G, B)
+    \]
+    This projector can be useful when exposure weighing while employing a lower cutoff (see
+    option~\option{--exposure-cutoff}) to reduce the noise in the fused image.
+
+    \genidx{gray projector!average@\code{average}}%
+    \gensee{average gray projector@\code{average} gray projector}%
+           {gray projector, \code{average}}%
+  \item[average]\itemend
+    Average red, green, and blue channel with equal weights.  This is the default, and it often
+    is a good projector for $\mbox{gamma} = 1$ data.
+    \[
+    Y = \frac{R + G + B}{3}
+    \]
+
+    \genidx{gray projector!channel-mixer@\code{channel-mixer}}%
+    \gensee{channel-mixer gray projector@\code{channel-mixer} gray projector}%
+           {gray projector, \code{channel-mixer}}%
+  \item[\itempar{channel-mixer:\metavar{RED-WEIGHT}:\feasiblebreak
+    \metavar{GREEN-WEIGHT}:\feasiblebreak\metavar{BLUE-WEIGHT}}]\itemend
+    Weight the channels as given.
+    \[
+    \begin{array}{r@{\hspace{1ex}}c@{\hspace{1ex}}l@{\hspace{1ex}}c@{\hspace{1ex}}cc}
+      Y & = & \metavar{RED-WEIGHT}   & \times & R & + \\
+        &   & \metavar{GREEN-WEIGHT} & \times & G & + \\
+        &   & \metavar{BLUE-WEIGHT}  & \times & B &
+    \end{array}
+    \]
+
+    The weights are automatically normalized to one, so
+
+    \begin{literal}
+      --gray-projector=channel-mixer:0.25:0.5:0.25 \\
+      --gray-projector=channel-mixer:1:2:1 \\
+      --gray-projector=channel-mixer:25:50:25
+    \end{literal}
+
+    all define the same mixer configuration.
+
+    The three weights \metavar{RED-WEIGHT}, \metavar{GREEN\hyp{}WEIGHT}, and
+    \metavar{BLUE\hyp{}WEIGHT} define the relative weight of the respective color channel.  The
+    sum of all weights is normalized to one.
+
+    \genidx{gray projector!l-star@\code{l-star}}%
+    \gensee{l-star gray projector@\code{l-star} gray projector}%
+           {gray projector, \code{l-star}}%
+    \genidx{RGB-L*a*b* conversion@\acronym{RGB}-\acronym{L*a*b*} conversion}%
+    \gensee{conversion!RGB-L*a*b*@\acronym{RGB}-\acronym{L*a*b*}}%
+           {\acronym{RGB}-\acronym{L*a*b*} conversion}%
+  \item[l-star]\itemend
+    Use the L-channel of the L*a*b*-conversion of the image as its grayscale representation.
+    This is a useful projector for $\mbox{gamma} = 1$ data.  It reveals minute contrast
+    variations even in the shadows and the highlights.  This projector is computationally
+    expensive.  Compare with \sample{pl-star}, which is intended for gamma-corrected images.
+
+    See \uref{\wikipedialabcolorspace}{Wikipedia} for a detailed description of the
+    \acronym{Lab}~color space.
+
+    \genidx{gray projector!lightness@\code{lightness}}%
+    \gensee{lightness gray projector@\code{lightness} gray projector}%
+           {gray projector, \code{lightness}}%
+  \item[lightness]\itemend
+    Compute the lightness of each \acronym{RGB} pixel as in an
+    Hue\hyp{}Saturation\hyp{}Lightness (\acronym{HSL}) conversion of the image.
+    \[
+    Y = \frac{\max(R, G, B) + \min(R, G, B)}{2}
+    \]
+
+    \genidx{gray projector!luminance@\code{luminance}}%
+    \gensee{luminance gray projector@\code{luminance} gray projector}%
+           {gray projector, \code{luminance}}%
+  \item[luminance]\itemend
+    Use the weighted average of the \acronym{RGB} pixel's channels as defined by \acronym{CIE}
+    (``Commission Internationale de l'\'Eclairage'') and the \acronym{JPEG} standard.
+    \[
+    Y = 0.30 \times R + 0.59 \times G + 0.11 \times B
+    \]
+
+    \genidx{gray projector!pl-star@\code{pl-star}}%
+    \gensee{pl-star gray projector@\code{pl-star} gray projector}%
+           {gray projector, \code{pl-star}}%
+    \genidx{RGB'-L*a*b* conversion@\acronym{RGB'}-\acronym{L*a*b*} conversion}%
+  \item[pl-star]\itemend
+    Use the L-channel of the L*a*b*-conversion of the image as its grayscale representation.
+    This is a useful projector for gamma-corrected data.  It reveals minute contrast variations
+    even in the shadows and the highlights.  This projector is computationally expensive.
+    Compare with \sample{l-star}, which is intended for $\mbox{gamma} = 1$ images.
+
+    See \uref{\wikipedialabcolorspace}{Wikipedia} for a detailed description of the
+    \acronym{Lab}~color space.
+
+    \genidx{gray projector!value@\code{value}}%
+    \gensee{value gray projector@\code{value} gray projector}{gray projector, \code{value}}%
+  \item[value]\itemend
+    Take the Value-channel of the Hue-Saturation-Value (\acronym{HSV}) conversion of the image.
+    \[
+    Y = \max(R, G, B)
+    \]
+  \end{codelist}
+\end{codelist}
+
+\genidx[\rangeendlocation]{expert fusion options}
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:

@@ -1,0 +1,222 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+%% Open ``Color Schemer Online''
+%%     http://www.colorschemer.com/online.html
+%% enter '66FF33' in the field `#' and click `Set HEX'.  The first column ``Color Suggestions''.
+%% The color names are our own; they are neither related to X11 or dvi2ps color names.
+%%
+%%   Suggestions     Color Name        CSS Usage      Print Replacement
+%%   ===========    =============    =============    =================
+%%     #66ff33      limegreen        chapter
+%%     #33ff66      grassgreen       section
+%%     #33ffcc      seagreen         subsection
+%%     #33ccff      skyblue          subsubsection
+%%     #3366ff      navyblue
+%%     #6633ff      violetblue
+%%     #cc33ff      purple
+%%     #ff33cc      rhodamine        fix-me           lightgray
+%%     #ff3366      orangered
+%%     #ff6633      brickred
+%%     #ffcc33      dandelion        restrictednote
+%%     #ccff33      springgreen      geeknote         lightlightgray
+%%     #3df500      green            terminal
+%%     #2eb800      forestgreen
+%%     #b800f5      orchid
+%%     #8a00b8      fuchsia
+%%
+%%   Supplements
+%%   -----------    -------------    -------------    -----------------
+%%     #cccccc      gray             literal
+
+
+%% Physical Color Definitions
+\definecolor{limegreen}{rgb}{0.4, 1, 0.2}        % #66ff33
+\definecolor{grassgreen}{rgb}{0.2, 1, 0.4}       % #33ff66
+\definecolor{seagreen}{rgb}{0.2, 1, 0.8}         % #33ffcc
+\definecolor{skyblue}{rgb}{0.2, 0.8, 1}          % #33ccff
+\definecolor{navyblue}{rgb}{0.2, 0.4, 1}         % #3366ff
+\definecolor{violetblue}{rgb}{0.4, 0.2, 1}       % #6633ff
+\definecolor{purple}{rgb}{0.8, 0.2, 1}           % #cc33ff
+\definecolor{rhodamine}{rgb}{1, 0.2, 0.8}        % #ff33cc
+\definecolor{orangered}{rgb}{1, 0.2, 0.4}        % #ff3366
+\definecolor{brickred}{rgb}{1, 0.4, 0.2}         % #ff6633
+\definecolor{dandelion}{rgb}{1, 0.8, 0.2}        % #ffcc33
+\definecolor{springgreen}{rgb}{0.8, 1, 0.2}      % #ccff33
+\definecolor{green}{rgb}{0.24, 0.96, 0}          % #3df500
+\definecolor{forestgreen}{rgb}{0.18, 0.72, 0}    % #2eb800
+\definecolor{orchid}{rgb}{0.72, 0, 0.96}         % #b800f5
+\definecolor{fuchsia}{rgb}{0.54, 0, 0.72}        % #8a00b8
+
+\definecolor{black}{rgb}{0, 0, 0}
+\definecolor{gray}{rgb}{0.8, 0.8, 0.8}
+\definecolor{lightgray}{rgb}{0.9, 0.9, 0.9}
+\definecolor{lightlightgray}{rgb}{0.95, 0.95, 0.95}
+\definecolor{white}{rgb}{1, 1, 1}
+
+
+%% Logical Color Definitions
+\newcommand*{\bodybackgroundcolor}{white}
+\newcommand*{\bodyforegroundcolor}{black}
+\newcommand*{\chapterbackgroundcolor}{limegreen}
+\newcommand*{\fixmebackgroundcolor}{\ifhevea rhodamine\else lightgray\fi}
+\newcommand*{\geeknotebackgroundcolor}{\ifhevea springgreen\else lightlightgray\fi}
+\newcommand*{\literalbackgroundcolor}{gray}
+\newcommand*{\restrictedmaterialbordercolor}{dandelion}
+\newcommand*{\sectionbackgroundcolor}{grassgreen}
+\newcommand*{\subsectionbackgroundcolor}{seagreen}
+\newcommand*{\subsubsectionbackgroundcolor}{skyblue}
+\newcommand*{\terminalbackgroundcolor}{black}
+\newcommand*{\terminalbordercolor}{gray}
+\newcommand*{\terminalcolor}{green}
+\newcommand*{\titlebackgroundcolor}{skyblue}
+\newcommand*{\titleforegroundcolor}{black}
+
+
+%% Font Family Definitions
+\newcommand*{\seriffontfamily}{Verdana, sans-serif}% Georgia, serif
+\newcommand*{\sansfontfamily}{Verdana, sans-serif}
+\newcommand*{\fixedfontfamily}{"Andale Mono", Courier, monospace}
+
+
+\newstyle{.adalisting}%
+{%
+  font-family: \fixedfontfamily;
+  white-space: pre;
+}
+
+
+\newstyle{body}%
+{%
+  background: \@getcolor{\bodybackgroundcolor};
+  color: \@getcolor{\bodyforegroundcolor};
+  font-family: \seriffontfamily;
+  margin-left: 15\%;
+  margin-right: 15\%;
+}
+
+
+\newstyle{.chapter}%
+{%
+  background: \@getcolor{\chapterbackgroundcolor};
+  margin-left: -10\%;
+  margin-right: -10\%;
+  padding: 0.75em;
+}
+
+
+\newstyle{.cxxlisting}%
+{%
+  font-family: \fixedfontfamily;
+  white-space: pre;
+}
+
+
+\newstyle{.dt-list}%
+{%
+  font-weight: bold;
+}
+
+
+\newstyle{.literal}%
+{%
+  background: \@getcolor{\literalbackgroundcolor};
+  padding: 0.5em;
+}
+
+
+\newstyle{.maxipage}%
+{%
+  border-bottom: thin;
+  border-top: thin;
+  margin-left: -10\%;
+  margin-right: -10\%;
+}
+
+
+\newstyle{.restrictedmaterial}%
+{%
+  border-color: \@getcolor{\restrictedmaterialbordercolor};
+  border-style: solid;
+  border-width: thick;
+  padding: 0.5em;
+}
+
+
+\newstyle{.geeknote}%
+{%
+  background: \@getcolor{\geeknotebackgroundcolor};
+  padding-bottom: 0.25em;
+  padding-left: 0.333em;
+  padding-right: 0.333em;
+  padding-top: 0.25em;
+}
+
+
+%%\newstyle{.quote}%
+%%{%
+%%  font-style: oblique;
+%%}
+
+
+\newstyle{.section}%
+{%
+  background: \@getcolor{\sectionbackgroundcolor};
+  margin-left: -10\%;
+  margin-right: -10\%;
+  padding: 0.75em;
+}
+
+
+\newstyle{.subsection}%
+{%
+  background: \@getcolor{\subsectionbackgroundcolor};
+  padding: 0.5em;
+}
+
+
+\newstyle{.subsubsection}%
+{%
+  background: \@getcolor{\subsubsectionbackgroundcolor};
+  padding: 0.5em;
+}
+
+
+\newstyle{.terminal}%
+{%
+  background: \@getcolor{\terminalbackgroundcolor};
+  border-color: \@getcolor{\terminalbordercolor};
+  border-style: solid;
+  border-width: thick;
+  color: \@getcolor{\terminalcolor};
+  font-family: \fixedfontfamily;
+  padding: 0.25em;
+}
+
+
+\newstyle{.title}
+{
+  font-family: \sansfontfamily;
+}
+
+
+\newstyle{.titlemain}%
+{%
+  background: \@getcolor{\titlebackgroundcolor};
+  color: \@getcolor{\titleforegroundcolor};
+  font-weight: bolder;
+  padding: 1em;
+}
+
+
+\newstyle{.titlerest}%
+{%
+  font-weight: lighter;
+  padding: 0.5em;
+}
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:

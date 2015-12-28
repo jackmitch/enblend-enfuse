@@ -1,0 +1,101 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\RequirePackage[l2tabu, orthodox]{nag}
+
+
+\usepackage{amsmath}       % align, align*
+\usepackage{bold-extra}    % Bold typewriter for programming language keywords
+\usepackage{color}         % \colorbox
+\usepackage{enumitem}
+\usepackage{footnote}      % \makesavenoteenv
+\usepackage{graphicx}      % \includegraphics
+\usepackage{epstopdf}
+\usepackage{hevea}
+\usepackage{hyphenat}      % \hyp
+\usepackage{ifpdf}         % \ifpdf
+\usepackage{latexsym}      % \Box
+\usepackage{listings}
+\usepackage{microtype}     % Improve spacing between words or letters
+\usepackage{ragged2e}      % Improve hyphenation after e.g. \raggedright
+\usepackage{shorttoc}
+\usepackage{suffix}        % \WithSuffix for the definition of starred macros
+\usepackage{url}           % See: /usr/share/doc/texlive-doc/latex/url/url.pdf
+\usepackage{xstring}       % \IfBeginWith, \StrGobbleLeft
+
+
+\input{macros}
+\input{index-def}
+\input{htmlstyle}
+\input{url-def}
+
+
+\input{config-h}
+
+
+% Help graphicx package when this document is processed by something else than original LaTeX.
+% Without intervention other processors happily pull in PNG-files, which belong to the HTML
+% version.
+\DeclareGraphicsExtensions{.eps,.pdf}
+
+
+\ifpdf
+  \hyperreftrue
+\fi
+
+
+\ifhyperref
+  \usepackage{hyperref}    % MUST BE LOADED LATE!  See: https://www.tug.org/applications/hyperref/manual.html
+  \usepackage[all]{hypcap} % MUST BE LOADAD AFTER `hyperref' package!
+
+  \hypersetup{%
+    colorlinks = true,     % color the links themselves, do not use ghastly boxes
+    linkcolor = navyblue,  % use color as defined in "html-style.tex"
+    linktocpage = true,    % color page numbers not their contents lines
+    raiselinks = false,
+    urlcolor = skyblue,    % use color as defined in "html-style.tex"
+  }
+\fi
+
+\providecommand\phantomsection{} % define `\phantomsection' if hyperref is not included
+
+
+\pagestyle{myheadings}
+\renewcommand{\chaptermark}[1]{\markboth{\MakeUppercase{\chaptername\ \thechapter.\ #1}}{}}
+\renewcommand{\sectionmark}[1]{\markright{\MakeUppercase{\thesection.\ #1}}}
+
+
+\tocnumber                 % let Hacha put section numbers into table-of-contents entries
+
+
+\ifhevea
+  \relax
+\else
+  \ifreferencemanual
+    \relax
+  \else
+    \maxipagerulefalse
+  \fi
+\fi
+
+
+\hyphenation{%
+  ba-roque
+  cat-ches chro-mi-n-ance
+  En-blend En-fuse en-tro-py
+  gray-scale
+  lo-rentz-ian lu-mi-n-ance
+  meth-od mim-ic mo-no-chrome
+  Open-CL Open-MP
+  pa-no-ra-ma
+  sour-ces
+}
+
+
+%HEVEA \footerfalse    % Disable hevea advertisement in footer
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:

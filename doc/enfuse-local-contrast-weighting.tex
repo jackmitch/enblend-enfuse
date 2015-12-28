@@ -1,0 +1,264 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\section[Local Contrast Weighting]{\label{sec:local-contrast-weighting}%
+  \genidx{weighting!local contrast}%
+  \gensee{local contrast}{weighting, local contrast}%
+  Local Contrast Weighting}
+
+Local contrast weighting favors pixels inside a high contrast neighborhood.  The notion of
+``high contrast'' is defined either by two different criteria or by a blend of both:
+
+\begin{itemize}
+\item
+  The standard deviation (\acronym{SDev}) of all the pixels in the local analysis window is
+  large.  See \sectionName~\fullref{sec:standard-deviation}.
+
+\item
+  The Laplacian-of-Gaussian (\acronym{LoG}) has a large magnitude.  See
+  \sectionName~\fullref{sec:laplacian-of-gaussian}.
+
+\item
+  If the \acronym{LoG} magnitude is below a given threshold, use \acronym{SDev} data, otherwise
+  stick with \acronym{LoG}.  See \sectionName~\fullref{sec:blend-sdev-and-log}.
+\end{itemize}
+
+\App{} converts every \acronym{RGB} image to grayscale before it determines its contrast.
+Option~\flexipageref{\option{--gray-projector}}{opt:gray-projector} controls the projector
+function.  Depending on the subject, one of several grayscale projectors may yield the best
+black-and-white contrast for image fusion.
+
+In the following sections we describe each algorithm in detail.
+
+
+\subsection[Standard Deviation]{\label{sec:standard-deviation}%
+  \genidx{weighting!contrast using standard deviation}%
+  \gensee{contrast weighting using standard deviation}{weighting, contrast using standard deviation}%
+  Standard Deviation}
+
+\genidx{window!local-analysis}%
+\gensee{local analysis window}{window, local-analysis}%
+The pixel under consideration~\textsf{C} sits exactly in the center of a square, the so-called
+local analysis window.  It always has an uneven edge length.  The user sets the size with
+option~\option{--contrast-window-size}.  \figureName~\ref{fig:local-analysis-window} shows two
+windows with different sizes.
+
+
+\begin{figure}[htbp]
+  \begin{maxipage}
+    \centering
+    \includeimage{local-analysis-window}
+  \end{maxipage}
+
+  \caption[Local analysis window]{\label{fig:local-analysis-window}Examples of local analysis
+    windows for the sizes~3 and~5.  ``\textsf{C}'' marks the center where the pixel gets the
+    weight.  ``\textsf{N}'' denote neighboring pixels, which all contribute to the weight.}
+\end{figure}
+
+
+During the analysis, \App{} scans the local analysis window across all rows and all
+columns\footnote{In the current implementation a \code{floor(contrast-window-size / 2)}-wide
+  border around the images remains unprocessed and gets a weight of zero.}\ of each of the input
+images to compute the contrast weight of every pixel.
+
+\begin{optionsummary}
+\item[--contrast-weight] \sectionName~\fullref{opt:contrast-weight}
+\item[--contrast-window-size] \sectionName~\fullref{opt:contrast-window-size}
+\item[--gray-projector] \sectionName~\fullref{opt:gray-projector}
+\item[--hard-mask] \sectionName~\fullref{opt:hard-mask}
+\end{optionsummary}
+
+
+\subsubsection[Statistical Moments]{\label{sec:statistical-moments}%
+  \genidx{statistical moments}%
+  Statistical Moments}
+
+\genidx{probability function}%
+\genidx{random variable}%
+We start with the probability function~$w$ of the random variable~$X$:
+\[
+    w: x \rightarrow p(\{\omega: X(\omega) = x\}).
+\]
+\noindent It associates a probability~$p$ with each of the $n$ different possible
+outcomes~$\omega$ of the random variable~$X$.
+
+\genidx{expectation value}%
+\genidx{moment!first}%
+\gensee{first moment}{moment, first}%
+Based on $w$, we define the expectation value or ``First Moment'' of the random variable~$X$:
+\[
+    \Ex X := \sum_{i = 1}^n x_i w(x_i).
+\]
+
+\genidx{variance}%
+\genidx{moment!second}%
+\gensee{second moment}{moment, second}%
+Using the definition of the expectation value, we define the
+variance, or ``Second Moment'' as
+\[
+    \Var X := \mbox{\Ex}\left( (X - \Ex X)^2 \right),
+\]
+\genidx{standard deviation}%
+\noindent and the standard deviation as
+\[
+    \sigma \, X := \sqrt{\Var X}.
+\]
+
+Obviously, the variance of $X$ is the expectation value of the squared deviation from the
+expectation value of $X$ itself.  Note that the variance's dimension is $X$'s dimension squared;
+the standard deviation rectifies the dimension to make it comparable with $X$ itself again.
+
+
+\subsubsection[Estimators]{\label{sec:estimators}%
+  \genidx{estimators}%
+  Estimators}
+
+In \App{}, we assume that $X$ follows a uniform probability function~$w(x) = \mbox{const.}$ That
+is, all pixel values in the local analysis window are considered to be equally probable.  Thus,
+the expectation value and the variance can be estimated from the pixel values like this
+\[
+    \mbox{\Ex } X := \frac{1}{n} \sum_{i = 1}^n x_i.
+\]
+\noindent In other words: the expectation value is the arithmetic mean of the lightness of all
+pixels in the local analysis window.  Analogously, the variance becomes
+\[
+    \mbox{\Var } X :=
+    \frac{1}{n - 1} \, \mbox{\Ex}\left( (X - \mbox{\Ex } X)^2 \right).
+\]
+
+
+\subsection[Laplacian of Gaussian]{\label{sec:laplacian-of-gaussian}%
+  \genidx{weighting!contrast using \propername{Laplacian}-of-\propername{Gaussian}}%
+  \gensee{contrast weighting using \propername{Laplacian}-of-\propername{Gaussian}}%
+         {weighting, contrast using \propername{Laplacian}-of-\propername{Gaussian}}%
+  Laplacian of Gaussian}
+
+\genidx{Laplacian-of-Gaussian@\propername{Laplacian}-of-\propername{Gaussian}}%
+\gensee{Log@\acronym{LoG}}{\propername{Laplacian}-of-\propername{Gaussian}}%
+\begin{sloppypar}
+  The \propername{Laplacian}-of-\propername{Gaussian} (\acronym{LoG}) is an operator to detect
+  edges in an image.  Sometimes the \acronym{LoG}-operator is also called
+  \propername{Marr}-\propername{Hildreth} operator.  A
+  \propername{Laplacian}-of-\propername{Gaussian} operator,
+  \uref{\hciiwrvigracommonfilters}{\code{vigra::laplacianOfGaussian}} is part of the
+  package~\uref{\hciiwrvigra}{\acronym{VIGRA}} that \App{} is built upon and is used for edge
+  detection if option~\option{--contrast-edge-scale} is non-zero and
+  \option{--contrast-min-curvature} equal to or less than zero.
+\end{sloppypar}
+
+Let the \propername{Gaussian} function be
+\[
+    g(x, y) =
+    \frac{1}{2 \pi \sigma^2} \,
+    {\exp\left(-\frac{x^2 + y^2}{2 \sigma^2}\right)}
+\]
+\noindent The parameter~$\sigma$, the argument of option~\option{--contrast-edge-scale}, is the
+length scale on which edges are detected by $g(x, y)$.  We apply the \propername{Laplacian}
+operator in \propername{Cartesian} coordinates
+\[
+    \bigtriangleup \equiv \nabla \cdot \nabla =
+    \frac{\partial^2}{\partial x^2} + \frac{\partial^2}{\partial y^2}
+\]
+\noindent to $g(x, y)$, to arrive at a continuous representation of the two-dimensional filter
+kernel
+\begin{equation}\label{equ:laplacian-of-gaussian}
+    k(x, y) = \frac{\xi^2 - 1}{\pi \sigma^4} \exp(-\xi^2),
+\end{equation}
+\noindent where we have used the dimensionless distance~$\xi$ from the origin
+\[
+    \xi^2 = \frac{x^2 + y^2}{2 \sigma^2}.
+\]
+
+\App{} uses a discrete approximation of $k$ in the convolution with the image.  The operator is
+radially symmetric with respect to the origin, which is why we can easily plot it in
+\figureName~\ref{fig:laplacian-of-gaussian}, setting $R = \sqrt{x^2 + y^2}$.
+
+
+\begin{figure}[htbp]
+  \ifreferencemanual\begin{maxipage}\fi
+  \centering
+  \includeimage{laplacian-of-gaussian}
+  \ifreferencemanual\end{maxipage}\fi
+
+  \caption[\propername{Laplacian}-of-\propername{Gaussian}]{\label{fig:laplacian-of-gaussian}%
+    Plot of the \propername{Laplacian}-of-\propername{Gaussian} function~$k(R)$,
+    \equationabbr~\ref{equ:laplacian-of-gaussian}, for $\sigma = 0.5$, using $R = \sqrt{x^2 +
+      y^2}$.}
+\end{figure}
+
+
+\noindent See also \uref{\hipriilog}{\acronym{HIPR2}:
+  \propername{Laplacian}-of-\propername{Gaussian}}.
+
+Sometimes the \acronym{LoG} is plagued by noise in the input images.  After all, it is a
+numerical approximation of the second derivative and deriving always ``roughens'' a function.
+The (normalized) mask files relentlessly disclose such problems.  Use
+option~\option{--contrast-min-curvature} with a \emph{negative} argument~\metavar{CURVATURE} to
+suppress all edges with a curvature below $-\metavar{CURVATURE}$ (which is a positive value).
+Check the effects with the mask files and particularly the hard-mask files
+(\filename{\val{val:default-hard-mask-template}}) if using option~\option{--hard-mask}.
+
+To indicate the \metavar{CURVATURE} in relative terms, which is particularly comprehensible for
+humans, append a percent sign (\sample{\%}).  Try minimum curvatures starting from $-0.5\%$ to
+$-3\%$.
+
+\begin{optionsummary}
+\item[--contrast-edge-scale] \sectionName~\fullref{opt:contrast-edge-scale}
+\item[--contrast-min-curvature] \sectionName~\fullref{opt:contrast-min-curvature}
+\item[--contrast-weight] \sectionName~\fullref{opt:contrast-weight}
+\item[--hard-mask] \sectionName~\fullref{opt:hard-mask}
+\end{optionsummary}
+
+
+\subsection[Blend \acronym{SDev} and \acronym{LoG}]%
+{\label{sec:blend-sdev-and-log}%
+\genidx{weighting!contrast using a blend of methods}%
+\gensee{contrast weighting using a blend of methods}{weighting, contrast using a blend of methods}%
+Blend Standard Deviation and \propername{Laplacian}\hyp{}of\hyp{}\propername{Gaussian}}
+
+\App{} can team the standard deviation computation and Laplacian of Gaussian to deliver the best
+of both methods.  Use a \emph{positive} argument~\metavar{CURVATURE} with
+option~\option{--contrast-min-curvature} to combine both algorithms.  In this mode of operation
+\App{} computes the \acronym{SDev}-weight and the \acronym{LoG}-weight, then uses the
+\acronym{LoG} to decide whether to go with that value or prefer the \acronym{SDev} data.  If the
+\acronym{LoG} is greater than \metavar{CURVATURE} \App{} uses the weight delivered by the
+\acronym{LoG}, otherwise the \acronym{SDev}-weight is rescaled such that its maximum is equal to
+\metavar{CURVATURE}, and the scaled \acronym{SDev} is used as weight.
+
+This technique merges the two edge detection methods where they are best.  The \acronym{LoG}
+excels with clear edges and cannot be fooled by strong but smooth gradients.  However, it is bad
+at detecting faint edges and it is susceptible to noise.  The \acronym{SDev} on the other hand
+shines with even the most marginal edges, and resists noise quite well.  Its weakness is that is
+is easily deceived by strong and smooth gradients.  Tuning \metavar{CURVATURE} the user can pick
+the best threshold for a given set of images.
+
+\begin{optionsummary}
+\item[--contrast-edge-scale] \sectionName~\fullref{opt:contrast-edge-scale}
+\item[--contrast-min-curvature] \sectionName~\fullref{opt:contrast-min-curvature}
+\item[--contrast-weight] \sectionName~\fullref{opt:contrast-weight}
+\item[--contrast-window-size] \sectionName~\fullref{opt:contrast-window-size}
+\item[--gray-projector] \sectionName~\fullref{opt:gray-projector}
+\item[--hard-mask] \sectionName~\fullref{opt:hard-mask}
+\end{optionsummary}
+
+
+\subsection[Scaling and Choice of Mode]{\label{sec:scaling-and-choice}%
+  \genidx{scaling of parameters}
+  \genidx{mode of operation (\acronym{SDev}, \acronym{LoG}, \dots)}%
+  Scaling and Choice of Mode}
+
+Experience has shown that neither the parameters \metavar{EDGESCALE} and \metavar{CURVATURE} nor
+the mode of operation (\acronym{SDev}-only, \acronym{LoG}-only, or a blend of both) scales to
+different image sizes.  In practice, this means that if you start with a set of reduced size
+images, say $2808 \times 1872$~pixels, carefully optimize \metavar{EDGESCALE},
+\metavar{CURVATURE} and so on, and find \acronym{LoG}-only the best mode, and then switch to the
+original resolution of $5616 \times 3744$~pixels, multiplying (or dividing) the parameters by
+four and sticking to \acronym{LoG}-only might \emph{not} result in the best fused image.  For
+best quality, perform the parameter optimization and the search for the most appropriate mode at
+the final resolution.
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:

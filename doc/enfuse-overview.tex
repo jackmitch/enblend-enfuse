@@ -1,0 +1,126 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\chapter[Overview]{\label{sec:overview}%
+  \genidx[\rangebeginlocation]{overview}%
+  Overview}
+
+\genidx{Mertens@\propername{Mertens, Tom}}%
+\genidx{Kautz@\propername{Kautz, Jan}}%
+\genidx{Reeth@\propername{Van Reeth, Frank}}%
+\genidx{fusion!exposure}%
+\gensee{exposure fusion}{fusion, exposure}%
+\genidx{high dynamic range}%
+\gensee{HDR@\acronym{HDR}}{high dynamic range}%
+\begin{sloppypar}
+  \App{} merges overlapping images using the
+  \propername{Mertens}-\propername{Kautz}\-\propername{Van Reeth} exposure fusion
+  algorithm.\footnotemark{} This is a quick way for example to blend differently exposed images
+  into a nice output image, without producing intermediate high-dynamic range (\acronym{HDR})
+  images that are then tonemapped to a viewable image.  This simplified process often works much
+  better than tonemapping algorithms.%
+  %
+  \footnotetext{\propername{Tom Mertens}, \propername{Jan Kautz}, and \propername{Frank van
+      Reeth}, ``Exposure Fusion'', Proceedings of the 15$^{\mathrm{th}}$ Pacific Conference on
+    Computer Graphics and Applications 2007, pages~382--390.}
+\end{sloppypar}
+
+\genidx{depth-of-field}%
+\gensee{DoF@\acronym{DoF}}{depth-of-field}%
+\App{} can also be used to build extended depth-of-field (\acronym{DoF}) images by blending a
+focus stack.
+
+The idea is that pixels in the input images are weighted according to qualities such as, for
+example, proper exposure, good local contrast, or high saturation.  These weights determine how
+much a given pixel will contribute to the final image.
+
+\genidx{Burt@\propername{Burt, Peter J.}}%
+\genidx{Adelson@\propername{Adelson, Edward H.}}%
+\genidx{Burt-Adelson@\propername{Burt-Adelson}}%
+\genidx{multiresolution spline}%
+\gensee{spline}{multiresolution spline}%
+A \propername{Burt}-\propername{Adelson} multiresolution spline blender\footnotemark{} is used
+to combine the images according to the weights.  The multiresolution blending ensures that
+transitions between regions where different images contribute are difficult to spot.%
+%
+\footnotetext{\propername{Peter J. Burt} and \propername{Edward H. Adelson}, ``A Multiresolution
+  Spline With Application to Image Mosaics'', \acronym{ACM} Transactions on Graphics,
+  \abbreviation{Vol}.~2, \abbreviation{No}.~4, October~1983, pages~217--236.}
+
+\App{} uses up to four criteria to judge the quality of a pixel:
+
+\begin{description}
+  \genidx{weighting!exposure}%
+  \gensee{exposure weighting}{weighting, exposure}%
+\item[Exposure]\itemend
+  The exposure criteria favors pixels with luminance close to the middle of the range.  These
+  pixels are considered better exposed than those with high or low luminance levels.
+
+  \genidx{weighting!saturation}%
+  \gensee{saturation weighting}{weighting, saturation}%
+\item[Saturation]\itemend
+  The saturation criteria favors highly-saturated pixels.  Note that saturation is only defined
+  for color pixels.
+
+  \genidx{weighting!local contrast}%
+  \gensee{contrast weighting}{weighting, local contrast}
+  \gensee{local contrast weighting}{weighting, local contrast}
+\item[Local Contrast]\itemend
+  The contrast criteria favors pixels inside a high-contrast neighborhood.  \App{} can use
+  standard deviation, \propername{Laplacian} magnitude, or a blend of both as local contrast
+  measure.
+
+  \genidx{weighting!local entropy}%
+  \gensee{entropy weighting}{weighting, local entropy}%
+  \gensee{local entropy weighting}{weighting, local entropy}%
+\item[Local Entropy]\itemend
+  The entropy criteria prefers pixels inside a high-entropy neighborhood.  In addition, \App{}
+  allows the user to mitigate the problem of noisy images when using entropy weighting by
+  setting a black threshold.
+\end{description}
+
+\noindent See \tableName~\ref{tab:default-weights} for the default weights of these criteria.
+
+For the concept of pixel weighting, and details on the different weighting functions, see
+\chapterName~\fullref{sec:weighting-functions}.
+
+Adjust how much importance is given to each criterion by setting the weight parameters on the
+command line.  For example, if you set
+\begin{literal}
+  --exposure-weight=1.0 --saturation-weight=0.5
+\end{literal}
+\App{} will favor well-exposed pixels over highly-saturated pixels when blending the source
+images.  The effect of these parameters on the final result will not always be clear in advance.
+The quality of the result is subject to your artistic interpretation.  Playing with the weights
+may or may not give a more pleasing result.  The authors encourage the users to experiment,
+perhaps using down-sized or cropped images for speed.
+
+\begin{geeknote}
+  Down-sizing (also called ``down-sampling'') with a good interpolator reduces noise, which
+  might not be desired to judge the image quality of the original-size image.  Cropping can
+  offer an alternative, though.
+\end{geeknote}
+
+\genidx{channel!alpha}%
+\gensee{alpha channel}{channel, alpha}%
+\App{} expects but does not require each input image to have an alpha channel.  By setting the
+alpha values of pixels to zero, users can manually remove those pixels from consideration when
+blending.  If an input image lacks an alpha channel, \App{} will issue a warning and continue
+assuming all pixels should contribute to the final output.  Any alpha value other than zero is
+interpreted as ``this pixel should contribute to the final image''.
+
+The input images are processed in the order they appear on the command line.  Multi\hyp{}layer
+images are processed from the first layer to the last before \App{} considers the next image on
+the command line.  Consult \sectionName~\ref{sec:layer-selection} on how to change the images'
+order within multi\hyp{}layer image files.
+
+\genidx{SourceForge}Find out more about \App{} on its \uref{\sourceforgenet}{SourceForge}
+\uref{\enblendsourceforgenet}{web page}.
+
+\genidx[\rangeendlocation]{overview}
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:

@@ -1,0 +1,276 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\section[Exposure Weighting]{\label{sec:exposure-weighting}%
+  \genidx{weighting!exposure}%
+  \gensee{exposure weighting}{weighting, exposure}%
+  Exposure Weighting}
+
+\optidx{--exposure-optimum}%
+Exposure weighting prefers pixels with a luminance~$Y$ close to the user-chosen optimum value
+(option~\option{--exposure-optimum}, default: \val{val:default-exposure-optimum}) of the
+normalized, real-valued luminance interval~$(0, 1)$.
+
+\genidx{projector!grayscale}%
+\gensee{grayscale projector}{projector, grayscale}%
+\optidx{--gray-projector}%
+\acronym{RGB}-pixels get converted to luminance before using the grayscale projector given by
+\sample{--gray-projector}, which defaults to \code{average}.  Grayscale pixels simply are
+identified with luminance.
+
+\genidx{luminance interval!normalized}%
+\gensee{normalized luminance interval}{luminance interval, normalized}%
+In the normalized luminance interval 0.0 represents pure black and 1.0 represents pure white
+independently of the data type of the input image.  This is, for a \acronym{JPEG} image the
+luminance~255 maps to 1.0 in the normalized interval and for a 32~bit \acronym{TIFF} picture the
+highest luminance value~4294967295 also maps to 1.0.  The middle of the luminance interval, 0.5,
+is where a neutral gray tone ends up with every camera that had no exposure correction dialed
+in, for example the image of any gray-card or white-card.
+
+The exposure weighting algorithm only looks at a single pixel at a time; the pixel's
+neighborhood is not taken into account.
+
+
+\subsection[Built-In Functions]{\label{sec:built-in-functions}%
+  \genidx{weighting!exposure!built-in}%
+  Built-In Functions}
+
+\genidx{exposure weight function!\code{gauss}}%
+\genidx{exposure weight function!\propername{Gaussian}}%
+Up to \App{} version~4.1 the only weighting function is the \propername{Gaussian}
+\begin{equation*}\refrep{equ:weight:gauss}%
+    w_{\mathrm{exp}}(Y) =
+    \exp\left(-\frac{1}{2}
+              \left( \frac{Y - Y_{\mathrm{opt}}}{\mathit{width}} \right)^2\right),
+\end{equation*}
+\noindent whose maximum position~$Y_{\mathrm{opt}}$ and $width$ are controlled by the command
+line options \option{--exposure-optimum} and~\option{--exposure-width} respectively, where
+$Y_{\mathrm{opt}}$ defaults to \val{val:default-exposure-optimum} and $width$ defaults to
+\val{val:default-exposure-width}.  \figureName~\ref{fig:gaussian} shows some
+\propername{Gaussians}.
+
+
+\begin{figure}[htbp]
+  \ifreferencemanual\begin{maxipage}\fi
+  \centering
+  \includeimage{gaussian}
+  \ifreferencemanual\end{maxipage}\fi
+
+  \caption[\propername{Gaussian} weight function]{\label{fig:gaussian}%
+    \App{}'s \propername{Gaussian} function with the parameters \metavar{optimum} = 0.5 and
+    three different \metavar{width}s: 0.1, 0.2, and~0.4.}
+\end{figure}
+
+
+The options \option{--exposure-optimum}\optidx{--exposure-optimum}
+and~\option{--exposure-width}\optidx{--exposure-width} serve to fine-tune the final result
+without changing the set of input images.  Option~\option{--exposure-optimum} sets the point of
+optimum exposure.  Increasing the \metavar{optimum} makes \App{} prefer lighter pixels,
+rendering the final image lighter, and vice versa.  Option~\option{--exposure-width} defines the
+\metavar{width} of acceptable exposures.  Small values of \metavar{width} penalize exposures
+that deviate from \metavar{optimum} more, and vice versa.
+
+In \App{} version~4.2 several new exposure weight functions have been added.  Select them with
+option~\option{--exposure-weight-function}.\optidx{--exposure-weight-function} For the following
+presentation we refer to the linear luminance transform
+\begin{equation*}\refrep{equ:linear-luminance-transform}
+  z = \frac{Y - Y_{\mathrm{opt}}}{\mathit{width}}.
+\end{equation*}
+as introduced in \equationabbr~\fullref{equ:linear-luminance-transform}.
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}{p{.28\textwidth}lcc}
+    \hline
+    \multicolumn{1}{c|}{Exposure Weight} &
+    \multicolumn{1}{c|}{\metavar{WEIGHT-FUNC.}} &
+    \multicolumn{1}{c|}{Equ.} &
+    \multicolumn{1}{c}{Chart} \\
+    \hline\extraheadingsep
+    \propername{Gaussian} curve (default)%
+    \genidx{exposure weight function!\code{gauss}}%
+    \genidx{exposure weight function!\propername{Gaussian}}
+    & \code{gauss}, \code{gaussian} &
+    \fullref{equ:weight:gauss} &
+    \fullref{fig:gaussian} \\
+    \propername{Lorentz} curve%
+    \genidx{exposure weight function!\code{lorentz}}%
+    \genidx{exposure weight function!\propername{Lorentz} curve}%
+    \genidx{exposure weight function!\propername{Lorentzian}}
+    & \code{lorentz}, \code{lorentzian} &
+    \fullref{equ:weight:lorentz} &
+    \fullref{fig:lorentzian} \\
+    Upper half-wave of a sine%
+    \genidx{exposure weight function!\code{halfsine}}%
+    \genidx{exposure weight function!\code{half-sine}}
+    & \code{halfsine}, \code{half-sine} &
+    \fullref{equ:weight:halfsine} &
+    \fullref{fig:halfsine} \\
+    Full sine-wave shifted upwards by one%
+    \genidx{exposure weight function!\code{fullsine}}%
+    \genidx{exposure weight function!\code{full-sine}}
+    & \code{fullsine}, \code{full-sine} &
+    \fullref{equ:weight:fullsine} &
+    \fullref{fig:fullsine} \\
+    Quartic, or bi-square function%
+    \genidx{exposure weight function!\code{bisquare}}%
+    \genidx{exposure weight function!\code{bi-square}}
+    & \code{bisquare}, \code{bi-square} &
+    \fullref{equ:weight:bisquare} &
+    \fullref{fig:power}
+  \end{tabular}
+
+  \caption[Exposure weight functions]{\label{tab:weight-functions}%
+    \genidx{exposure weight functions}%
+    Available, compiled-in exposure weight functions.}
+\end{table}
+
+
+Functions \propername{Gaussian}
+\begin{equation*}\refrep{equ:weight:gauss}%
+    w_{\mathrm{exp}}(z) = \exp\left(-z^2 / 2\right)
+\end{equation*}
+and \propername{Lorentzian}
+\begin{equation*}\refrep{equ:weight:lorentz}
+  w_{\mathrm{exp}}(z) = \frac{1}{1 + z^2 / 2}
+\end{equation*}
+\noindent behave like $1 - z^2$ around the optimum.  However for large $|z|$ the
+\propername{Gaussian} weight rolls off like $\exp(-z^2/2)$ and the \propername{Lorentzian} only
+as $z^{-2}$.
+
+
+\begin{figure}[htbp]
+  \ifreferencemanual\begin{maxipage}\fi
+  \centering
+  \includeimage{lorentzian}
+  \ifreferencemanual\end{maxipage}\fi
+
+  \caption[\propername{Lorentzian} function]{\label{fig:lorentzian}%
+    \App{}'s \propername{Lorentzian} function with the parameters $\metavar{optimum} = 0.5$ and
+    three different \metavar{width}s: 0.1, 0.2, and~0.4.}
+\end{figure}
+
+
+Both, the \propername{Gaussian} and the \propername{Lorentzian} are easy to use, because they do
+not go exactly to zero.  Thus, \App{} can select ``better'' pixels even far away from the chosen
+optimum.
+
+
+\begin{figure}[htbp]
+  \ifreferencemanual\begin{maxipage}\fi
+  \centering
+  \includeimage{halfsine}
+  \ifreferencemanual\end{maxipage}\fi
+
+  \caption[Half-Sine function]{\label{fig:halfsine}%
+    \App{}'s Half-Sine function with the parameters $\metavar{optimum} = 0.5$ and three
+    different \metavar{width}s: 0.1, 0.2, and~0.4.}
+\end{figure}
+
+
+\begin{figure}[htbp]
+  \ifreferencemanual\begin{maxipage}\fi
+  \centering
+  \includeimage{fullsine}
+  \ifreferencemanual\end{maxipage}\fi
+
+  \caption[Full-Sine function]{\label{fig:fullsine}%
+    \App{}'s Full-Sine function with the parameters $\metavar{optimum} = 0.5$ and three
+    different \metavar{width}s: 0.1, 0.2, and~0.4.}
+\end{figure}
+
+
+Again, Half-Sine
+\begin{equation}\refrep{equ:weight:halfsine}
+  w_{\mathrm{exp}}(z) =
+  \left\{\begin{array}{cl}
+  \cos(z) & \mbox{if } |z| \leq \pi/2 \\
+  0       & \mbox{otherwise.}
+  \end{array}\right.
+\end{equation}
+and Full-Sine
+\begin{equation}\refrep{equ:weight:fullsine}
+  w_{\mathrm{exp}}(z) =
+  \left\{\begin{array}{cl}
+  (1 + \cos(z)) / 2 & \mbox{if } |z| \leq \pi \\
+  0                 & \mbox{otherwise.}
+  \end{array} \right.
+\end{equation}
+\noindent behave like $1 - z^2$ around the optimum, like \propername{Gaussian} and
+\propername{Lorentzian}.  However for large $|z|$ they both are exactly zero.  The difference is
+how they decrease just before they reach zero.  Half-Sine behaves like $z - z'$ and Full-Sine
+like $(z - z'')^2$, where $z'$ and $z''$ are the respective zeros.
+
+
+\begin{figure}[htbp]
+  \ifreferencemanual\begin{maxipage}\fi
+  \centering
+  \includeimage{power}
+  \ifreferencemanual\end{maxipage}\fi
+
+  \caption[Bi-Square function]{\label{fig:power}%
+    \App{}'s Bi-Square function with the parameters $\metavar{optimum} = 0.5$ and three
+    different \metavar{width}s: 0.1, 0.2, and~0.4.}
+\end{figure}
+
+
+Bi-Square
+\begin{equation}\refrep{equ:weight:bisquare}
+  w_{\mathrm{exp}}(z) =
+  \left\{
+  \begin{array}{cl}
+    1 - z^4 & \mbox{if } |z| \leq 1 \\
+    0       & \mbox{otherwise.}
+  \end{array}
+  \right.
+\end{equation}
+\noindent is the only predefined function that behaves like $1 - z^4$ around the optimum.
+
+The weight functions Half-Sine, Full-Sine, and Bi-Square are more difficult to use, because they
+yield exactly zero if the normalized luminance of a pixel is far enough away from the optimum.
+This can lead to pathologies if the luminances of the same pixel position in all $N$ input
+images are assigned a weight of zero.  For all-zero weights \App{} falls back to weighing
+equally.  This is, each pixel gets a weight of $\slfrac{1}{N}$, which may or may not be the
+desired result.  However, if the \metavar{width} is chosen so large that the weight never
+vanishes or the imput images span a large enough range of luminances for each and every pixel,
+the problem is circumnavigated.
+
+Another way of cutting off underexposed or overexposed pixels is to use
+option~\option{--exposure-cutoff},\optidx{--exposure-cutoff} which has the additional benefit of
+allowing to choose upper and lower cutoff separately.
+
+
+\begin{figure}[htbp]
+  \ifreferencemanual\begin{maxipage}\fi
+  \centering
+  \includeimage{exposure-weights}
+  \ifreferencemanual\end{maxipage}\fi
+
+  \caption[Comparison of exposure weight functions]{\label{fig:exposure-weights}%
+    Comparison of all of \App{}'s built-in exposure weight functions~$w(Y)$ for the default
+    values of $\metavar{optimum} = 0.5$ and $\metavar{width} = 0.2$.  Note that all functions
+    intersect at $w = \slfrac{1}{2}$, this is, they share the same \acronym{FWHM}.}
+\end{figure}
+
+
+\figureName~\ref{fig:exposure-weights} compares all available exposure weight functions for the
+same parameters, namely their defaults.  They all intersect at $w = \slfrac{1}{2}$ independently
+of \metavar{optimum} or \metavar{width}, making it simple to just try them out without
+fundamentally changing brightness.
+
+
+\subsection[User-Defined Functions]{\label{sec:user-defined-functions}%
+  \genidx{weighting!exposure!user-defined}%
+  User-Defined Exposure Weighting Functions}
+
+Depending on how \App{} was compiled it may support dynamically-linked exposure weighting
+functions, \acronym{OpenCL} exposure weighting functions, or both.
+
+\input{enfuse-exposure-weighting-user-dynamic}
+\input{enfuse-exposure-weighting-user-opencl}
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:
