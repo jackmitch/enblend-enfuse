@@ -583,7 +583,6 @@ namespace ocl
             std::cout << "\n";
         }
 #endif // PREFER_SEPARATE_OPENCL_SOURCE || ENFUSE_SOURCE
-        return true;
     }
 
 
