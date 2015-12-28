@@ -389,8 +389,8 @@ numberOfString(const char* a_string,                // string we want to convert
             if (long_int_value < traits::min() || long_int_value > traits::max())
             {
                 std::cerr << command << ": "
-                          << "signed number " << long_int_value
-                          << " out of range [" << traits::min() << " .. " << traits::max() << "]"
+                          << "signed number x = " << long_int_value
+                          << " out of range " << traits::min() << " <= x <= " << traits::max()
                           << std::endl;
                 exit(1);
             }
@@ -404,8 +404,8 @@ numberOfString(const char* a_string,                // string we want to convert
             if (long_int_value < 0L || long_int_value > traits::max())
             {
                 std::cerr << command << ": "
-                          << "unsigned number " << long_int_value
-                          << " out of range [0 .. " << traits::max() << "]"
+                          << "unsigned number x = " << long_int_value
+                          << " out of range 0 <= x <= " << traits::max()
                           << std::endl;
                 exit(1);
             }

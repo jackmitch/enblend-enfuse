@@ -54,7 +54,7 @@ public:
             }
             if (exponent <= 0.0 || exponent > 4.0)
             {
-                throw super::error("exponent out of range (0, 4]");
+                throw super::error("exponent x out of range 0 < x <= 4");
             }
         }
 
