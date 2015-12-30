@@ -89,12 +89,12 @@ add_custom_command(
 )
 
 if(WIN32)
-  SET(INSTALL_SHARE "share")
+  SET(INSTALL_DOC_DIR "${DocumentsDirectory}")
 else()
-  SET(INSTALL_SHARE "${CMAKE_INSTALL_PREFIX}/share")
+  SET(INSTALL_DOC_DIR "${CMAKE_INSTALL_PREFIX}/${DocumentsDirectory}")
 endif()
 # replace invalid characters for latex
-string(REGEX REPLACE "([$&%_^{}])" "\\\\\\1" INSTALL_SHARE "${INSTALL_SHARE}")
+string(REGEX REPLACE "([$&%_^{}])" "\\\\\\1" INSTALL_DOC_DIR "${INSTALL_DOC_DIR}")
 configure_file(version.cmake.in "${CMAKE_BINARY_DIR}/doc/version.in" @ONLY)
 
 file(GLOB ENBLEND_SOURCE_FILES common-*.tex enblend-*.tex enblend.tex static-preamble.tex lead-in.tex lead-out.tex index-def.tex index-use.tex
