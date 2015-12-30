@@ -26,6 +26,38 @@ AC_LANG(C++)
 
 AC_C_BIGENDIAN
 
+enable_on_demand_dynamic_linking=check
+AC_MSG_CHECKING([if on-demand dynamic linking is desired])
+AC_ARG_ENABLE([on-demand-dynlink],
+              [AS_HELP_STRING([--enable-on-demand-dynlink],
+                              [use on-demand dynamic linking @<:@default=check@:>@])],
+              [AC_MSG_RESULT($enableval);
+               enable_on_demand_dynamic_linking=$enableval],
+              [AC_MSG_RESULT(check);
+               enable_on_demand_dynamic_linking=check])
+
+have_on_demand_dynamic_linking=no
+AS_IF([test "$enable_on_demand_dynamic_linking" = no],
+      [have_on_demand_dynamic_linking=no],
+      [if test -n "$enable_on_demand_dynamic_linking" || \
+          test "$enable_on_demand_dynamic_linking" = yes || \
+          test "$enable_on_demand_dynamic_linking" = check;
+       then
+          AC_MSG_CHECKING([for on-demand dynamic linking])
+          save_ldflags="$LDFLAGS"
+          LDFLAGS="-Wl,--as-needed ${LDFLAGS}"
+          AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <string.h>]],
+                                          [[strlen("foo")]])],
+                         [AC_MSG_RESULT(yes);
+                          have_on_demand_dynamic_linking=yes],
+                         AC_MSG_RESULT(no))
+          LDFLAGS="$save_ldflags"
+       fi])
+if test "$have_on_demand_dynamic_linking" = yes; then
+  LDFLAGS="-Wl,--as-needed ${LDFLAGS}"
+fi
+
+
 # Checks for libraries.
 
 # We check for TCMalloc so early to make it the last user library on

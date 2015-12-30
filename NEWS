@@ -130,6 +130,9 @@ Unreleased.  Current line of development.
   aliases for "false" and "true" allows to shorten setting boolean
   parameters.
 
+- The new configuration option "--enable-on-demand-dynlink" controls
+  lazy loading of all shared libraries.
+
 
 ** Package Maintainer Stuff
 

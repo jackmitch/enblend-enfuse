@@ -120,6 +120,14 @@ We write the default values of all configuration options in capital
 letters.
 
 
+** --enable-on-demand-dynlink=CHECK/yes/no
+
+Link Enblend and Enfuse binaries with flags that instruct the dynamic
+linker to delay loading dynamic libraries until they are actually
+needed.  This feature slightly decreases the load-time of the
+binaries.
+
+
 ** --enable-openmp=yes/NO
    -DENABLE_OPENMP=ON/off    (CMake)
 
