@@ -1830,7 +1830,7 @@ process_options(int argc, char** argv)
 
         case '?':
         {
-            if (optopt == 0) {
+            if (optopt == 0 || optopt == -1) {
                 const int failing_index = optind - 1;
 
                 std::cerr << command << ": unknown long option";
