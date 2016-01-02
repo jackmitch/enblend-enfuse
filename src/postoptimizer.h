@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011-2015 Mikolaj Leszczynski
+ * Copyright (C) 2011-2016 Mikolaj Leszczynski
  *
  * This file is part of Enblend.
  *

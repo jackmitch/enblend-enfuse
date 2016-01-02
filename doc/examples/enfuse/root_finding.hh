@@ -1,4 +1,4 @@
-// Copyright (C) 2014 Christoph L. Spiel
+// Copyright (C) 2014-2016 Christoph L. Spiel
 //
 // This file is part of Enblend.
 //

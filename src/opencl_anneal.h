@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Christoph L. Spiel
+ * Copyright (C) 2015, 2016 Christoph L. Spiel
  *
  * This file is part of Enblend.
  *
@@ -19,15 +19,6 @@
  */
 #ifndef OPENCL_ANNEAL_H_INCLUDED
 #define OPENCL_ANNEAL_H_INCLUDED
-
-
-/*
-    Test
-
-    cd ~/photos/multi-image-techniques/hugin-multi-row
-    rm -f vis-?.tif;  env ENBLEND_OPENCL_PATH=/home/cspiel/src/enblend/src /home/cspiel/src/enblend/BUILD-GCC-O0/src/enblend --gpu --primary-seam-generator=nft --fine-mask --visualize --parameter='gpu-kernel-dt=false' --parameter='time-anneal-snake=true:time-state-probabilities=true:profile-state-probabilities=true' remapped-000?-08bit.tif
-
-*/
 
 
 #ifdef HAVE_CONFIG_H
