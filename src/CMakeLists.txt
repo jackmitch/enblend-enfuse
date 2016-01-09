@@ -99,6 +99,8 @@ set(ENFUSE_SOURCES
 
 set(additional_libs)
 if (WIN32)
+  list(APPEND ENBLEND_SOURCES win32helpers/delayHelper.h)
+  list(APPEND ENFUSE_SOURCES win32helpers/delayHelper.h)
   add_subdirectory(win32helpers)
   list(APPEND additional_libs getopt)
 endif()
@@ -131,6 +133,11 @@ if(OpenMP_CXX_FLAGS AND NOT MSVC)
 endif(OpenMP_CXX_FLAGS AND NOT MSVC)
 target_link_libraries(enblend ${common_libs} ${additional_libs})
 target_link_libraries(enfuse ${common_libs} ${additional_libs})
+if(ENABLE_OPENCL AND MSVC)
+  # provide delay loading of opencl.dll
+  set_target_properties(enblend PROPERTIES LINK_FLAGS "/DELAYLOAD:opencl.dll")
+  set_target_properties(enfuse PROPERTIES LINK_FLAGS "/DELAYLOAD:opencl.dll")
+endif()
 install(TARGETS enblend enfuse DESTINATION bin CONFIGURATIONS Release RelWithDebInfo MinSizeRel)
 
 IF(ENABLE_OPENCL AND NOT ${PREFER_SEPARATE_OPENCL_SOURCE})

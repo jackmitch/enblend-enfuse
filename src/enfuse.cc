@@ -89,7 +89,9 @@ extern "C" int optind;
 #include "self_test.h"
 #include "signature.h"
 #include "tiff_message.h"
-
+#ifdef _MSC_VER
+#include "win32helpers/delayHelper.h"
+#endif
 
 // Globals
 const std::string command("enfuse");
@@ -1990,6 +1992,8 @@ int main(int argc, char** argv)
     // functions in float_cast.h will work properly.
     // See changes in vigra numerictraits.hxx
     _controlfp(_RC_NEAR, _MCW_RC);
+    // install failure hook for delayed loading of dll
+    __pfnDliFailureHook2 = delayHookFailureFunc;
 #else
     fesetround(FE_TONEAREST);
 #endif
