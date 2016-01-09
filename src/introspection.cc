@@ -41,6 +41,9 @@
 
 #include "introspection.h"
 
+#ifdef _MSC_VER
+#include <delayimp.h>
+#endif
 
 extern const std::string command;
 extern Signature sig;
@@ -113,7 +116,22 @@ namespace introspection
 
 #ifdef OPENCL
             std::cout << "Extra feature: OpenCL: yes\n";
+#ifdef _MSC_VER
+            // catching errors with delay loading of opencl.dll
+            // remember to reset __pfnDliFailureHook2 before
+            // otherwise the failure hooks exits the program before __except is reached
+            __try
+            {
+                ocl::print_opencl_information();
+            }
+            __except(GetExceptionCode() == VcppException(ERROR_SEVERITY_ERROR, ERROR_MOD_NOT_FOUND) ||
+                GetExceptionCode() == VcppException(ERROR_SEVERITY_ERROR, ERROR_PROC_NOT_FOUND))
+            {
+                std::cout << "                       but not available on this system\n";
+            }
+#else
             ocl::print_opencl_information();
+#endif
 #else
             std::cout << "Extra feature: OpenCL: no\n";
 #endif

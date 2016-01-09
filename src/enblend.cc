@@ -1688,6 +1688,11 @@ process_options(int argc, char** argv)
     switch (print_only_task)
     {
     case VERSION_ONLY:
+#ifdef _MSC_VER
+        // deinstall failure hook to catch errors in printVersion directly
+        // so printVersion can run to end
+        __pfnDliFailureHook2 = nullptr;
+#endif
         introspection::printVersion(argc, argv);
         break;                  // never reached
     case USAGE_ONLY:
