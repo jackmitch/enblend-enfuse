@@ -45,7 +45,7 @@ AS_IF([test "$enable_on_demand_dynamic_linking" = no],
        then
           AC_MSG_CHECKING([for on-demand dynamic linking])
           save_ldflags="$LDFLAGS"
-          LDFLAGS="-Wl,--as-needed ${LDFLAGS}"
+          LDFLAGS="-Wl,--as-needed -Wl,--no-copy-dt-needed-entries ${LDFLAGS}"
           AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <string.h>]],
                                           [[strlen("foo")]])],
                          [AC_MSG_RESULT(yes);
@@ -54,7 +54,7 @@ AS_IF([test "$enable_on_demand_dynamic_linking" = no],
           LDFLAGS="$save_ldflags"
        fi])
 if test "$have_on_demand_dynamic_linking" = yes; then
-  LDFLAGS="-Wl,--as-needed ${LDFLAGS}"
+  LDFLAGS="-Wl,--as-needed -Wl,--no-copy-dt-needed-entries ${LDFLAGS}"
 fi
 
 
