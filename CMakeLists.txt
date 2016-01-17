@@ -547,4 +547,14 @@ SET(CPACK_SET_DESTDIR "ON")
 # The next ones are required by debian
 SET(CPACK_PACKAGE_CONTACT "hugin-ptx@googlegroups.com")
 
+# ignore some directories when creating rpm
+SET(CPACK_RPM_SPEC_MORE_DEFINE "%define ignore \#")
+SET(CPACK_RPM_USER_FILELIST 
+  "%ignore /usr/local"
+  "%ignore /usr/local/bin" 
+  "%ignore /usr/local/share" 
+  "%ignore /usr/local/share/man" 
+  "%ignore /usr/local/share/man/man1"
+)
+
 include(CPack)
