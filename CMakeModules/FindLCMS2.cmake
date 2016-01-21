@@ -1,5 +1,11 @@
 IF(NOT WIN32)
-    FIND_LIBRARY(LCMS2_LIBRARIES lcms2 HINTS /usr/local/lib /usr/lib/x86_64-linux-gnu /usr/lib32)
+  FIND_PATH(LCMS2_INCLUDE_DIR
+    NAMES lcms2.h
+    PATHS 
+      /usr/local/include
+      /usr/include
+  )
+  FIND_LIBRARY(LCMS2_LIBRARIES lcms2 HINTS /usr/local/lib /usr/lib/x86_64-linux-gnu /usr/lib32)
 ELSE(NOT WIN32)
     FIND_PATH(LCMS2_ROOT_DIR
       NAMES include/lcms2.h
@@ -14,22 +20,20 @@ ELSE(NOT WIN32)
     
     FIND_PATH(LCMS2_INCLUDE_DIR 
       NAMES lcms2.h
-      PATHS
-        /usr/local/include
-        /usr/include
-        ${LCMS2_ROOT_DIR}/include
+      PATHS ${LCMS2_ROOT_DIR}/include
     )
 
     include(FindLibraryWithDebug)
     find_library_with_debug(LCMS2_LIBRARIES
       WIN32_DEBUG_POSTFIX d    
       NAMES lcms2 lcms2_static
-      PATHS /usr/local/include /usr/include ${LCMS2_ROOT_DIR}/Lib/MS
+      PATHS ${LCMS2_ROOT_DIR}/Lib/MS
     )
     
-    MARK_AS_ADVANCED(
-      LCMS_ROOT_DIR
-      LCMS_LIBRARIES
-      LCMS_INCLUDE_DIR
-      )        
+    MARK_AS_ADVANCED(LCMS2_ROOT_DIR)
 ENDIF(NOT WIN32) 
+
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(LCMS2 DEFAULT_MSG 
+                                  LCMS2_INCLUDE_DIR LCMS2_LIBRARIES)
+MARK_AS_ADVANCED(LCMS2_LIBRARIES LCMS2_INCLUDE_DIR)
