@@ -1,6 +1,6 @@
 This is enfuse.info, produced by makeinfo version 5.2 from enfuse.texi.
 
-This manual is for Enfuse (version 4.1.4, 7 August 2015), a program to
+This manual is for Enfuse (version 4.1.4, 24 January 2016), a program to
 merge different exposures of the same scene to produce an image that
 looks much like a tonemapped image.
 
@@ -23,7 +23,7 @@ File: enfuse.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enfuse
 ******
 
-This manual is for Enfuse (version 4.1.4, 7 August 2015), a program to
+This manual is for Enfuse (version 4.1.4, 24 January 2016), a program to
 merge different exposures of the same scene to produce an image that
 looks much like a tonemapped image.
 
@@ -4298,92 +4298,92 @@ General Index
 
 
 Tag Table:
-Node: Top853
-Node: Overview4908
-Ref: Table:weighting-criteria6111
-Ref: Overview-Footnote-18694
-Ref: Overview-Footnote-28863
-Ref: Overview-Footnote-39045
-Ref: Overview-Footnote-49227
-Node: Workflow9369
-Node: Standard Workflow9799
-Ref: Figure:photographic-workflow10069
-Node: External Mask Manipulation12768
-Ref: Figure:external-mask-workflow14093
-Node: Invocation14603
-Node: Image Requirements15448
-Node: Response Files16581
-Ref: Table:response-file-format18615
-Ref: Table:response-file-syntactic-comment21090
-Ref: Table:globbing-algorithms22001
-Node: Common Options23460
-Ref: Common Options-Footnote-132507
-Ref: Common Options-Footnote-232699
-Node: Extended Options32858
-Ref: Extended Options-Footnote-139474
-Node: Fusion Options39547
-Node: Expert Options41555
-Ref: Figure:entropy-cutoff44593
-Ref: Figure:exposure-cutoff48587
-Ref: Table:mask-template-characters55688
-Node: Option Delimiters57904
-Node: Color Profiles59288
-Node: Weighting Functions61723
-Node: Weighting Pixels62391
-Node: Weighted Average63927
-Node: Disabling Averaging64528
-Node: Single Criterion Fusing65508
-Ref: Table:default-weights66254
-Node: Exposure Weighting67038
-Ref: Figure:gaussian68484
-Node: Saturation Weighting69254
-Node: Local Contrast Weighting70369
-Node: Standard Deviation71731
-Ref: Figure:local-analysis-window72191
-Ref: Standard Deviation-Footnote-174284
-Node: Laplacian of Gaussian74435
-Ref: Figure:laplacian-of-gaussian76019
-Node: Blend SDev and LoG77137
-Node: Scaling and Choice of Mode78818
-Node: Local Entropy Weighting79664
-Ref: Figure:entropy80658
-Node: Understanding Masks82275
-Node: Tuning Memory Usage86071
-Ref: Table:cache-size-settings88817
-Node: Applications89252
-Node: What Images89976
-Node: Repetition93168
-Node: Exposure Series94237
-Node: Exposure Series Tips96584
-Node: Exposure Series Misconceptions97695
-Ref: Exposure Series Misconceptions-Footnote-199468
-Node: Flash Exposure Series99681
-Node: Polarization Series99921
-Node: Focus Stacks100316
-Node: Why Focus Stacks101166
-Node: Preparing Focus Stacks102500
-Node: Local Contrast Based Fusing103247
-Node: Basic Focus Stacking104582
-Node: Advanced Focus Stacking105955
-Node: Local Contrast Problem106719
-Ref: Figure:sharp-edge107925
-Ref: Figure:smooth-edge108013
-Node: Laplacian Edge Detection108774
-Node: Local Contrast Enhancement109905
-Node: Suppressing Noise or Recognizing Faint Edges110881
-Node: Focus Stacking Decision Tree113502
-Ref: Figure:focus-stacking-decision-tree113858
-Node: Expert Stacking114670
-Node: Helpful Programs116192
-Node: Bug Reports119922
-Ref: Bug Reports-Footnote-1125570
-Node: Authors125640
-Node: FDL126804
-Node: List of Tables147765
-Node: List of Figures148436
-Node: Program Index149484
-Node: Syntactic-Comment Index152418
-Node: Option Index153106
-Node: General Index156838
+Node: Top855
+Node: Overview4912
+Ref: Table:weighting-criteria6115
+Ref: Overview-Footnote-18698
+Ref: Overview-Footnote-28867
+Ref: Overview-Footnote-39049
+Ref: Overview-Footnote-49231
+Node: Workflow9373
+Node: Standard Workflow9803
+Ref: Figure:photographic-workflow10073
+Node: External Mask Manipulation12772
+Ref: Figure:external-mask-workflow14097
+Node: Invocation14607
+Node: Image Requirements15452
+Node: Response Files16585
+Ref: Table:response-file-format18619
+Ref: Table:response-file-syntactic-comment21094
+Ref: Table:globbing-algorithms22005
+Node: Common Options23464
+Ref: Common Options-Footnote-132511
+Ref: Common Options-Footnote-232703
+Node: Extended Options32862
+Ref: Extended Options-Footnote-139478
+Node: Fusion Options39551
+Node: Expert Options41559
+Ref: Figure:entropy-cutoff44597
+Ref: Figure:exposure-cutoff48591
+Ref: Table:mask-template-characters55692
+Node: Option Delimiters57908
+Node: Color Profiles59292
+Node: Weighting Functions61727
+Node: Weighting Pixels62395
+Node: Weighted Average63931
+Node: Disabling Averaging64532
+Node: Single Criterion Fusing65512
+Ref: Table:default-weights66258
+Node: Exposure Weighting67042
+Ref: Figure:gaussian68488
+Node: Saturation Weighting69258
+Node: Local Contrast Weighting70373
+Node: Standard Deviation71735
+Ref: Figure:local-analysis-window72195
+Ref: Standard Deviation-Footnote-174288
+Node: Laplacian of Gaussian74439
+Ref: Figure:laplacian-of-gaussian76023
+Node: Blend SDev and LoG77141
+Node: Scaling and Choice of Mode78822
+Node: Local Entropy Weighting79668
+Ref: Figure:entropy80662
+Node: Understanding Masks82279
+Node: Tuning Memory Usage86075
+Ref: Table:cache-size-settings88821
+Node: Applications89256
+Node: What Images89980
+Node: Repetition93172
+Node: Exposure Series94241
+Node: Exposure Series Tips96588
+Node: Exposure Series Misconceptions97699
+Ref: Exposure Series Misconceptions-Footnote-199472
+Node: Flash Exposure Series99685
+Node: Polarization Series99925
+Node: Focus Stacks100320
+Node: Why Focus Stacks101170
+Node: Preparing Focus Stacks102504
+Node: Local Contrast Based Fusing103251
+Node: Basic Focus Stacking104586
+Node: Advanced Focus Stacking105959
+Node: Local Contrast Problem106723
+Ref: Figure:sharp-edge107929
+Ref: Figure:smooth-edge108017
+Node: Laplacian Edge Detection108778
+Node: Local Contrast Enhancement109909
+Node: Suppressing Noise or Recognizing Faint Edges110885
+Node: Focus Stacking Decision Tree113506
+Ref: Figure:focus-stacking-decision-tree113862
+Node: Expert Stacking114674
+Node: Helpful Programs116196
+Node: Bug Reports119926
+Ref: Bug Reports-Footnote-1125574
+Node: Authors125644
+Node: FDL126808
+Node: List of Tables147769
+Node: List of Figures148440
+Node: Program Index149488
+Node: Syntactic-Comment Index152422
+Node: Option Index153110
+Node: General Index156842
 
 End Tag Table

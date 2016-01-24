@@ -1,7 +1,7 @@
 This is enblend.info, produced by makeinfo version 5.2 from
 enblend.texi.
 
-This manual is for Enblend (version 4.1.4, 7 August 2015), a tool for
+This manual is for Enblend (version 4.1.4, 24 January 2016), a tool for
 compositing images in such a way that the seam between the images is
 invisible, or at least very difficult to see.
 
@@ -24,7 +24,7 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 4.1.4, 7 August 2015), a tool for
+This manual is for Enblend (version 4.1.4, 24 January 2016), a tool for
 compositing images in such a way that the seam between the images is
 invisible, or at least very difficult to see.
 
@@ -2971,45 +2971,45 @@ General Index
 
 
 Tag Table:
-Node: Top865
-Node: Overview2054
-Ref: Overview-Footnote-14493
-Ref: Overview-Footnote-24675
-Node: Workflow4817
-Node: Standard Workflow5216
-Ref: Figure:photographic-workflow5487
-Node: External Mask Manipulation8186
-Ref: Figure:external-mask-workflow9512
-Node: Invocation10022
-Node: Image Requirements10726
-Node: Response Files12196
-Ref: Table:response-file-format14231
-Ref: Table:response-file-syntactic-comment16706
-Ref: Table:globbing-algorithms17617
-Node: Common Options19076
-Ref: Common Options-Footnote-128527
-Ref: Common Options-Footnote-228719
-Node: Extended Options28878
-Ref: Extended Options-Footnote-136325
-Node: Mask Generation Options36398
-Ref: Table:mask-generation39058
-Ref: Table:optimizer-strategies46445
-Ref: Table:visualization-colors52636
-Ref: Table:mask-template-characters53559
-Ref: Mask Generation Options-Footnote-155811
-Node: Primary Seam Generators56040
-Node: Color Profiles58916
-Node: Understanding Masks61365
-Node: Tuning Memory Usage65157
-Ref: Table:cache-size-settings67908
-Node: Helpful Programs68343
-Node: Bug Reports72081
-Ref: Bug Reports-Footnote-177730
-Node: Authors77800
-Node: FDL78965
-Node: Program Index99926
-Node: Syntactic-Comment Index102922
-Node: Option Index103611
-Node: General Index108195
+Node: Top867
+Node: Overview2058
+Ref: Overview-Footnote-14497
+Ref: Overview-Footnote-24679
+Node: Workflow4821
+Node: Standard Workflow5220
+Ref: Figure:photographic-workflow5491
+Node: External Mask Manipulation8190
+Ref: Figure:external-mask-workflow9516
+Node: Invocation10026
+Node: Image Requirements10730
+Node: Response Files12200
+Ref: Table:response-file-format14235
+Ref: Table:response-file-syntactic-comment16710
+Ref: Table:globbing-algorithms17621
+Node: Common Options19080
+Ref: Common Options-Footnote-128531
+Ref: Common Options-Footnote-228723
+Node: Extended Options28882
+Ref: Extended Options-Footnote-136329
+Node: Mask Generation Options36402
+Ref: Table:mask-generation39062
+Ref: Table:optimizer-strategies46449
+Ref: Table:visualization-colors52640
+Ref: Table:mask-template-characters53563
+Ref: Mask Generation Options-Footnote-155815
+Node: Primary Seam Generators56044
+Node: Color Profiles58920
+Node: Understanding Masks61369
+Node: Tuning Memory Usage65161
+Ref: Table:cache-size-settings67912
+Node: Helpful Programs68347
+Node: Bug Reports72085
+Ref: Bug Reports-Footnote-177734
+Node: Authors77804
+Node: FDL78969
+Node: Program Index99930
+Node: Syntactic-Comment Index102926
+Node: Option Index103615
+Node: General Index108199
 
 End Tag Table

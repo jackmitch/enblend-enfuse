@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2014 Christoph L. Spiel
+ * Copyright (C) 2012-2016 Christoph L. Spiel
  *
  * This file is part of Enblend.
  *
@@ -26,6 +26,9 @@
 #include <vigra/imageinfo.hxx>
 #include <vigra/impex.hxx>
 
+#ifndef VIGRA_UNIQUE_PTR
+#define VIGRA_UNIQUE_PTR std::auto_ptr
+#endif
 
 namespace vigra_ext
 {
@@ -194,7 +197,7 @@ namespace vigra_ext
                          AlphaIterator alpha_iterator, AlphaAccessor alpha_accessor,
                          vigra::VigraTrueType)
         {
-            std::auto_ptr<vigra::Decoder> decoder(vigra::decoder(import_info));
+            VIGRA_UNIQUE_PTR<vigra::Decoder> decoder(vigra::decoder(import_info));
 
             switch (pixel_t_of_string(decoder->getPixelType()))
             {
@@ -249,7 +252,7 @@ namespace vigra_ext
                          AlphaIterator alpha_iterator, AlphaAccessor alpha_accessor,
                          vigra::VigraFalseType)
         {
-            std::auto_ptr<vigra::Decoder> decoder(vigra::decoder(import_info));
+            VIGRA_UNIQUE_PTR<vigra::Decoder> decoder(vigra::decoder(import_info));
 
             switch (pixel_t_of_string(decoder->getPixelType()))
             {
@@ -467,7 +470,7 @@ namespace vigra_ext
                          vigra::VigraTrueType)
         {
             const std::string pixel_type(export_info.getPixelType());
-            std::auto_ptr<vigra::Encoder> encoder(vigra::encoder(export_info));
+            VIGRA_UNIQUE_PTR<vigra::Encoder> encoder(vigra::encoder(export_info));
 
             encoder->setPixelType(pixel_type);
 
@@ -525,7 +528,7 @@ namespace vigra_ext
                          vigra::VigraFalseType)
         {
             const std::string pixel_type(export_info.getPixelType());
-            std::auto_ptr<vigra::Encoder> encoder(vigra::encoder(export_info));
+            VIGRA_UNIQUE_PTR<vigra::Encoder> encoder(vigra::encoder(export_info));
 
             encoder->setPixelType(pixel_type);
 

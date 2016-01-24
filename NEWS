@@ -1,5 +1,15 @@
 * Version 4.1.x  --  Stable Branch
 
+Patchlevel 5
+
+Unreleased.
+
+
+** Bug Fixes
+
+- [Enblend and Enfuse] Fix compilation problem with gcc-6 (#1537368).
+
+
 Patchlevel 4
 
 Released on September 28, 2015.
