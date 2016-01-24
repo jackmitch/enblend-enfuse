@@ -10,6 +10,11 @@ Unreleased.
 - [Enblend and Enfuse] Fix compilation problem with gcc-6 (#1537368).
 
 
+** Package Maintainer Stuff
+
+- Get documentation target `xhtml' working again.
+
+
 Patchlevel 4
 
 Released on September 28, 2015.

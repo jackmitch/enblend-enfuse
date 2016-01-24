@@ -16,7 +16,7 @@ readonly global__sed=${SED:-sed}
 readonly global__tidy=${TIDY:-tidy}
          global__tidy_flags=""
 readonly global__xmllint=${XMLLINT:-xmllint}
-         global__xmllint_flags="--valid --noblanks --noent -nonet --nsclean --format --encode iso-8859-1"
+         global__xmllint_flags="--valid --noblanks --noent --nsclean --format --encode iso-8859-1"
 
 
 failwith_error ()
@@ -69,11 +69,16 @@ postprocess_tidy_output ()
         -e "s#^<head>#<head>\n$lazy__meta_tag#" \
         \
         -e 's#<html\([^>]*\) lang="[^"]*"\([^>]*\)#<html\1\2#' \
+        -e 's#<body[^>]*>#<body>#' \
         -e 's#<ol[^>]*>#<ol>#' \
+        -e 's#<h\([1-9]\)\([^>]*\)align="[^"]*"#<h\1\2#' \
         -e 's#<t\([dh]\)\([^>]*\)width="[^"]*"\([^>]*\)#<t\1\2\3#' \
+        -e 's#<dl\([^>]*\)compact="[^"]*"\([^>]*\)#<dl\1\2#' \
         -e 's#<ul\([^>]*\)compact="[^"]*"\([^>]*\)#<ul\1\2#' \
         \
-        -e 's#<\(/*\)\(math\|mfenced\|mrow\|msqrt\|msub\|msup\)inline#<\1\2#g'
+        -e 's#<\(/*\)\(math\|mfenced\|mrow\|msqrt\|msub\|msup\)inline#<\1\2#g' \
+        \
+        -e 's#^<a name=.*></a>##'
 }
 
 

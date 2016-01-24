@@ -3145,10 +3145,19 @@ means they are @emph{active}.
 @float Table,Table:default-weights
 @multitable {Local Contrast} {0.0}
 @headitem Criterion  @tab Weight
+
+@html
+<tbody>
+@end html
+
 @item Exposure       @tab @value{src::default-weight-exposure}
 @item Saturation     @tab @value{src::default-weight-saturation}
 @item Local Contrast @tab @value{src::default-weight-contrast}
 @item Local Entropy  @tab @value{src::default-weight-entropy}
+
+@html
+</tbody>
+@end html
 @end multitable
 
 @caption{Enfuse's default weights as compiled into version@tie{}@value{VERSION}.}
@@ -5187,7 +5196,6 @@ Fire in rapid succession.
 @cindex series, simple
 @cindex noise reduction
 
-@mainpurpose Reduce noise
 
 @noindent
 With the default settings, Enfuse computes a weighted average of the
@@ -5216,7 +5224,6 @@ be worth an extra run.
 @cindex series, exposure
 @cindex dynamic range increase
 
-@mainpurpose Increase manageable dynamic range
 
 @noindent
 An exposure series is a set of images taken with identical parameters
@@ -5345,7 +5352,6 @@ the multiply occuring exposures and reducing noise.
 @cindex series, flash exposure
 @cindex dynamic range increase
 
-@mainpurpose ???
 
 ...
 
@@ -5356,7 +5362,6 @@ the multiply occuring exposures and reducing noise.
 @cindex series, polarization
 @cindex saturation enhancement
 
-@mainpurpose Reflection suppression, saturation enhancement
 
 In the current implementation of Enfuse, it is not possible in general
 to fuse a polarization series.  Naively abusing
@@ -5368,7 +5373,6 @@ to fuse a polarization series.  Naively abusing
 @cindex focus stacks
 @cindex depth-of-focus increase
 
-@mainpurpose Synthetic Depth-of-Field Increase
 
 A @dfn{focus stack} is a series of images where the distance of the
 focal plane from the sensor varies.  Sloppily speaking, the images

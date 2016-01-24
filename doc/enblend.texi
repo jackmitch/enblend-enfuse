@@ -1613,6 +1613,10 @@ Also see @ref{Table:mask-generation}.
 @multitable @columnfractions 0.2 0.35 0.35
 @headitem @tab @code{--no-optimize} @tab @code{--optimize}
 
+@html
+<tbody>
+@end html
+
 @item @code{--fine-mask}
 @c no opt
 @tab
@@ -1635,6 +1639,10 @@ it, fill vector contours.
 Scale down overlap region, vectorize @acronym{NFT} mask, optimize
 vertices with simulated annealing and @sc{Dijkstra's} shortest path
 algorithm, fill vector contours.
+
+@html
+</tbody>
+@end html
 @end multitable
 
 @caption{Various options that control the generation of masks.  All mask computations are based on the Nearest-Feature Transformation (@acronym{NFT}) of the overlap region.}
