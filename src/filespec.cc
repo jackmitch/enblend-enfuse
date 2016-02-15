@@ -37,7 +37,6 @@
 #include <cctype>
 
 #include <boost/algorithm/string/case_conv.hpp>
-#include <boost/assign/list_of.hpp>
 
 #include <vigra/imageinfo.hxx>
 
@@ -412,17 +411,12 @@ class Globbing
 public:
     Globbing() : algorithm_name_("literal"), algorithm_(NULL)
     {
-        installed_algorithms_ =
-            boost::assign::map_list_of
-            ("literal", MAKE_ALGORITHM(new LiteralGlobbingAlgorithm))
-            ("wildcard", MAKE_ALGORITHM(new WildcardGlobbingAlgorithm))
-#ifndef _WIN32
-            ("shell", MAKE_ALGORITHM(new ShellGlobbingAlgorithm))
-#endif
-            ;
-
+        installed_algorithms_["literal"] = MAKE_ALGORITHM(new LiteralGlobbingAlgorithm);
+        installed_algorithms_["wildcard"] = MAKE_ALGORITHM(new WildcardGlobbingAlgorithm);
         setup_alias("literal", "none");
+
 #ifndef _WIN32
+        installed_algorithms_["shell"] = MAKE_ALGORITHM(new ShellGlobbingAlgorithm);
         setup_alias("shell", "sh");
 #endif
     }
