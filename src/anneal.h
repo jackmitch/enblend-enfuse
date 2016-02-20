@@ -767,10 +767,12 @@ void annealSnake(const CostImage* const ci,
                  VisualizeImage* const vi)
 {
     timer::WallClock wall_clock;
-    const bool enable_kernel = parameter::as_boolean("gpu-kernel-anneal", true);
 
     wall_clock.start();
+
 #ifdef OPENCL
+    const bool enable_kernel = parameter::as_boolean("gpu-kernel-anneal", true);
+
     std::unique_ptr<GDAConfiguration<CostImage, VisualizeImage> >
         cfg((GPUContext && enable_kernel) ?
             new GDAConfigurationGPU<CostImage, VisualizeImage>(ci, snake, vi) :

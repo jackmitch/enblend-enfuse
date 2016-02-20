@@ -62,10 +62,12 @@ namespace vigra
                           ValueType background, int norm)
         {
             timer::WallClock wall_clock;
-            const bool enable_kernel = parameter::as_boolean("gpu-kernel-dt", true);
 
             wall_clock.start();
+
 #ifdef OPENCL
+            const bool enable_kernel = parameter::as_boolean("gpu-kernel-dt", true);
+
             if (GPUContext && GPU::DistanceTransform && enable_kernel)
             {
 #ifdef DEBUG
