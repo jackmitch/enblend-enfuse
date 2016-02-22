@@ -836,6 +836,10 @@ namespace ocl
         {
             return vendor::amd;
         }
+        else if (is_prefix_of_name("Apple"))
+        {
+            return vendor::apple;
+        }
         else if (is_prefix_of_name("NVIDIA"))
         {
             return vendor::nvidia;

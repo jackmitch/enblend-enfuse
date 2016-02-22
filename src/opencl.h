@@ -294,6 +294,7 @@ namespace ocl
         typedef enum
         {
             amd,
+            apple,
             nvidia,
             unknown
         } id_t;
