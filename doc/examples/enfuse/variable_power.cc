@@ -25,6 +25,7 @@
 #include <algorithm>              // std::max()
 #include <cerrno>                 // errno
 #include <cmath>                  // macro M_LN2, std::exp(), std::abs(), std::pow()
+#include <cstdlib>
 
 #include "exposure_weight_base.h" // macro FWHM_GAUSSIAN, class ExposureWeight
 
