@@ -9,6 +9,9 @@ Unreleased.
 
 - [Enblend and Enfuse] Fix compilation problem with gcc-6 (#1537368).
 
+- [Enblend and Enfuse] Correct a longstanding off-by-one glitch in the
+  signature generation, which produced wrong compilation dates.
+
 
 ** Package Maintainer Stuff
 
