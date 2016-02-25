@@ -80,6 +80,17 @@ Some notes on the arguments of this option:
     For details consult the manual page of LoadLibrary.
   \end{restrictedmaterial}
 
+  \smallskip
+
+  \begin{restrictedmaterial}{OS X}
+    If \metavar{SHARED-OBJECT} does not contain a slash (\sample{/}), the dynamic loader 
+    searches the following until it finds a compatible Mach-O file: \envvar{LD\_LIBRARY\_PATH}, 
+    \envvar{DYLD\_LIBRARY\_PATH}, current working directory, \envvar{DYLD\_FALLBACK\_LIBRARY\_PATH}.
+
+    \genidx{dlopen (OS X)}%
+    For details of the search algorithm please consult the manual page of dlopen(3).
+  \end{restrictedmaterial}
+
 \item
   There is no way knowing which of the symbols inside of \metavar{SHARED-OBJECT} are suitable
   for \metavar{SYMBOL} without knowledge of source code of \metavar{SHARED-OBJECT}.
@@ -502,6 +513,35 @@ extern "C"
 
   \begin{literal}
     \app{} --exposure-weight-function=dynexp.dll:linear\dots
+  \end{literal}
+\end{restrictedmaterial}
+
+\medskip
+
+\begin{restrictedmaterial}{OS X}
+  \noindent On OS X the creation of shared objects -- or loadable modules --
+  has been tested with the \acronym{Clang} C language frontend for \acronym{LLVM},
+  and should work on OS X Mavericks (10.9) or higher.
+
+  \begin{literal}
+    clang++ -std=c++11 -stdlib=libc++ \bslash \\
+    ~~~~-O2 -bundle -I<PATH-TO-BASE-CLASS-HEADER> \bslash \\
+    ~~~~-o dynexp.so \bslash \\
+    ~~~~dynexp.cc
+  \end{literal}
+
+  The important options are
+
+  \begin{codelist}
+  \item[\option{-bundle}]\itemend
+    Instruct the compiler's code-generator to produce a loadable module.
+  \end{codelist}
+
+  Finally, the weight function can be selected by its \metavar{SYMBOL}~name in the
+  \metavar{SHARED-OBJECT}.
+
+  \begin{literal}
+    \app{} --exposure-weight-function=dynexp.so:linear\dots
   \end{literal}
 \end{restrictedmaterial}
 
