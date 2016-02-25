@@ -554,7 +554,17 @@ namespace ocl
     //     * It assists in getting OpenCL source code compiled.
 
     template <class actual_code_policy,
-              int default_queue_flags = CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE | CL_QUEUE_PROFILING_ENABLE>
+              int default_queue_flags =
+#ifdef __APPLE__
+              // PORTABILITY NOTE: Omit out-of-order execution flag as
+              // it makes the OpenCL runtime choke on Apple platforms
+              // (OS X 10.11).
+              CL_QUEUE_PROFILING_ENABLE
+#else
+              CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE | CL_QUEUE_PROFILING_ENABLE
+#endif
+        >
+
     class Function : public BuildableFunction, public actual_code_policy
     {
     public:
