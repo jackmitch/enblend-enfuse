@@ -176,7 +176,7 @@ float enfuse_normalized_luminance(float y)
   The weight function's signature being so simple and weight functions usually also being simple
   none of the language-specific features like, for example, \code{local}-\slash\code{global}
   address spaces, synchronization nor vector-data types are required to write useful weight
-  functions.  In particular, \App's \acronym{OpenCL} exposure weight functions are \emph{no}
+  functions.  In particular, \App's \acronym{OpenCL} exposure weight functions are \emph{not}
   \code{kernel} functions.
 \end{geeknote}
 
@@ -205,7 +205,7 @@ float weight(float y)
   \caption[Generalized \propername{Gauss} weight function]{%
     \label{ex:opencl-generalized-gaussian-weight}%
     Generalized \propername{Gauss} weight function written in \acronym{OpenCL}.  Note the
-    definition of a default parameter \code{EXPONENT}.}
+    definition of a default parameter~\code{EXPONENT}.}
 \end{exemplar}
 
 Say \exampleName~\ref{ex:opencl-generalized-gaussian-weight} is stored in
@@ -221,7 +221,7 @@ or
   \app{} --gpu --exposure-weight-function=\feasiblebreak
   generalized\_gaussian.cl:\feasiblebreak
   weight:\feasiblebreak
-  1.5 \dots
+  EXPONENT=1.5 \dots
 \end{literal}
 
 \exampleName~\ref{ex:variable-opencl-exposure-weight-function} implements the same variable
@@ -283,7 +283,7 @@ or
   \app{} --gpu --exposure-weight-function=\feasiblebreak
   variable\_power.cl:\feasiblebreak
   variable\_power\_weight:\feasiblebreak
-  3 \dots
+  EXPONENT=3 \dots
 \end{literal}
 
 \optidx{--exposure-weight}%
