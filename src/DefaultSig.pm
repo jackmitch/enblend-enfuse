@@ -61,7 +61,7 @@ sub use_gmt {
 }
 
 
-# Answer a formatted date based on the current date.
+# Answer a formatted date string based on the current date.
 #
 # 1 <= $day_of_month <= 31
 # 1 <= $month <= 12
@@ -78,7 +78,7 @@ sub format_date {
 }
 
 
-# Answer a formatted time based on the current time.
+# Answer a formatted time string based on the current time.
 sub format_time {
     my ($self,
         $second, $minute, $hour) = @_;
@@ -100,12 +100,12 @@ sub format_time {
 
 
 sub weekdays {my $self = shift;  return [qw(Sun Mon Tue Wed Thu Fri Sat)]}
-sub monthnames {my $self = shift;  return [qw(Jan Feb Mar May Jun Jul Aug Sep Oct Nov Dec)]}
+sub monthnames {my $self = shift;  return [qw(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec)]}
 
 
 # Update date and time fields simultaneously to get a consistent time
-# stamp.  If is_using_gmt() use GMT instead of the local time (maybe
-# defined by the TZ environment variable).
+# stamp.  If is_using_gmt() use GMT instead of the local time, which
+# may be defined by the TZ environment variable.
 sub update_date_and_time {
     my $self = shift;
 
@@ -115,7 +115,7 @@ sub update_date_and_time {
 
     $self->{DATE} = $self->format_date($day_of_month, $month, $year + 1900, $day_of_week,
                                        $self->weekdays->[$day_of_week],
-                                       $self->monthnames->[$month - 1]);
+                                       $self->monthnames->[$month]);
     $self->{TIME} = $self->format_time($second, $minute, $hour);
 }
 
