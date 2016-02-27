@@ -171,8 +171,10 @@
 /* Define to 1 if you have the ANSI C header files. */
 #cmakedefine STDC_HEADERS 1
 
-/* Define to 1 if strerror_r returns char *. */
+/* Define to 1 if strerror_r returns char. Undefined for OS X as it requires int */
+#ifndef __APPLE__
 #define STRERROR_R_CHAR_P 1
+#endif
 
 /* Version number of package */
 #define VERSION "${ENBLEND_VERSION_ONLY}"
