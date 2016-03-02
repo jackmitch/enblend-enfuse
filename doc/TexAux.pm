@@ -33,6 +33,9 @@ sub lift {
 
     if ($string =~ m#^https?:#) {
         $string = "\\url{$string}";
+    } else {
+        $string =~ s#:#:\\feasiblebreak #g;
+        $string =~ s#(?<!^)/(?!$)#\\slash #g;
     }
 
     return $string;

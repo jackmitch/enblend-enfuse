@@ -128,6 +128,10 @@ sub print_docstrings {
         my $raw_value = $docstrings->{$key}{VALUE};
         my $value = TexAux::escape(defined($raw_value) ? $raw_value : $options->{EMPTY_VALUE_SUBSTITUTE});
 
+        if ($key =~ m#DIR|PATH#) {
+            $value = TexAux::lift($value);
+        }
+
         print("%% $filename:$linenumber\n",
               "$options->{INSERT_MACRO_NAME}\{$options->{KEY_PREFIX}$key\}\{$value\}\n",
               "\n");
