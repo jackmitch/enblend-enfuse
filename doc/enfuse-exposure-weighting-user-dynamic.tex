@@ -36,14 +36,14 @@ option~\option{--exposure-weight-function}, load the exposure weight function id
 Some notes on the arguments of this option:
 
 \begin{itemize}
-  \genidx{environment variable!LD\_LIBRARY\_PATH@\envvar{LD\_LIBRARY\_PATH}}%
-  \gensee{LD\_LIBRARY\_PATH@\envvar{LD\_LIBRARY\_PATH}}%
-         {environment variable, \envvar{LD\_LIBRARY\_PATH}}%
 \item
   \metavar{SHARED-OBJECT} is a filename (typically ending in \filename{.so} or \filename{.dll}).
   Depending on the operating system and the dynamic-loader implementation compiled into \appcmd,
   \metavar{SHARED-OBJECT} may or may not require a path.
 
+  \genidx{environment variable!LD\_LIBRARY\_PATH@\envvar{LD\_LIBRARY\_PATH}}%
+  \gensee{LD\_LIBRARY\_PATH@\envvar{LD\_LIBRARY\_PATH}}%
+         {environment variable, \envvar{LD\_LIBRARY\_PATH}}%
   \begin{restrictedmaterial}{Linux}
     If \metavar{SHARED-OBJECT} does not contain a slash (\sample{/}), the dynamic loader
     \emph{only} searches along \envvar{LD\_LIBRARY\_PATH}; it even ignores the current working
@@ -58,8 +58,36 @@ Some notes on the arguments of this option:
       \app{} --exposure-weight-function=\feasiblebreak ./SHARED-OBJECT:\dots
     \end{literal}
 
-    \genidx{dlopen (Linux)}%
-    For details of the search algorithm please consult the manual page of dlopen(3).
+    \genidx{dlopen!Linux}%
+    For details of the search algorithm please consult the manual page of \manpage{dlopen}{3}.
+  \end{restrictedmaterial}
+
+  \smallskip
+
+  \genidx{environment variable!LD\_LIBRARY\_PATH@\envvar{LD\_LIBRARY\_PATH}}%
+  \gensee{LD\_LIBRARY\_PATH@\envvar{LD\_LIBRARY\_PATH}}%
+         {environment variable, \envvar{LD\_LIBRARY\_PATH}}%
+  \genidx{environment variable!DYLD\_LIBRARY\_PATH@\envvar{DYLD\_LIBRARY\_PATH}}%
+  \gensee{DYLD\_LIBRARY\_PATH@\envvar{DYLD\_LIBRARY\_PATH}}%
+         {environment variable, \envvar{DYLD\_LIBRARY\_PATH}}%
+  \genidx{environment variable!DYLD\_FALLBACK\_LIBRARY\_PATH@\envvar{DYLD\_FALLBACK\_LIBRARY\_PATH}}%
+  \gensee{DYLD\_FALLBACK\_LIBRARY\_PATH@\envvar{DYLD\_FALLBACK\_LIBRARY\_PATH}}%
+         {environment variable, \envvar{DYLD\_FALLBACK\_LIBRARY\_PATH}}%
+  \begin{restrictedmaterial}{OS~X}
+    \genidx{file!Mach-O}%
+    \gensee{Math-O file}{file, Mach-O}%
+    If \metavar{SHARED-OBJECT} does not contain a slash (\sample{/}), the dynamic loader
+    searches the following paths or directories until it finds a compatible Mach-O~file:
+
+    \begin{enumerate}
+    \item \envvar{LD\_LIBRARY\_PATH},
+    \item \envvar{DYLD\_LIBRARY\_PATH},
+    \item current working directory, and finally
+    \item \envvar{DYLD\_FALLBACK\_LIBRARY\_PATH}.
+    \end{enumerate}
+
+    \genidx{dlopen!OS~X}%
+    For details of the search algorithm please consult the manual page of \manpage{dlopen}{3}.
   \end{restrictedmaterial}
 
   \smallskip
@@ -78,17 +106,6 @@ Some notes on the arguments of this option:
 
     \genidx{LoadLibrary (Windows)}%
     For details consult the manual page of LoadLibrary.
-  \end{restrictedmaterial}
-
-  \smallskip
-
-  \begin{restrictedmaterial}{OS X}
-    If \metavar{SHARED-OBJECT} does not contain a slash (\sample{/}), the dynamic loader 
-    searches the following until it finds a compatible Mach-O file: \envvar{LD\_LIBRARY\_PATH}, 
-    \envvar{DYLD\_LIBRARY\_PATH}, current working directory, \envvar{DYLD\_FALLBACK\_LIBRARY\_PATH}.
-
-    \genidx{dlopen (OS X)}%
-    For details of the search algorithm please consult the manual page of dlopen(3).
   \end{restrictedmaterial}
 
 \item
@@ -421,7 +438,8 @@ these two functions are the prime candidates for optimization.
   Compiling, Linking, and Loading}
 
 \begin{restrictedmaterial}{Linux}
-  \noindent Compile and link using the \acronym{GNU} compiler for example with
+  \noindent Compile and link using the \uref{\gccgnuorg}{\acronym{GNU}-compiler}, \code{g++},
+  for example with
 
   \begin{literal}
     g++ -std=c++11 \bslash \\
@@ -441,11 +459,36 @@ these two functions are the prime candidates for optimization.
 
   \item[\option{-shared}]\itemend
     Tell the linker to create a shared object instead of the default executable.  On some
-    systems, the library must be blessed, by passing the shared-object name (\option{soname})
-    directly to the linker (\option{-Wl}).
+    systems, the library must be ``blessed'', by passing the shared-object name
+    (\option{soname}) directly to the linker (\option{-Wl}).
 
     Of course more than one object file can be linked into a single shared object.
   \end{codelist}
+
+  Finally, the weight function can be selected by its \metavar{SYMBOL}~name in the
+  \metavar{SHARED-OBJECT}.
+
+  \begin{literal}
+    \app{} --exposure-weight-function=dynexp.so:linear\dots
+  \end{literal}
+\end{restrictedmaterial}
+
+\medskip
+
+\begin{restrictedmaterial}{OS~X}
+  \noindent On OS~X the creation of shared objects -- or loadable modules -- has been tested
+  with the C-language frontend of \uref{\llvm}{\acronym{LLVM}},
+  \uref{\clangllvm}{\code{clang++}}, and should work on OS~X Mavericks~(10.9) or higher.
+
+  \begin{literal}
+    clang++ -std=c++11 -stdlib=libc++ \bslash \\
+    ~~~~-O2 -bundle -I<PATH-TO-BASE-CLASS-HEADER> \bslash \\
+    ~~~~-o dynexp.so \bslash \\
+    ~~~~dynexp.cc
+  \end{literal}
+
+  The important option here is \sample{-bundle} which instructs the compiler's code-generator to
+  produce a loadable module.
 
   Finally, the weight function can be selected by its \metavar{SYMBOL}~name in the
   \metavar{SHARED-OBJECT}.
@@ -512,35 +555,6 @@ extern "C"
 
   \begin{literal}
     \app{} --exposure-weight-function=dynexp.dll:linear\dots
-  \end{literal}
-\end{restrictedmaterial}
-
-\medskip
-
-\begin{restrictedmaterial}{OS X}
-  \noindent On OS X the creation of shared objects -- or loadable modules --
-  has been tested with the \acronym{Clang} C language frontend for \acronym{LLVM},
-  and should work on OS X Mavericks (10.9) or higher.
-
-  \begin{literal}
-    clang++ -std=c++11 -stdlib=libc++ \bslash \\
-    ~~~~-O2 -bundle -I<PATH-TO-BASE-CLASS-HEADER> \bslash \\
-    ~~~~-o dynexp.so \bslash \\
-    ~~~~dynexp.cc
-  \end{literal}
-
-  The important options are
-
-  \begin{codelist}
-  \item[\option{-bundle}]\itemend
-    Instruct the compiler's code-generator to produce a loadable module.
-  \end{codelist}
-
-  Finally, the weight function can be selected by its \metavar{SYMBOL}~name in the
-  \metavar{SHARED-OBJECT}.
-
-  \begin{literal}
-    \app{} --exposure-weight-function=dynexp.so:linear\dots
   \end{literal}
 \end{restrictedmaterial}
 

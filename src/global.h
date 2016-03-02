@@ -157,8 +157,8 @@ typedef enum
 } blend_colorspace_t;
 
 
-//< default-tiff-resolution 300@dmn{dpi}
-#define DEFAULT_TIFF_RESOLUTION 300.0f
+//< default-tiff-resolution 300
+#define DEFAULT_TIFF_RESOLUTION 300.0f // units are dots-per-inch ("DPI")
 
 
 struct TiffResolution {

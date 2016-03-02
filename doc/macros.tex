@@ -136,6 +136,7 @@
 
 \newcommand*{\flexipageref}[2]{\ifhevea\ahrefloc{#2}{#1}\else #1, \pagename~\pageref{#2}\fi}
 \WithSuffix\newcommand\flexipageref*[2]{\ifhevea\ahrefloc{#2}{#1}\else #1 (\pagename~\pageref{#2})\fi}
+\newcommand*{\manpage}[2]{#1(#2)}
 \newcommand*{\semilog}[2]{\mbox{${#1}\cdot 10^{#2}$}} % \cdot or \times
 \newcommand*{\slfrac}[2]% Knuth, answer to Question 11.6 rewritten with LaTeX macros
 {\ifhevea #1/#2\else

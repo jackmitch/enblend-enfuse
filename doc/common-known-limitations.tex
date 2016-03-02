@@ -15,14 +15,15 @@ some of the known ones.
   The \genidx{BigTIFF@\acronym{BigTIFF}}\acronym{BigTIFF} image format is not supported.
 
 \item
-  Total size of \emph{any} -- even intermediate -- image is limit of to $2^{31}$~pixels, this is
+  Total size of \emph{any} -- even intermediate -- image is limited to $2^{31}$~pixels, this is
   two giga-pixels.
 
 \ifenblend
-  \genidx{blending!sequential}
+  \genidx{blending!sequential}%
+  \gensee{sequential blending}{blending, sequential}%
 \item
   Each ``next'' image must overlap with the result of the blending of all previous images.  In
-  special occasions option~\option{--pre-assemble} can circumvent this sequential-blending
+  special occasions option~\sample{--pre-assemble} can circumvent this sequential-blending
   restriction.
 
 \item
@@ -44,8 +45,8 @@ some of the known ones.
     A > \val{val:overlap-check-threshold} \times U.
     \]
     Avoiding the term ``fractal dimension'', we have constructed a simple measure of how
-    2-dimensional the overlap area is.  This way we avoid feeding later processing stages with
-    nearly 1-dimensional overlap regions, something that wreaks havoc on them.
+    2-dimensional the overlap area is.  This way we steer clear of feeding later processing
+    stages with nearly 1-dimensional overlap regions, something that wreaks havoc on them.
   \end{geeknote}
 
   \optidx{--wrap}
