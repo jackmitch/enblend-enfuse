@@ -182,7 +182,7 @@ enhanced :=
     to fusing with the commands demonstrated in
     \exampleName~\ref{ex:imagemagick-convert-cutoff}.
 
-    \begin{exemplar}[htbp]
+    \begin{exemplar}
       \begin{terminal}
         \$ convert IMAGE \bslash \\
         ~~~~~~~~~~~\bslash( +clone -threshold LOWER-CUTOFF \bslash) \bslash \\
@@ -203,10 +203,11 @@ enhanced :=
         ~~~~~~~~~~~MASKED-IMAGE
       \end{terminal}
 
-      \caption[\application{ImageMagick} for exposure cutoff]{\label{ex:imagemagick-convert-cutoff}%
-        Using \application{ImageMagick} for exposure cutoff operations.  The first example only
-        applies a lower cutoff, wherease the second one applies both a lower and an upper cutoff
-        to the images.}
+      \caption[\application{ImageMagick} for exposure cutoff]%
+              {\label{ex:imagemagick-convert-cutoff}%
+                Using \application{ImageMagick} for exposure cutoff operations.  The first
+                example only applies a lower cutoff, wherease the second one applies both a
+                lower and an upper cutoff to the images.}
     \end{exemplar}
 
     Transforming some or all input images as shown in the example gives the user more

@@ -167,7 +167,7 @@ being recognized as a response file add one of the following syntactic comments 
 
 Finally, \exampleName~\ref{ex:response-file} shows a complete response file.
 
-\begin{exemplar}[htbp]
+\begin{exemplar}
   \begin{literal}
     \val*{val:response-file-comment-char}~4\bslash pi panorama! \\
     \mbox{} \\
@@ -183,7 +183,9 @@ Finally, \exampleName~\ref{ex:response-file} shows a complete response file.
     nadir.tif \\
   \end{literal}
 
-  \caption[Complete response file]{\label{ex:response-file}Example of a complete response file.}
+  \caption[Complete response file]%
+          {\label{ex:response-file}%
+            Example of a complete response file.}
 \end{exemplar}
 
 
@@ -295,7 +297,7 @@ use option~\option{--show-globbing-algorithms}.
 \exampleName~\ref{ex:globbing-algorithm} gives an example of how to control filename-globbing in
 a response file.
 
-\begin{exemplar}[htbp]
+\begin{exemplar}
   \begin{literal}
     \val*{val:response-file-comment-char}~Horizontal panorama \\
     \val*{val:response-file-comment-char}~15 images \\
@@ -306,8 +308,9 @@ a response file.
     image\_001[0-4].tif \\
   \end{literal}
 
-  \caption[Filename-globbing syntactic comment]{\label{ex:globbing-algorithm}Control
-    filename-globbing in a response file with a syntactic comment.}
+  \caption[Filename-globbing syntactic comment]%
+          {\label{ex:globbing-algorithm}%
+            Control filename-globbing in a response file with a syntactic comment.}
 \end{exemplar}
 
 

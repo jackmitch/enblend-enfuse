@@ -280,7 +280,7 @@ directory~\filename{\val*{val:DOCDIR}\slash examples\slash enfuse} along with a
 \acronym{GNU}-Makefile called \filename{Makefile.userweight}.
 
 
-\begin{exemplar}[htbp]
+\begin{exemplar}
   \begin{maxipage}
     \begin{cxxlisting}
 #include <cmath>                     // std::fabs()
@@ -307,12 +307,12 @@ Linear linear;
     \end{cxxlisting}
   \end{maxipage}
 
-  \caption[Simple dynamic exposure weight function]{%
-    \label{ex:simple-dynamic-exposure-weight-function}%
-    A dynamic exposure weight function that defines a ``roof-top''.  The natural width is
-    exactly one, so we override method~\code{initialize} to rescale \metavar{WIDTH}, passed in
-    as \code{width\_parameter}, by multiplying with \code{FWHM\_GAUSSIAN} to get the same width
-    as the predefined Gaussian.}
+  \caption[Simple dynamic exposure weight function]%
+          {\label{ex:simple-dynamic-exposure-weight-function}%
+            A dynamic exposure weight function that defines a ``roof-top''.  The natural width
+            is exactly one, so we override method~\code{initialize} to rescale \metavar{WIDTH},
+            passed in as \code{width\_parameter}, by multiplying with \code{FWHM\_GAUSSIAN} to
+            get the same width as the predefined Gaussian.}
 \end{exemplar}
 
 
@@ -320,7 +320,7 @@ As the extension language is C++, we can write templated families of functions, 
 \exampleName~\ref{ex:templated-dynamic-exposure-weight-function} demonstrates.
 
 
-\begin{exemplar}[htbp]
+\begin{exemplar}
   \begin{maxipage}
     \begin{cxxlisting}
 #include <algorithm>    // std::max()
@@ -353,11 +353,11 @@ TemplatedPower<4> tpower4;
     \end{cxxlisting}
   \end{maxipage}
 
-  \caption[Templated dynamic exposure weight function]{%
-    \label{ex:templated-dynamic-exposure-weight-function}%
-    The templated class~\code{TemplatedPower} allows to create a weight function for arbitrary
-    positive exponents~\code{n}.  In particular, \code{TemplatedPower<4>} duplicates the
-    built-in exposure-weight function~\code{bisquare}.}
+  \caption[Templated dynamic exposure weight function]%
+          {\label{ex:templated-dynamic-exposure-weight-function}%
+            The templated class~\code{TemplatedPower} allows to create a weight function for
+            arbitrary positive exponents~\code{n}.  In particular, \code{TemplatedPower<4>}
+            duplicates the built-in exposure-weight function~\code{bisquare}.}
 \end{exemplar}
 
 
@@ -367,7 +367,7 @@ class like \code{VariablePower} allows full control over the exponent at the com
 including fractional exponents thereby generalizing both of the previous examples.
 
 
-\begin{exemplar}[htbp]
+\begin{exemplar}
   \begin{maxipage}
     \begin{cxxlisting}
 #include <algorithm>    // std::max()
@@ -416,10 +416,10 @@ VariablePower vpower;
     \end{cxxlisting}
   \end{maxipage}
 
-  \caption[Dynamic exposure weight function with extra arguments]{%
-    \label{ex:variable-dynamic-exposure-weight-function}%
-    Dynamic exposure weight function that accesses the first extra argument from the tuple of
-    arguments passed with option~\option{--exposure-weight-function}.}
+  \caption[Dynamic exposure weight function with extra arguments]%
+          {\label{ex:variable-dynamic-exposure-weight-function}%
+            Dynamic exposure weight function that accesses the first extra argument from the
+            tuple of arguments passed with option~\option{--exposure-weight-function}.}
 \end{exemplar}
 
 

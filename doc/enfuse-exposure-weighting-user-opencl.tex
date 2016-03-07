@@ -55,9 +55,8 @@ function, \App{} aborts with an extensive error message.  In
 \sample{foobar}, whereas \filename{variable\_power.cl} -- one of the supplied examples --
 actually defines \sample{weight}.
 
-\begin{exemplar}[htbp]
+\begin{exemplar}
   \begin{maxipage}
-    \centering
     \begin{terminal}
 \$ enfuse --gpu --exposure-weight-function=variable\_power.cl:foobar image-[0-9].tif \\
 enfuse: info: chose OpenCL platform \#2, NVIDIA Corporation, NVIDIA CUDA, device \#1 \\
@@ -78,11 +77,11 @@ enfuse: note:~~~~~ptxas fatal: Unresolved extern function 'foobar'
     \end{terminal}
   \end{maxipage}
 
-  \caption[\acronym{OpenCL} user-weight error]{%
-    \label{ex:opencl-userweight-error}%
-    Error output of \App{} for an invalid (here: unknown) user-defined \acronym{OpenCL}
-    exposure-weight function.  The actual error output error differs for different graphics-card
-    manufacturers.}
+  \caption[\acronym{OpenCL} user-weight error]%
+          {\label{ex:opencl-userweight-error}%
+            Error output of \App{} for an invalid (here: unknown) user-defined \acronym{OpenCL}
+            exposure-weight function.  The actual error output error differs for different
+            graphics-card manufacturers.}
 \end{exemplar}
 
 
@@ -195,7 +194,7 @@ using \acronym{OpenCL}.  \exampleName~\ref{ex:opencl-generalized-gaussian-weight
 where $\code{EXPONENT} = 2$ obviously duplicates the pre-defined \propername{Gaussian} weight,
 \equationabbr~\ref{equ:weight:gauss} (\pageabbr~\pageref{equ:weight:gauss}).
 
-\begin{exemplar}[htbp]
+\begin{exemplar}
   \begin{cxxlisting}
 #ifndef EXPONENT
 #define EXPONENT 2.0f
@@ -208,10 +207,10 @@ float weight(float y)
 }
   \end{cxxlisting}
 
-  \caption[Generalized \propername{Gauss} weight function]{%
-    \label{ex:opencl-generalized-gaussian-weight}%
-    Generalized \propername{Gauss} weight function written in \acronym{OpenCL}.  Note the
-    definition of the default parameter~\code{EXPONENT}.}
+  \caption[Generalized \propername{Gauss} weight function]%
+          {\label{ex:opencl-generalized-gaussian-weight}%
+            Generalized \propername{Gauss} weight function written in \acronym{OpenCL}.  Note
+            the definition of the default parameter~\code{EXPONENT}.}
 \end{exemplar}
 
 Assuming \exampleName~\ref{ex:opencl-generalized-gaussian-weight} is stored in
@@ -243,7 +242,7 @@ parameter checks:
     \right.
 \]
 
-\begin{exemplar}[htbp]
+\begin{exemplar}
   \begin{cxxlisting}
 #ifndef M_LN2
 #define M_LN2 0.69314718f
@@ -269,11 +268,12 @@ float variable_power_weight(float y)
 }
   \end{cxxlisting}
 
-  \caption[\acronym{OpenCL} exposure weight function with an extra argument]{%
-    \label{ex:variable-opencl-exposure-weight-function}%
-    \acronym{OpenCL} exposure weight function with extra argument~\code{EXPONENT} that defaults
-    to 2.  Also compare with \exampleName~\ref{ex:variable-dynamic-exposure-weight-function} for
-    the implementation of almost the same functionality using dynamic linking.}
+  \caption[\acronym{OpenCL} exposure weight function with an extra argument]%
+          {\label{ex:variable-opencl-exposure-weight-function}%
+            \acronym{OpenCL} exposure weight function with extra argument~\code{EXPONENT} that
+            defaults to 2.  Also compare with
+            \exampleName~\ref{ex:variable-dynamic-exposure-weight-function} for the
+            implementation of almost the same functionality using dynamic linking.}
 \end{exemplar}
 
 Say \exampleName~\ref{ex:variable-opencl-exposure-weight-function} is stored in

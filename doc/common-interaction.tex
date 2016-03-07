@@ -56,8 +56,7 @@ It is the number that can be compared with the version number of this document, 
 is \val{val:VERSION}.  Our slightly cranky markup (see also
 \flexipageref{Notation}{sec:notation}) dispels copy-paste errors.
 
-\begin{exemplar}[htbp]
-  \centering
+\begin{exemplar}
   \begin{terminal}
     \$ \app{} --version \\
     \app{} 4.2-02c1f45857b4 \\
@@ -72,8 +71,9 @@ is \val{val:VERSION}.  Our slightly cranky markup (see also
     Written by Andrew Mihal, Christoph Spiel and others.
   \end{terminal}
 
-  \caption[Output of \sample{\app{} --version}]{\label{ex:option-version}Example output of
-    \appcmd{} when called with option~\option*{--version}.}
+  \caption[Output of \sample{\app{} --version}]%
+          {\label{ex:option-version}%
+            Example output of \appcmd{} when called with option~\option*{--version}.}
 \end{exemplar}
 
 The version indicator consist of a two (major and minor version) or three (major and minor
@@ -141,9 +141,8 @@ and its connection to some library or specific hardware.
 \exampleName~\fullref{ex:option-version-verbose} shows such a report.  Remember that your binary
 may include more or less of the features displayed there.
 
-\begin{exemplar}[htbp]
+\begin{exemplar}
   \begin{maxipage}
-    \centering
     \begin{terminal}
       \$ \app{} --version --verbose \\
         \app{} 4.2-95f1fed2bf2d \\
@@ -190,16 +189,16 @@ may include more or less of the features displayed there.
     \end{terminal}
   \end{maxipage}
 
-  \caption[Output of \sample{\app{} --version
-      --verbose}]{\label{ex:option-version-verbose}Example output of \appcmd{} when called with
-    options \option*{--version} and~\option*{--verbose} together.}
+  \caption[Output of \sample{\app{} --version --verbose}]%
+          {\label{ex:option-version-verbose}%
+            Example output of \appcmd{} when called with options \option*{--version}
+            and~\option*{--verbose} together.}
 \end{exemplar}
 
 The \sample{--version --verbose}~combo is one of the first things test if \appcmd{} ``suddenly''
 behaves strangely.
 
-\begin{exemplar}[htbp]
-  \centering
+\begin{exemplar}
   \begin{tabular}{@{--\hspace{.667\tabcolsep}} p{.45\linewidth} p{.45\linewidth}}
     \hline
     \multicolumn{1}{c|}{Question/Problem} & \multicolumn{1}{c}{Hint} \\
@@ -227,9 +226,10 @@ behaves strangely.
         should be put somewhere on the \acronym{OpenCL} search path.
   \end{tabular}
 
-  \caption[Questions answered by \sample{\app{} --version
-      --verbose}]{\label{ex:qanda-option-version-verbose}Some questions that calling \appcmd{}
-    with the option pair \option*{--version} and~\option*{--verbose} can answer.}
+  \caption[Questions answered by \sample{\app{} --version --verbose}]%
+          {\label{ex:qanda-option-version-verbose}%
+            Some questions that calling \appcmd{} with the option pair \option*{--version}
+            and~\option*{--verbose} can answer.}
 \end{exemplar}
 
 
@@ -339,12 +339,14 @@ unsigned integral'' (\code{uint8}) up to seven:
     \end{tabular}
     \ifreferencemanual\end{maxipage}\fi
 
-    \caption[Image formats and bit-depths]{\label{tab:image-format-and-bit-depth}Bit-depths of
-      selected image formats.  These are the maximum capabilities of the formats themselves, not
-      \App's.  The ``Mask''-column indicates whether the format supports an image mask
-      (alpha-channel), see also \chapterName~\ref{sec:understanding-masks}.  Column~``Profile''
-      shows whether the image format allows for \acronym{ICC}-profiles to be included; see also
-      \chapterName~\ref{sec:color-spaces}.}
+    \caption[Image formats and bit-depths]%
+            {\label{tab:image-format-and-bit-depth}%
+              Bit-depths of selected image formats.  These are the maximum capabilities of the
+              formats themselves, not \App's.  The ``Mask''-column indicates whether the format
+              supports an image mask (alpha-channel), see also
+              \chapterName~\ref{sec:understanding-masks}.  Column~``Profile'' shows whether the
+              image format allows for \acronym{ICC}-profiles to be included; see also
+              \chapterName~\ref{sec:color-spaces}.}
   \end{table}
 
 
@@ -386,8 +388,7 @@ important compiler extensions like, for example,
 \genidx{OpenMP@\acronym{OpenMP}}\acronym{OpenMP}.
 \exampleName~\ref{ex:show-software-components} shows such a report.
 
-\begin{exemplar}[htbp]
-  \centering
+\begin{exemplar}
   \begin{terminal}
     \$ \app{} --show-software-components \\
     Compiler \\
@@ -408,10 +409,10 @@ important compiler extensions like, for example,
     ~~Vigra:~~~~~~1.10.0
   \end{terminal}
 
-  \caption[Output of \sample{\app{}
-      --show-software-components}]{\label{ex:show-software-components}Output of \appcmd{} when
-    asked to reveal the compiler that was used to build it along with the libraries it was
-    linked against.}
+  \caption[Output of \sample{\app{} --show-software-components}]%
+          {\label{ex:show-software-components}%
+            Output of \appcmd{} when asked to reveal the compiler that was used to build it
+            along with the libraries it was linked against.}
 \end{exemplar}
 
 
