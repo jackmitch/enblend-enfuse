@@ -1,0 +1,19 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+%% Define a new `float' style.
+%%   - Ruled: Draw rules before and after the float (and its caption).
+%%   - Bot:   Put the caption at the bottom of the float.
+
+\makeatletter
+
+\newcommand\fs@ruledbot{%
+  \def\@fs@rule{\kern0pt\hfill\rule{.667\textwidth}{.333pt}\hfill\kern0pt\relax}%
+  \def\@fs@cfont{\rmfamily}%
+  \let\@fs@capt\floatc@ruled
+  \def\@fs@pre{\@fs@rule\vspace\abovedisplayskip\relax}%
+  \def\@fs@mid{\vspace\abovecaptionskip\relax}%
+  \def\@fs@post{\vspace\belowcaptionskip\@fs@rule}%
+  \let\@fs@iftopcapt\iffalse}
+
+\makeatother

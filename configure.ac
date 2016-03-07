@@ -406,10 +406,10 @@ dnl  mentioned while testing and `hypcap' needs `hyperref' to be
 dnl  included first.
   m4_foreach([package_name],
              [amsmath, bold-extra, color, enumitem,
-              footnote, graphicx, hyperref, hyphenat,
+              float, footnote, graphicx, hyperref, hyphenat,
               ifpdf, index, latexsym, listings,
               microtype, ragged2e, shorttoc, suffix,
-              trivfloat, url, xstring],
+              url, xstring],
              [AC_LATEX_PACKAGE([package_name],
                                [report],
                                [m4_translit(package_name,[-],[_])],

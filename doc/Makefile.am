@@ -366,7 +366,7 @@ ENBLEND_SOURCE_FILES = \
         enblend.tex \
         static-preamble.tex  lead-in.tex  lead-out.tex \
         index-def.tex  index-use.tex \
-        macros.tex  exemplar.hva \
+        macros.tex  floatstyle-ruledbot.sty  exemplar.hva \
         htmlstyle.tex  url-def.tex \
     )
 
@@ -434,7 +434,7 @@ ENFUSE_SOURCE_FILES = \
         enfuse.tex \
         static-preamble.tex  lead-in.tex  lead-out.tex \
         index-def.tex  index-use.tex \
-        macros.tex  exemplar.hva \
+        macros.tex  floatstyle-ruledbot.sty  exemplar.hva \
         htmlstyle.tex  url-def.tex \
     )
 
@@ -564,6 +564,6 @@ EXTRA_DIST = \
     $(wildcard $(srcdir)/*.tif) \
     $(addprefix $(srcdir)/, \
         uml-dot.m4 \
-        endoc.ist exemplar.hva \
+        endoc.ist floatstyle-ruledbot.sty  exemplar.hva \
         cleantex config2tex docstrings updated-on \
     )

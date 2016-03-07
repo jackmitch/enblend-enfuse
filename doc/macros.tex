@@ -343,15 +343,24 @@
 
 %% Extra floating objects: exemplars.  We cannot use `example', because the macro-name is used
 %% in `Reference-Manual' style.
+\input{floatstyle-ruledbot.sty}
+
 \ifhevea
   \input{exemplar.hva}
   \renewcommand{\exemplarname}{Example}
-  \newcommand{\listofexemplars}{\relax}
+  \newcommand*{\listofexemplars}{\relax}
 \else
-  \usepackage{trivfloat}
-  \trivfloat{exemplar}
-  \renewcommand{\exemplarname}{Example}
-  \renewcommand{\listexemplarname}{List of Examples}
+  \usepackage{float}
+
+  \newfloat{exemplarbase}{btp}{lox}[chapter]
+  \floatname{exemplarbase}{Example}
+
+  \newenvironment{exemplar}[1][]%
+                 {\floatstyle{ruledbot}\restylefloat*{exemplarbase}\begin{exemplarbase}[#1]}%
+                 {\end{exemplarbase}}
+  \newenvironment{exemplar*}[1][]%
+                 {\floatstyle{plain}\restylefloat*{exemplarbase}\begin{exemplarbase}[#1]}%
+                 {\end{exemplarbase}}
 \fi
 
 
