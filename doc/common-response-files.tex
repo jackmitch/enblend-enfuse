@@ -103,7 +103,7 @@ Filenames that begin with a \code{\val{val:response-file-prefix-char}}~character
 response files.  \tableName~\ref{tab:response-file-format} states a formal grammar of response
 files in \uref{\wikipediaebnf}{\acronym{EBNF}}.
 
-\begin{table}[htbp]
+\begin{table}
   \begin{tabular}{l@{$\quad::=\quad$}l}
     \metavar{response-file} & \metavar{line}* \\
     \metavar{line} & (\metavar{comment} $|$ \metavar{file-spec}) [\sample{\bslash r}] \sample{\bslash n} \\
@@ -199,7 +199,7 @@ Comments that follow the format described in
 interpret the rest of the response file.  A syntactic comment is effective immediately and its
 effect persists to the end of the response file, unless another syntactic comment undoes it.
 
-\begin{table}[htbp]
+\begin{table}
   \begin{tabular}{l@{$\quad::=\quad$}l}
     \metavar{syntactic-comment} & \metavar{space}* \sample{\val*{val:response-file-comment-char}}
     \metavar{space}* \metavar{key}
@@ -252,7 +252,7 @@ All versions of \application{Enblend} and \application{Enfuse} support at least 
 find out about the algorithms in your version of \application{Enblend} or \application{Enfuse}
 use option~\option{--show-globbing-algorithms}.
 
-\begin{table}[htbp]
+\begin{table}
   \begin{minipage}{\linewidth}
     \begin{codelist}
       \genidx{globbing algorithm!\code{literal}}%

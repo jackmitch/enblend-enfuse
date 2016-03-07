@@ -356,7 +356,8 @@
   \floatname{exemplarbase}{Example}
 
   \newenvironment{exemplar}[1][]%
-                 {\floatstyle{ruledbot}\restylefloat*{exemplarbase}\begin{exemplarbase}[#1]}%
+                 {\maxipagerulefalse
+                   \floatstyle{ruledbot}\restylefloat*{exemplarbase}\begin{exemplarbase}[#1]}%
                  {\end{exemplarbase}}
   \newenvironment{exemplar*}[1][]%
                  {\floatstyle{plain}\restylefloat*{exemplarbase}\begin{exemplarbase}[#1]}%
