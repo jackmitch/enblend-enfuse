@@ -1309,12 +1309,15 @@ void enfuseMain(const FileNameList& anInputFileNameList,
         }
 
         if (SaveMasks) {
+            const std::string mask_pixel_type =
+                to_upper_copy(parameter::as_string("mask-save-pixel-type", "float"));
             const std::string maskFilename =
                 enblend::expandFilenameTemplate(SoftMaskTemplate,
                                                 numberOfImages,
                                                 *inputFileNameIterator,
                                                 OutputFileName,
                                                 m);
+
             if (maskFilename == *inputFileNameIterator) {
                 std::cerr << command
                           << ": will not overwrite input image \""
@@ -1338,6 +1341,7 @@ void enfuseMain(const FileNameList& anInputFileNameList,
                 maskInfo.setXResolution(ImageResolution.x);
                 maskInfo.setYResolution(ImageResolution.y);
                 maskInfo.setCompression(MASK_COMPRESSION);
+                maskInfo.setPixelType(mask_pixel_type.c_str());
                 exportImage(srcImageRange(*mask), maskInfo);
             }
         }
@@ -1411,6 +1415,9 @@ void enfuseMain(const FileNameList& anInputFileNameList,
         }
         unsigned i = 0;
         if (SaveMasks) {
+            const std::string mask_pixel_type =
+                to_upper_copy(parameter::as_string("mask-save-pixel-type", "float"));
+
             for (imageIter = imageList.begin(), inputFileNameIterator = anInputFileNameList.begin();
                  imageIter != imageList.end();
                  ++imageIter, ++inputFileNameIterator) {
@@ -1443,6 +1450,7 @@ void enfuseMain(const FileNameList& anInputFileNameList,
                     maskInfo.setXResolution(ImageResolution.x);
                     maskInfo.setYResolution(ImageResolution.y);
                     maskInfo.setCompression(MASK_COMPRESSION);
+                    maskInfo.setPixelType(mask_pixel_type.c_str());
                     exportImage(srcImageRange(*(imageIter->third)), maskInfo);
                 }
                 i++;
