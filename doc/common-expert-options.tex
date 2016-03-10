@@ -219,6 +219,12 @@
     index (\sample{\%02n}) to keep the mask files nicely sorted, and decorates the mask filename
     with the name of the associated input file (\sample{\%f}) for easy recognition.
 
+    \genidx{mask!floating-point \acronym{TIFF}}%
+    \gensee{floating-point \acronym{TIFF} mask}{mask, floating-point \acronym{TIFF}}%
+    The masks carry the totaled images' weights.  They consist of single-channel, this is
+    grayscale, floating-point data and thus preferably are saved in floating-point form.  \App{}
+    defaults to floating-point~\acronym{TIFF}.
+
     Options~\option{--load-masks} and~\option{--save-masks} are mutually exclusive.
 \fi
 \end{codelist}
