@@ -84,18 +84,28 @@
     \genidx{mask!loading}\gensee{load mask}{mask, loading}Load masks from images instead of
     computing them.
 
-    The masks must be grayscale images.
+    The masks must be grayscale images.  All image formats understood by \App{} (see
+    option~\flexipageref{\option{--show-image-formats}}{opt:show-image-formats}) are viable mask
+    file formats, though those with floating-point pixels for example \acronym{TIFF} or
+    \acronym{VIFF} are suited best.
 
+    \genidx{mask!filename template}%
+    \gensee{filename template}{mask, filename template}%
     \begin{sloppypar}
-      First form: Load all soft-weight masks from files that were previously saved with
-      option~\option{--save-masks}.  If option~\option{--hard-mask} is effective only load hard
-      masks.  The respective defaults are \genidx{mask!filename template}\gensee{filename
-        template}{mask, filename template}\mbox{\code{\val{val:default-soft-mask-template}}} and
-      \mbox{\code{\val{val:default-hard-mask-template}}}. In the second form,
-      \metavar{SOFT\hyp{}MASK\hyp{}TEMPLATE} defines the names of the soft-mask files.  In the
-      third form, \metavar{HARD\hyp{}MASK\hyp{}TEMPLATE} additionally defines the names of the
-      hard-mask files.  See option~\option{--save-masks} below for the description of mask
-      templates.
+      \oldstylefirst~form: Load all soft-weight masks from files that were previously saved with
+      option~\flexipageref{\option{--save-masks}}{opt:save-masks}.  \metavar{HARD-MASK-TEMPLATE}
+      is effective only when loading hard masks (see
+      option~\flexipageref{\option{--hard-mask}}{opt:hard-mask}).  The respective defaults are
+      \mbox{\code{\val{val:default-soft-mask-template}}} and
+      \mbox{\code{\val{val:default-hard-mask-template}}}.
+
+      In the \oldstylesecond~form \metavar{SOFT\hyp{}MASK\hyp{}TEMPLATE} defines the names of
+      the soft-mask files.
+
+      In the \oldstylethird~form \metavar{HARD\hyp{}MASK\hyp{}TEMPLATE} additionally defines the
+      names of the hard-mask files.  See
+      option~\flexipageref{\option{--save-masks}}{opt:save-masks} below for the description of
+      mask templates.
     \end{sloppypar}
 
     Options~\option{--load-masks} and~\option{--save-masks} are mutually exclusive.
@@ -191,21 +201,27 @@
     \genidx{mask!save}\gensee{save mask}{mask, save}Save the generated weight masks to image
     files.
 
+    \genidx{mask!filename template}%
+    \gensee{filename template}{mask, filename template}%
     \begin{sloppypar}
-      First form: Save all soft-weight masks in files.  If option~\option{--hard-mask} is
-      effective also save the hard masks.  The defaults are \genidx{mask!filename
-        template}\gensee{filename template}{mask, filename
-        template}\code{\val{val:default-soft-mask-template}} and
-      \code{\val{val:default-hard-mask-template}}. In the second form,
-      \metavar{SOFT\hyp{}MASK\hyp{}TEMPLATE} defines the names of the soft-mask files.  In the
-      third form, \metavar{HARD\hyp{}MASK\hyp{}TEMPLATE} additionally defines the names of the
-      hard-mask files.
+      \oldstylefirst~form: Save all soft-weight masks in files.  If
+      option~\flexipageref{\option{--hard-mask}}{opt:hard-mask} is effective also save the hard
+      masks.  The defaults are \code{\val{val:default-soft-mask-template}} and
+      \code{\val{val:default-hard-mask-template}}.
+
+      In the \oldstylesecond~form \metavar{SOFT\hyp{}MASK\hyp{}TEMPLATE} defines the names of
+      the soft-mask files.
+
+      In the \oldstylethird~form \metavar{HARD\hyp{}MASK\hyp{}TEMPLATE} additionally defines the
+      names of the hard-mask files.
     \end{sloppypar}
 
-    \genidx{save mask!only}\gensee{only save mask}{save mask only}\App{} will stop after saving
-    all masks unless option~\option{--output} is given, too.  With both options given, this is,
-    \sample{--save-masks} and \sample{--output}, \App{} saves all masks and then proceeds to
-    fuse the output image.
+    \genidx{save mask!only}%
+    \gensee{only save mask}{save mask only}%
+    \App{} will stop after saving all masks unless
+    option~\flexipageref{\option{--output}}{opt:output} is given, too.  With both options given,
+    this is, \sample{--save-masks} and \sample{--output}, \App{} saves all masks and then
+    proceeds to fuse the output image.
 
     Both \metavar{SOFT\hyp{}MASK\hyp{}TEMPLATE} and \metavar{HARD\hyp{}MASK\hyp{}TEMPLATE}
     define templates that are expanded for each mask file.  In a template a percent sign

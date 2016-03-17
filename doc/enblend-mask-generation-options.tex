@@ -28,7 +28,8 @@ These options control the generation and the usage of masks.
 
   Valid range: $\metavar{FACTOR} = 1, 2, 3, \dots$, where 1 reproduces \sample{--fine-mask}.
 
-  Also see the negated option, \sample{--fine-mask} and \tableName~\ref{tab:mask-generation}.
+  Also see the negated option, \flexipageref{\sample{--fine-mask}}{opt:file-mask} and
+  \tableName~\ref{tab:mask-generation}.
 
   \begin{table}
     \begin{tabular}{lp{.3\linewidth}p{.4\linewidth}}
@@ -63,7 +64,8 @@ These options control the generation and the usage of masks.
   Instruct \App{} to employ the full-size images to create the seam line, which can be slow.
   Use this option, for example, if you have very narrow overlap regions.
 
-  Also see option~\option{--coarse-mask} and \tableName~\ref{tab:mask-generation}.
+  Also see option~\flexipageref{\option{--coarse-mask}}{opt:coarse-mask} and
+  \tableName~\ref{tab:mask-generation}.
 
 
   \label{opt:load-masks}%
@@ -75,7 +77,7 @@ These options control the generation and the usage of masks.
   \mbox{\sample{\val{val:default-mask-template}}}.  The mask images must be 8~bit grayscale
   images.
 
-  See option~\option{--save-masks} below for details.
+  See option~\flexipageref{\option{--save-masks}}{opt:save-masks} below for details.
 
 
   \label{opt:optimize}%
@@ -112,8 +114,8 @@ These options control the generation and the usage of masks.
   \genidx{nearest-feature transform (\acronym{NFT})}%
   Option~\option{--no-optimize}\optidx[\defininglocation]{--no-optimize} negates
   \option{--optimize} and thus turns off seam line optimization.  Combined with
-  option~\option{--fine-mask} this will produce the same type of mask as \App{}~version~2.5,
-  namely the result of a Nearest-Feature Transform (\acronym{NFT}).
+  option~\flexipageref{\option{--fine-mask}}{opt:fine-mask} this will produce the same type of
+  mask as \App{}~version~2.5, namely the result of a Nearest-Feature Transform (\acronym{NFT}).
 
 
   \label{opt:save-masks}%
@@ -127,14 +129,16 @@ These options control the generation and the usage of masks.
 
   Use this option if you wish to edit the location of the seam line by hand.  This will give you
   images of the right sizes that you can edit to make your changes.  Later, use
-  option~\option{--load-masks} to blend the project with your custom seam lines.
+  option~\flexipageref{\option{--load-masks}}{opt:load-masks} to blend the project with your
+  custom seam lines.
 
   \genidx{save mask!only}%
   \gensee{only save mask}{save mask, only}%
   \begin{sloppypar}
-    \App{} will stop after saving all masks unless option~\option{--output} is given, too.  With
-    both options given, this is, \sample{--save-masks} and \sample{--output}, \App{} saves all
-    masks and then proceeds to blend the output image.
+    \App{} will stop after saving all masks unless
+    option~\flexipageref{\option{--output}}{opt:output} is given, too.  With both options given,
+    this is, \sample{--save-masks} and \sample{--output}, \App{} saves all masks and then
+    proceeds to blend the output image.
   \end{sloppypar}
 
   \begin{geeknote}

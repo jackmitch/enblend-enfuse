@@ -8,26 +8,30 @@
   External Masks}
 
 In the usual workflow \application{Enblend} and \application{Enfuse} generate the blending and
-fusing masks according to the command-line options and the input images and then they
-immediately use these masks for blending or fusing the output image.
+fusing masks according to the command-line options and the input images including their
+associated alpha-channels, and then they immediately use these masks for multi-resolution
+blending or multi-resolution fusing the output image.
 
-Sometimes more control over the masks is needed or wanted.  To this end, both applications
-provide the option pair \option{--load-masks} and \option{--save-masks}.  See
+Sometimes more control over the masks is wanted.  To this end, both applications provide the
+option pair \option{--load-masks} and \option{--save-masks}.  See
 \chapterName~\fullref{sec:invocation}, for detailed explanations of both options.  With the help
-of these options the processing can be broken up into two steps:
+of these options the processing can be broken up into two phases:
 
-\begin{enumerate}
-  \optidx{--save-masks}
-  \optidx{--output}
+\begin{enumerate}%
+  \optidx{--save-masks}%
+  \optidx{--output}%
 \item
   Save masks with \option{--save-masks}.  Generate masks and save them into image files.
 
-  Avoid option~\option{--output} unless the blended or fused image at this point is necessary.
+  Avoid option~\option{--output} here unless the blended or fused image at this point is wanted.
 
-  \optidx{--load-masks}
+  \optidx{--load-masks}%
 \item
-  Load masks with \option{--load-masks}.  Load masks from files and then blend or fuse the final
-  image with the help of the loaded masks.
+  Load possibly modified masks with \option{--load-masks} from files and then blend or fuse the
+  final image with the help of the loaded masks only.
+
+  Neither application (re-)generates any mask in this phase.  The loaded masks completely
+  control the multi-resolution blending or multi-resolution fusing the output image.
 \end{enumerate}
 
 In between these two steps the user may apply whatever transformation to the mask files, as long
@@ -42,8 +46,9 @@ as their geometries and offsets remain the same.  Thus the ``Combine Images'' bo
   \end{maxipage}
 
   \caption[External mask workflow]{\label{fig:external-mask-workflow}%
-    \genidx{workflow!external mask}
-    Workflow for externally modified masks.}
+    \genidx{workflow!external mask}%
+    Workflow for externally modified masks.  The ``Blend or Fuse Using Masks'' step utilizes the
+    multi-resolution algorithm just as for internal workflow without mask files.}
 \end{figure}
 
 To further optimize this kind of workflow, both \application{Enblend} and \application{Enfuse}

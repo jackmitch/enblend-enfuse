@@ -52,8 +52,8 @@ enhanced :=
   relative to maximum pixel value in the source image (for example 255 or~65535).
 
   A positive value makes \App{} use the local contrast data (controlled with
-  option~\option{--contrast-window-size}) for curvatures less than \metavar{CURVATURE} and
-  \acronym{LoG} data for values above it.
+  option~\flexipageref{\option{--contrast-window-size}}{opt:contrast-window-size}) for
+  curvatures less than \metavar{CURVATURE} and \acronym{LoG} data for values above it.
 
   A negative value truncates all curvatures less than $-\metavar{CURVATURE}$ to zero.  Values
   above \metavar{CURVATURE} are left unchanged.  This effectively suppresses weak edges.
@@ -74,8 +74,9 @@ enhanced :=
   Valid range: $\metavar{SIZE} \geq \val{val:minimum-contrast-window-size}$, default:
   \val{val:default-contrast-window-size}~pixels.
 
-  See also \sectionName~\ref{sec:fusion-options}, options \option{--contrast-weight}~and
-  \option{--hard-mask} below.
+  See also \sectionName~\ref{sec:fusion-options}, options
+  \flexipageref{\option{--contrast-weight}}{opt:contrast-weight}~and
+  \flexipageref{\option{--hard-mask}}{opt:hard-mask} below.
 
 
   \label{opt:entropy-cutoff}%

@@ -137,7 +137,7 @@ which govern the mask generation.
     This is the default in \App{} version~4.1 and later.
 
     Note that the ``delta-E'' mentioned here has nothing to do with \metavar{DELTA-E-MAX} and
-    \metavar{DELTA-E-MIN} of option~\option{--anneal}.
+    \metavar{DELTA-E-MIN} of option~\flexipageref{\option{--anneal}}{opt:anneal}.
   \end{codelist}
 
   \begin{sloppypar}
@@ -180,11 +180,11 @@ which govern the mask generation.
   Set the mask vectorization \metavar{DISTANCE} that \App{} uses to partition each seam.  Thus,
   break down the seam to segments of length \metavar{DISTANCE} each.
 
-  If \App{} uses a coarse mask (\option{--coarse-mask}) or \App{} optimizes
-  (\option{--optimize}) a mask it vectorizes the initial seam line before performing further
-  operations.  See \tableName~\ref{tab:mask-generation} for the precise conditions.
-  \metavar{DISTANCE} tells \App{} how long to make each of the line segments called vectors
-  here.
+  If \App{} uses a coarse mask (\flexipageref{\option{--coarse-mask}}{opt:coarse-mask}) or
+  \App{} optimizes (\flexipageref{\option{--optimize}}{opt:optimize}) a mask it vectorizes the
+  initial seam line before performing further operations.  See
+  \tableName~\ref{tab:mask-generation} for the precise conditions.  \metavar{DISTANCE} tells
+  \App{} how long to make each of the line segments called vectors here.
 
   The unit of \metavar{DISTANCE} is pixels unless it is a percentage as explained in the next
   paragraph.  In fine masks one mask pixel corresponds to one pixel in the input image, whereas
@@ -206,9 +206,10 @@ which govern the mask generation.
   \gensee{loops in seam line}{seam line, loops}%
   What should \emph{never} happen though, are loops or cusps in the seam line.  Counter loops
   and cusps with higher weights of \metavar{DISTANCE-WEIGHT}
-  (option~\option{--optimizer-weights}), larger vectorization \metavar{DISTANCE}s, and
-  \metavar{TAU}s (option~\option{--anneal}) that are closer to one.  Use
-  option~\option{--visualize} to check the results.
+  (option~\flexipageref{\option{--optimizer-weights}}{opt:optimizer-weights}), larger
+  vectorization \metavar{DISTANCE}s, and \metavar{TAU}s
+  (option~\flexipageref{\option{--anneal}}{opt:anneal}) that are closer to one.  Use
+  option~\flexipageref{\option{--visualize}}{opt:visualize} to check the results.
 
   Valid range: $\metavar{DISTANCE} \geq \val{val:minimum-vectorize-distance}$.
 
@@ -234,7 +235,7 @@ which govern the mask generation.
   \begin{itemize}
   \item
     The distance of the seam line from its initial position, which has been determined by
-    \acronym{NFT} (see option~\option{--no-optimize}).
+    \acronym{NFT} (see option~\flexipageref{\option{--no-optimize}}{opt:optimize}).
 
   \item
     The total ``mismatch'' accumulated along it.
@@ -247,8 +248,8 @@ which govern the mask generation.
   A large \metavar{DISTANCE-WEIGHT} pulls the optimized seam line closer to the initial postion.
   A large \metavar{MISMATCH\hyp{}WEIGHT} makes the seam line go on detours to find a path along
   which the mismatch between the images is small.  If the optimized seam line shows cusps or
-  loops (see option~\option{--visualize}), reduce \metavar{MISMATCH\hyp{}WEIGHT} or increase
-  \metavar{DISTANCE\hyp{}WEIGHT}.
+  loops (see option~\flexipageref{\option{--visualize}}{opt:visualize}), reduce
+  \metavar{MISMATCH\hyp{}WEIGHT} or increase \metavar{DISTANCE\hyp{}WEIGHT}.
 
   Both weights must be non-negative.  They cannot be both zero at the same time.  Otherwise,
   their absolute values are not important as \App{} normalizes their sum.
