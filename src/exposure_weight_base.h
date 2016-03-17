@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <iterator>
 
 
 // Version number of the interface-to-user-weight functions.
