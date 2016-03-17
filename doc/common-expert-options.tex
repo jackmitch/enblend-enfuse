@@ -26,12 +26,15 @@
 \begin{codelist}
   \label{opt:fallback-profile}%
   \optidx[\defininglocation]{--fallback-profile}%
+  \genidx{profile!fallback}%
+  \gensee{fallback profile}{profile, fallback}%
+  \genidx{luminance interval!trivial}%
+  \genidx{RGB-cube@\acronym{RGB}-cube}%
 \item[--fallback-profile=\metavar{PROFILE-FILENAME}]\itemend
   Use the \acronym{ICC} profile in \metavar{PROFILE-FILENAME} instead of the default
-  \acronym{sRGB}.\genidx{profile!fallback}\gensee{fallback profile}{profile, fallback} This
-  option only is effective if the input images come \emph{without} color profiles \emph{and}
-  blending is not performed in the trivial luminance interval\genidx{luminance interval!trivial}
-  or \genidx{RGB-cube@\acronym{RGB}-cube}\acronym{RGB}-cube.
+  \acronym{sRGB}. This option only is effective if the input images come \emph{without} color
+  profiles \emph{and} blending is not performed in the trivial luminance interval or
+  \acronym{RGB}-cube.
 
   Compare option~\flexipageref{\option{--blend-colorspace}}{opt:blend-colorspace} and
   \chapterName~\fullref{sec:color-profiles} on color profiles.
@@ -77,12 +80,13 @@
 \ifenfuse
   \label{opt:load-masks}%
   \optidx[\defininglocation]{--load-masks}%
+  \genidx{mask!loading}%
+  \gensee{load mask}{mask, loading}%
   \item[\itempar{--load-masks~\textrm{(\oldstylefirst~form)}
       \\ --load-masks=\metavar{SOFT-MASK-TEMPLATE}~\textrm{(\oldstylesecond~form)}
       \\ --load-masks=\metavar{SOFT-MASK-TEMPLATE}:\feasiblebreak
       \metavar{HARD-MASK-TEMPLATE}~\textrm{(\oldstylethird~form)}}]\itemend
-    \genidx{mask!loading}\gensee{load mask}{mask, loading}Load masks from images instead of
-    computing them.
+    Load masks from images instead of computing them.
 
     The masks must be grayscale images.  All image formats understood by \App{} (see
     option~\flexipageref{\option{--show-image-formats}}{opt:show-image-formats}) are viable mask
@@ -139,14 +143,16 @@
     \label{opt:pre-assemble}%
     \optidx[\defininglocation]{--pre-assemble}%
     \shoptidx{-a}{--pre-assemble}%
+    \genidx{preassemble}%
+    \gensee{assemble}{preasselble}%
+    \genidx{blending!sequential}%
+    \gensee{sequential blending}{blending, sequential}%
   \item[\itempar{-a \\ --pre-assemble}]\itemend
-    \genidx{preassemble}\gensee{assemble}{preasselble}Pre-assemble non-overlapping images before
-    each blending iteration.
+    Pre-assemble non-overlapping images before each blending iteration.
 
-    \genidx{blending!sequential}\gensee{sequential blending}{blending, sequential}This overrides
-    the default behavior which is to blend the images sequentially in the order given on the
-    command line.  \App{} will use fewer blending iterations, but it will do more work in each
-    iteration.
+    This overrides the default behavior which is to blend the images sequentially in the order
+    given on the command line.  \App{} will use fewer blending iterations, but it will do more
+    work in each iteration.
 
     This option has the negated form \optidx[\defininglocation]{--no-pre-assemble}%
     \sample{--no-pre-assemble}, which restores the default.
@@ -155,14 +161,14 @@
 
   \label{opt:prefer-gpu}%
   \optidx[\defininglocation]{--prefer-gpu}%
+  \genidx{OpenCL}%
+  \genidx{OpenCL!device}%
+  \genidx{OpenCL!platform}%
 \item[--prefer-gpu=\optional{\metavar{PLATFORM}:}\metavar{DEVICE}
   \restrictednote{\acronym{OpenCL}-enabled versions only.}]\itemend
-
-  Direct \App{} towards a particular \genidx{OpenCL}\acronym{OpenCL}
-  \genidx{OpenCL!device}\metavar{DEVICE} on the first autodetected
-  \genidx{OpenCL!platform}\metavar{PLATFORM} or directly to the given
-  \metavar{PLATFORM}\slash\metavar{DEVICE} combination.  Use the numbers of platform and device
-  found either with
+  Direct \App{} towards a particular \acronym{OpenCL} \metavar{DEVICE} on the first autodetected
+  \metavar{PLATFORM} or directly to the given \metavar{PLATFORM}\slash\metavar{DEVICE}
+  combination.  Use the numbers of platform and device found either with
 
   \begin{terminal}
     \$ \app{} --verbose --version
@@ -185,21 +191,23 @@
 \ifenblend
     \label{opt:x}%
     \optidx[\defininglocation]{-x}%
+    \genidx{result!checkpoint}%
+    \genidx{checkpoint results}%
   \item[-x]
-    \genidx{result!checkpoint}Checkpoint\genidx{checkpoint results} partial results to the output
-    file after each blending step.
+    Checkpoint partial results to the output file after each blending step.
 \fi
 
 
 \ifenfuse
     \label{opt:save-masks}%
     \optidx[\defininglocation]{--save-masks}%
+    \genidx{mask!save}%
+    \gensee{save mask}{mask, save}
   \item[\itempar{--save-masks~\textrm{(\oldstylefirst~form)}
       \\ --save-masks=\metavar{SOFT-MASK-TEMPLATE}~\textrm{(\oldstylesecond~form)}
       \\ --save-masks=\metavar{SOFT-MASK-TEMPLATE}:\feasiblebreak
       \metavar{HARD-MASK-TEMPLATE}~\textrm{(\oldstylethird~form)}}]\itemend
-    \genidx{mask!save}\gensee{save mask}{mask, save}Save the generated weight masks to image
-    files.
+    Save the generated weight masks to image files.
 
     \genidx{mask!filename template}%
     \gensee{filename template}{mask, filename template}%

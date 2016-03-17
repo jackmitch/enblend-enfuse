@@ -14,13 +14,13 @@ cutoffs for entropy and exposure fusion.
   \label{opt:contrast-edge-scale}%
   \optidx[\defininglocation]{--contrast-edge-scale}%
   \genidx{Laplacian-of-Gaussian@\propername{Laplacian}-of-\propername{Gaussian}}%
+  \gensee{LoG@\acronym{LoG}}{\propername{Laplacian}-of-\propername{Gaussian}}%
 \item[\itempar{--contrast-edge-scale=\metavar{EDGE-SCALE}\optional{:\feasiblebreak
       \metavar{LCE-SCALE}:\feasiblebreak\metavar{LCE-FACTOR}}}]\itemend
   A non-zero value for \metavar{EDGE-SCALE} switches on the
-  \propername{Laplacian}\hyp{}of\hyp{}\propername{Gaussian}
-  (\acronym{LoG}\gensee{LoG@\acronym{LoG}}{\propername{Laplacian}-of-\propername{Gaussian}})
-  edge detection algorithm.  \metavar{EDGE-SCALE} is the radius of the \propername{Gaussian}
-  used in the search for edges.  Default: \val{val:default-edge-scale}~pixels.
+  \propername{Laplacian}\hyp{}of\hyp{}\propername{Gaussian} (\acronym{LoG}) edge detection
+  algorithm.  \metavar{EDGE-SCALE} is the radius of the \propername{Gaussian} used in the search
+  for edges.  Default: \val{val:default-edge-scale}~pixels.
 
   \genidx{contrast!local enhancement}%
   \gensee{local contrast enhancement}{contrast, local enhancement}%
@@ -318,9 +318,9 @@ enhanced :=
   user-defined exposure weight function.  Optionally pass the user-defined function
   \metavar{ARGUMENT}s.
 
+  \genidx{dynamic library}%
+  \gensee{library!dynamic}{dynamic library}%
   \begin{geeknote}
-    \genidx{dynamic library}%
-    \gensee{library!dynamic}{dynamic library}%
     Depending on the operating system environment, a ``shared object'' is sometimes also called
     a ``dynamic library''.
   \end{geeknote}

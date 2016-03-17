@@ -76,11 +76,12 @@ image.
   \end{description}
 
   \ifenblend
+  \genidx{optimizer!seam-line}%
     \begin{restrictedmaterial}{\application{Enblend} only.}
-      \genidx{optimizer!seam-line}Please keep in mind that by using different blend colorspaces,
-      blending may not only change the colors of the output image, but \application{Enblend} may
-      choose different seam line routes as some seam-line optimizers are guided by image
-      differences, which are different when viewed in different colorspaces.
+      Please keep in mind that by using different blend colorspaces, blending may not only
+      change the colors of the output image, but \application{Enblend} may choose different seam
+      line routes as some seam-line optimizers are guided by image differences, which are
+      different when viewed in different colorspaces.
     \end{restrictedmaterial}
   \fi
 
@@ -103,9 +104,10 @@ image.
   \metavar{DEPTH}.  The number of bits per channel is also known as ``channel width'' or
   ``channel depth''.
 
-  \genidx{requantization}\App{} always uses a smart way to change the channel depth to assure
-  highest image quality at the expense of memory, whether requantization is implicit because of
-  the output format or explicit through option~\option{--depth}.
+  \genidx{requantization}%
+  \App{} always uses a smart way to change the channel depth to assure highest image quality at
+  the expense of memory, whether requantization is implicit because of the output format or
+  explicit through option~\option{--depth}.
 
   \begin{itemize}
   \item
@@ -182,16 +184,17 @@ image.
   If the requested \metavar{DEPTH} is not supported by the output file format, \App{} warns and
   chooses the \metavar{DEPTH} that matches best.
 
-  \restrictednote{Versions with \acronym{OpenEXR} read\slash write support only.}
-  \noindent The \genidx{OpenEXR@\acronym{OpenEXR}!data format}\acronym{OpenEXR} data format is
-  treated as \acronym{IEEE754}~float internally.  Externally, on disk, \acronym{OpenEXR} data is
-  represented by ``half'' precision floating-point numbers.
+  \genidx{OpenEXR@\acronym{OpenEXR}!data format}%
+  \restrictednote{Versions with \acronym{OpenEXR} read\slash write support only.}%
+  \noindent The \acronym{OpenEXR} data format is treated as \acronym{IEEE754}~float internally.
+  Externally, on disk, \acronym{OpenEXR} data is represented by ``half'' precision
+  floating-point numbers.
 
   %% ILM half: 16 bits, n = 10, k = 16 - n - 1 = 5
-  \genidx{OpenEXR@\acronym{OpenEXR}!half precision
-    float}\uref{\openexrcomfeatures}{\acronym{OpenEXR}} \gensee{half precision float
-    (\acronym{OpenEXR})}{\acronym{OpenEXR}, half precision float}half precision floating-point,
-  16~bit wide, 10~bit significant;
+  \genidx{OpenEXR@\acronym{OpenEXR}!half precision float}%
+  \gensee{half precision float (\acronym{OpenEXR})}{\acronym{OpenEXR}, half precision float}%
+  \uref{\openexrcomfeatures}{\acronym{OpenEXR}} half precision floating-point, 16~bit wide,
+  10~bit significant;
 
   \begin{itemize}
   \item
@@ -205,14 +208,17 @@ image.
 
   \label{opt:f}%
   \optidx[\defininglocation]{-f}%
+  \genidx{size!canvas}%
+  \genidx{output image!set size}%
 \item[-f \metavar{WIDTH}x\metavar{HEIGHT}%
   \optional{+x\metavar{XOFFSET}+y\metavar{YOFFSET}}]\itemend
-  Ensure that the minimum \genidx{size!canvas}``canvas'' \genidx{output image!set size}size of
-  the output image is at least \metavar{WIDTH}\classictimes\metavar{HEIGHT}.  Optionally specify
-  the \metavar{XOFFSET} and \metavar{YOFFSET} of the canvas, too.
+  Ensure that the minimum ``canvas'' size of the output image is at least
+  \metavar{WIDTH}\classictimes\metavar{HEIGHT}.  Optionally specify the \metavar{XOFFSET} and
+  \metavar{YOFFSET} of the canvas, too.
 
+  \prgidx{nona \textrm{(Hugin)}}%
   This option only is useful when the input images are cropped \acronym{TIFF} files, such as
-  those produced by \prgidx{nona \textrm{(Hugin)}}\command{nona}.
+  those produced by \command{nona}.
 
   Note that option~\option{-f} neither rescales the output image, nor shrinks the canvas size
   below the minimum size occupied by the union of all input images.
@@ -227,12 +233,13 @@ image.
   Save alpha channel as ``associated''. See the
   \uref{\awaresystemsbeextrasamples}{\acronym{TIFF} documentation} for an explanation.
 
-  \appidx{Gimp}\application{The Gimp} before version~2.0 and
-  \appidx{Cinepaint}\application{CinePaint} (see \appendixName~\fullref{sec:helpful-programs})
-  exhibit unusual behavior when loading images with unassociated alpha channels.  Use
-  option~\option{-g} to work around this problem.  With this flag \App{} will create the output
-  image with the ``associated alpha tag'' set, even though the image is really unassociated
-  alpha.
+  \appidx{Gimp}%
+  \appidx{Cinepaint}%
+  \application{The Gimp} before version~2.0 and \application{CinePaint} (see
+  \appendixName~\fullref{sec:helpful-programs}) exhibit unusual behavior when loading images
+  with unassociated alpha channels.  Use option~\option{-g} to work around this problem.  With
+  this flag \App{} will create the output image with the ``associated alpha tag'' set, even
+  though the image is really unassociated alpha.
 
 
   \label{opt:wrap}%
@@ -286,9 +293,10 @@ image.
     S_P(x, y) = \{P(x + m w, y): m \in Z\}.
     \]
 
-    This is useful for \genidx{panorama!360\angulardegree!horizontal}%
-    \gensee{360@360\angulardegree{}!horizontal panorama}{panorama, 360\angulardegree}
-    360\angulardegree{} horizontal panoramas as it eliminates the left and right borders.
+    \genidx{panorama!360\angulardegree!horizontal}%
+    \gensee{360@360\angulardegree{}!horizontal panorama}{panorama, 360\angulardegree}%
+    This is useful for 360\angulardegree{} horizontal panoramas as it eliminates the left and
+    right borders.
 
   \item[vertical]\itemend
     Wrap around vertically:
@@ -296,9 +304,10 @@ image.
     S_P(x, y) = \{P(x, y + n h): n \in Z\}.
     \]
 
-    This is useful for 360\angulardegree\genidx{panorama!360\angulardegree!vertical}%
-    \gensee{360@360\angulardegree{}!vertical panorama}{panorama, 360\angulardegree}
-    vertical panoramas as it eliminates the top and bottom borders.
+    \genidx{panorama!360\angulardegree!vertical}%
+    \gensee{360@360\angulardegree{}!vertical panorama}{panorama, 360\angulardegree}%
+    This is useful for 360\angulardegree vertical panoramas as it eliminates the top and bottom
+    borders.
 
   \item[\itempar{both \\ horizontal+vertical
       \\ vertical+horizontal}]\itemend

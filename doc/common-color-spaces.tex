@@ -7,24 +7,29 @@
   \genidx{color profile}%
   Color Spaces And Color Profiles\commonpart}
 
+\genidx{profile!\acronym{ICC}}%
+\gensee{ICC@\acronym{ICC} profile}{profile, \acronym{ICC}}%
 This chapter explains the connection of pixel data types,
-\genidx{profile!\acronym{ICC}}\uref{\wikipediaiccprofile}{\acronym{ICC}}-color profiles,
-\gensee{ICC@\acronym{ICC} profile}{profile, \acronym{ICC}} blend color spaces in
+\uref{\wikipediaiccprofile}{\acronym{ICC}}-color profiles, blend color spaces in
 \application{Enblend} or \application{Enfuse}.
 
-Here, we collectively speak of \genidx{pixels!blending}\gensee{blending pixels}{pixels,
-  blending}blending and do not distinguish \genidx{pixels!fusing}\gensee{fusing pixels}{pixels,
-  fusing}fusing, for the basic operations are the same.  Furthermore, we assume the
-multiresolution spline algorithm has calculated a set of weights~$w_i$ for $i = 1, 2, \dots$~and
-$\sum w_i = 1$ for each pixel that must be blended from the participating input
-pixels~$P_i, i = 1, 2, \dots$.
+\genidx{pixels!blending}%
+\gensee{blending pixels}{pixels, blending}%
+\genidx{pixels!fusing}%
+\gensee{fusing pixels}{pixels, fusing}%
+Here, we collectively speak of blending and do not distinguish fusing, for the basic operations
+are the same.  Furthermore, we assume the multiresolution spline algorithm has calculated a set
+of weights~$w_i$ for $i = 1, 2, \dots$~and $\sum w_i = 1$ for each pixel that must be blended
+from the participating input pixels~$P_i, i = 1, 2, \dots$.
 
+\genidx{weighting factor}%
+\genidx{luminance}%
 In the simplest, non-trivial case we have to blend a pair of grayscale input pixels.  Given
-their luminances~$L_1$, $L_2$ and their \genidx{weighting factor}weighting
-factor~$0 \leq w \leq 1$, what \genidx{luminance}luminance~$L$ is their ``weighted average''?
-This is the heart of \application{Enblend's} and \application{Enfuse's} pyramidal blending
-operations!  We are in particular interested in a weighted average that appears \emph{visually}
-correct, this is, our eyes and brains consider $L$ convincing or at the very least credible.
+their luminances~$L_1$, $L_2$ and their weighting factor~$0 \leq w \leq 1$, what luminance~$L$
+is their ``weighted average''?  This is the heart of \application{Enblend's} and
+\application{Enfuse's} pyramidal blending operations!  We are in particular interested in a
+weighted average that appears \emph{visually} correct, this is, our eyes and brains consider $L$
+convincing or at the very least credible.
 
 \begin{geeknote}
   \noindent Note that \application{Enblend} and \application{Enfuse} face different obstacles in
@@ -52,16 +57,17 @@ we start this chapter with a mathematical introduction.
   \genidx{color profiles!math}%
   Mathematical Preliminaries}
 
+\genidx{luminance interval}%
+\genidx{luminance interval!normalized}%
 Let us first address grayscale images because they only require us to talk about luminances.
 For a linear representation of luminances, we just blend for a given $t$ with
 \begin{equation}\label{equ:trivial-luminance-blend}
   L = t L_1 + (1 - t) L_2 \quad \mbox{with} \quad 0 \leq t \leq 1,
 \end{equation}
 where the luminances~$L_i, i = 1, 2,$ range from zero to their data-type dependent maximum
-value~$L_{\mathrm{max}}$, thereby defining a \genidx{luminance interval}``luminance
-interval''. We can always map this interval to $(0, 1)$ by dividing the luminances by the
-maximum, which is why we call the latter \genidx{luminance
-  interval!normalized}\emph{``normalized luminance interval''}:
+value~$L_{\mathrm{max}}$, thereby defining a ``luminance interval''. We can always map this
+interval to $(0, 1)$ by dividing the luminances by the maximum, which is why we call the latter
+\emph{``normalized luminance interval''}:
 \begin{equation}\label{equ:luminance-normalization}
   (0, L_{\mathrm{max}}) \rightarrow (0, 1)
 \end{equation}
@@ -71,8 +77,8 @@ Obviously,
 \end{equation}
 holds for all values~$\bar{L} := L / L_{\mathrm{max}}$ in the normalized luminance interval.
 
-Sometimes images are gamma-encoded with \genidx{luminance interval!normalized}exponent~$\gamma$
-and the blended luminance becomes
+\genidx{luminance interval!normalized}%
+Sometimes images are gamma-encoded with exponent~$\gamma$ and the blended luminance becomes
 \begin{equation}\label{equ:gamma-luminance-blend}
 L' = \left(t L_1^{1/\gamma} + (1 - t) L_2^{1/\gamma}\right)^\gamma,
 \end{equation}
@@ -140,15 +146,18 @@ but this means
   \gensee{floating-point image}{image, floating-point}%
   Floating-Point Images}
 
-\genidx{transform!floating-point images}Floating-point images
-(\genidx{image!\acronym{EXR}}\gensee{EXR@\acronym{EXR} image}{image,
-  \acronym{EXR}}\acronym{EXR}, \genidx{image!floating-point
-  \acronym{TIFF}}\gensee{floating-point \acronym{TIFF} image}{image, floating-point
-  \acronym{TIFF}}floating-point \acronym{TIFF}, or \genidx{image!floating-point
-  \acronym{VIFF}}\gensee{floating-point \acronym{VIFF} image}{image, floating-point
-  \acronym{VIFF}}\gensee{VIFF@\acronym{VIFF} floating-point image}{image, floating-point
-  \acronym{VIFF}}\acronym{VIFF}) get a special treatment.  Their values~$L$ are first converted
-by the \genidx{transform!log}\gensee{log-transform}{transform, log}\LogTransform-transform.
+\genidx{transform!floating-point images}%
+\genidx{image!\acronym{EXR}}%
+\gensee{EXR@\acronym{EXR} image}{image, \acronym{EXR}}%
+\genidx{image!floating-point \acronym{TIFF}}%
+\gensee{floating-point \acronym{TIFF} image}{image, floating-point \acronym{TIFF}}%
+\genidx{image!floating-point \acronym{VIFF}}%
+\gensee{floating-point \acronym{VIFF} image}{image, floating-point \acronym{VIFF}}%
+\gensee{VIFF@\acronym{VIFF} floating-point image}{image, floating-point \acronym{VIFF}}%
+\genidx{transform!log}%
+\gensee{log-transform}{transform, log}%
+Floating-point images (\acronym{EXR}, floating-point \acronym{TIFF}, or \acronym{VIFF}) get a
+special treatment.  Their values~$L$ are first converted by the \LogTransform-transform.
 
 \begin{equation}\label{equ:log-transform}
   \mbox{Log}(L) :=
@@ -168,9 +177,10 @@ lower-case initial denotes the natural logarithmic function (i.e.\ to base~$e$).
   \centering
   \includeimage{log-transform}
 
-  \caption[\LogTransform-transform]{\label{fig:log-transform}\genidx{transform!log}%
-    Forward \LogTransform-transform shown for the range of $-20 \leq L \leq 100$.  The domain of
-    $\LogTransform(L)$ is the whole real axis.}
+  \caption[\LogTransform-transform]%
+          {\label{fig:log-transform}\genidx{transform!log}%
+            Forward \LogTransform-transform shown for the range of $-20 \leq L \leq 100$.  The
+            domain of $\LogTransform(L)$ is the whole real axis.}
 \end{figure}
 
 This transform serves two purposes:
@@ -194,23 +204,26 @@ floating-point format; this is the default, too.
   \genidx{color profile}%
   Color Profiles}
 
+\genidx{black-point}
+\gensee{ICC@\acronym{ICC} profile black-point}{black-point}
+\genidx{white-point}
+\gensee{ICC@\acronym{ICC} profile white-point}{white-point}
 \acronym{ICC}-color profiles completely absorb gamma
 encodings~\eqnref{equ:gamma-luminance-blend} and \acronym{ICC}~profile aware software like
 \application{Enblend} and \application{Enfuse} decode and encode images automatically respecting
 the gamma curves.  Moreover color profiles define what is the darkest representable black, so
-called \genidx{black-point}black-point
+called black-point
 \[
   L = 0
   \quad \mbox{and}\quad
   \transpose{(r, g, b)} = \transpose{(0, 0, 0)}
 \]
-and analogously what is the purest and brightest white, the \genidx{white-point}white-point
+and analogously what is the purest and brightest white, the white-point
 \[
   L = 1
   \quad \mbox{and}\quad
   \transpose{(r, g, b)} = \transpose{(1, 1, 1)}.
 \]
-
 
 \noindent By default, \application{Enblend} and \application{Enfuse} expect that either
 
@@ -221,17 +234,18 @@ and analogously what is the purest and brightest white, the \genidx{white-point}
   all images come with the \emph{same} \acronym{ICC}~profile.
 \end{enumerate}
 
-Even \genidx{image!black-and-white}\gensee{black-and-white image}{image,
-  black-and-white}black-and-white images benefit from having attached appropriate profiles!
+\genidx{image!black-and-white}%
+\gensee{black-and-white image}{image, black-and-white}%
+Even black-and-white images benefit from having attached appropriate profiles!
 
-In Case~\ref{enum:no-profile}.\ the applications blend grayscale images in the normalized
-luminance interval and color images inside the
 \genidx{color cube!\acronym{RGB}}%
 \gensee{RGB@\acronym{RGB} color cube}{color cube, \acronym{RGB}}%
 \genidx{color cube!\acronym{sRGB}}%
 \gensee{sRGB@\acronym{sRGB} color cube}{color cube, \acronym{sRGB}}%
-\acronym{sRGB}-cube.  To override the default \acronym{sRGB}-profile select the desired profile
-with option~\flexipageref{\option{--fallback-profile}}{opt:fallback-profile}.
+In Case~\ref{enum:no-profile}.\ the applications blend grayscale images in the normalized
+luminance interval and color images inside the \acronym{sRGB}-cube.  To override the default
+\acronym{sRGB}-profile select the desired profile with
+option~\flexipageref{\option{--fallback-profile}}{opt:fallback-profile}.
 
 In Case~\ref{enum:same-profile}.\ the images first are by default transformed to
 \uref{\wikipediaciecam}{\acronym{CIELUV}} color space -- respecting the input color profile --
@@ -259,41 +273,43 @@ option~\flexipageref{\option{--blend-colorspace}}{opt:blend-colorspace}.  Here a
 available color spaces.
 
 \begin{description}
+  \genidx{color cube!\acronym{RGB}}%
+  \gensee{RGB@\acronym{RGB} color cube}{color cube, \acronym{RGB}}%
 \item[Identity Space / \acronym{RGB}-Color Cube]\itemend
   Calculate the blended pixel inside the luminance interval \eqnref{equ:trivial-luminance-blend}
-  for grayscale images and inside the \genidx{color cube!\acronym{RGB}}\gensee{RGB@\acronym{RGB}
-    color cube}{color cube, \acronym{RGB}}\acronym{RGB}-color cube as given in
+  for grayscale images and inside the \acronym{RGB}-color cube as given in
   \eqnref{equ:trivial-rgb-blend}.
 
   This is the fastest color space to do computations within, i.e.\ it consumes by far the least
   computing power, because no transform to or from any of the perceptually uniform color spaces
   is done.
 
+  \genidx{colorspace!\acronym{L*a*b*}}%
+  \gensee{L*a*b*@\acronym{L*a*b*} colorspace}{colorspace, \acronym{L*a*b*}}%
+  \genidx{white-point!\acronym{D50}}%
+  \gensee{D50@\acronym{D50} white-point}{white-point, \acronym{D50}}%
 \item[\urlmark{\wikipedialabcolorspace}{\acronym{L*a*b*}}]\itemend\urltext
-
   Represent each pixel as lightness~$L\raisedasterisk$, red-green difference~$a\raisedasterisk$,
-  and yellow-blue difference~$b\raisedasterisk$.  The
-  \genidx{colorspace!\acronym{L*a*b*}}\gensee{L*a*b*@\acronym{L*a*b*} colorspace}{colorspace,
-    \acronym{L*a*b*}}\acronym{L*a*b*} color space encompasses all perceivable colors.  It is
-  completely independent of any device characteristics, approximates human vision, and is
-  perceptually uniform.
+  and yellow-blue difference~$b\raisedasterisk$.  The \acronym{L*a*b*} color space encompasses
+  all perceivable colors.  It is completely independent of any device characteristics,
+  approximates human vision, and is perceptually uniform.
 
   \App{} uses perceptual rendering intent and either the input profile's white-point or, if the
   \acronym{ICC}-profile lacks the \code{cms\-Sig\-Media\-White\-Point\-Tag}, fall back to the
-  \genidx{white-point!\acronym{D50}}\gensee{D50@\acronym{D50} white-point}{white-point,
-    \acronym{D50}}\acronym{D50} white-point (see,
+  \acronym{D50} white-point (see,
   e.g.\ \uref{\wikipediastandardilluminant}{Standard illuminant}).
 
   The conversions from and to \acronym{L*a*b*} are moderately fast to compute; \acronym{L*a*b*}
   mode is two to three times slower than working within the \acronym{RGB}-color cube.
 
+  \genidx{colorspace!\acronym{CIEL*u*v*}}%
+  \gensee{CIEL*u*v*@\acronym{CIEL*u*v*} colorspace}{colorspace, \acronym{CIEL*u*v*}}%
 \item[\urlmark{\wikipediacieluvcolorspace}{\acronym{CIEL*u*v*}}]\itemend\urltext
   Represent each pixel as lightness~$L\raisedasterisk$ and two color
   differences~$u\raisedasterisk$ and $v\raisedasterisk$.  Formulas of each are too complicated
   to show them here.
 
-  The \genidx{colorspace!\acronym{CIEL*u*v*}}\gensee{CIEL*u*v*@\acronym{CIEL*u*v*}
-    colorspace}{colorspace, \acronym{CIEL*u*v*}}\acronym{L*u*v*} tries to be percepually uniform
+  The \acronym{L*u*v*} tries to be percepually uniform
   in lightness as well as in color.
 
   The applications use the same rendering intent and white-point as with \acronym{L*a*b*}.
@@ -301,6 +317,12 @@ available color spaces.
   The conversions from and to \acronym{L*u*v*} are almost as fast to compute as
   \acronym{L*a*b*}.
 
+  \genidx{colorspace!\acronym{CIECAM02}}%
+  \gensee{CIECAM02@\acronym{CIECAM02} colorspace}{colorspace, \acronym{CIECAM02}}%
+  \genidx{rendering intent!perceptual}%
+  \gensee{perceptual rendering intent}{rendering intent}%
+  \genidx{white-point!\acronym{D50}}%
+  \gensee{D50@\acronym{D50} white-point}{white-point, \acronym{D50}}%
 \item[\urlmark{\wikipediaciecam}{\acronym{CIECAM02}}]\itemend\urltext
   Represent each pixel as lightness~$J$, chroma~$C$ (``colorfulness''), and hue
   angle~$h$.
@@ -310,15 +332,10 @@ available color spaces.
     coordinates for the pyramids.
   \end{geeknote}
 
-  The transformations to
-  \genidx{colorspace!\acronym{CIECAM02}}\gensee{CIECAM02@\acronym{CIECAM02}
-    colorspace}{colorspace, \acronym{CIECAM02}}\acronym{CIECAM02} color space and back use
-  \genidx{rendering intent!perceptual}\gensee{perceptual rendering intent}{rendering
-    intent}perceptual rendering intent, the
-  \genidx{white-point!\acronym{D50}}\gensee{D50@\acronym{D50} white-point}{white-point,
-    \acronym{D50}}\acronym{D50} white point (see,
-  e.g.\ \uref{\wikipediastandardilluminant}{Standard illuminant}), 500\dmn{lumen} surrounding
-  light (``average'' in \acronym{CIECAM02} parlance), and assume complete adaption.
+  The transformations to \acronym{CIECAM02} color space and back use perceptual rendering
+  intent, the \acronym{D50} white point (see, e.g.\ \uref{\wikipediastandardilluminant}{Standard
+    illuminant}), 500\dmn{lumen} surrounding light (``average'' in \acronym{CIECAM02} parlance),
+  and assume complete adaption.
 
   Both \acronym{CIELUV} and \acronym{CIELAB} only model the color information generated for
   small and isolated color samples.  They cannot model the contextual effects of color

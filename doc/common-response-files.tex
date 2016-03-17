@@ -14,7 +14,8 @@ A response file contains names of images or other response filenames.
 Introduce response file names at the command line or in a response file with an
 \code{\val{val:response-file-prefix-char}}~character.
 
-\genidx{order!of image processing}\gensee{image processing order}{order of image processing}
+\genidx{order!of image processing}%
+\gensee{image processing order}{order of image processing}%
 \application{Enblend} and \application{Enfuse} process the list \metavar{INPUT} strictly from
 left to right, expanding response files in depth-first order.  Multi-layer files are processed
 from first layer to the last.  The following examples only show \application{Enblend}, but
@@ -154,10 +155,10 @@ The above grammar might surprise the user in the some ways.
   if the filename's extension hints towards an image.
 \end{description}
 
-\genidx{response file!force recognition of}If \application{Enblend} or \application{Enfuse} do
-not recognize a response file, they will skip the file and issue a warning.  To force a file
-being recognized as a response file add one of the following syntactic comments to the
-\emph{first} line of the file.
+\genidx{response file!force recognition of}%
+If \application{Enblend} or \application{Enfuse} do not recognize a response file, they will
+skip the file and issue a warning.  To force a file being recognized as a response file add one
+of the following syntactic comments to the \emph{first} line of the file.
 
 \begin{literal}
   response-file: true\synidx{response-file} \\

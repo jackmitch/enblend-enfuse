@@ -111,10 +111,11 @@ are used most often.  However, in fact, \App{} and \OtherApp{} do have these opt
   \label{opt:levels}%
   \optidx[\defininglocation]{--levels}%
   \shoptidx{-l}{--levels}%
+  \genidx{levels!pyramid}%
+  \gensee{pyramid levels}{levels, pyramid}%
 \item[\itempar{-l \metavar{LEVELS} \\ --levels=\metavar{LEVELS}}]\itemend
-  Use at most this many \genidx{levels!pyramid}\gensee{pyramid levels}{levels,
-    pyramid}\metavar{LEVELS} for pyramid\footnotemark{} blending if \metavar{LEVELS} is
-  positive, or reduce the maximum number of levels used by $-\metavar{LEVELS}$ if
+  Use at most this many \metavar{LEVELS} for pyramid\footnotemark{} blending if \metavar{LEVELS}
+  is positive, or reduce the maximum number of levels used by $-\metavar{LEVELS}$ if
   \metavar{LEVELS} is negative; \sample{auto} or \sample{automatic} restore the default, which
   is to use the maximum possible number of levels for each overlapping region.
 
@@ -159,11 +160,11 @@ are used most often.  However, in fact, \App{} and \OtherApp{} do have these opt
   \genidx{filename!output}%
   \gensee{output filename}{filename, output}%
   \gensee{output filename!default}{filename, output, default}%
+  \genidx{filename!output!default}%
+  \gensee{default output filename}{filename, output, default}%
 \item[\itempar{-o \metavar{FILE} \\ --output=\metavar{FILE}}]\itemend
   Place \appdoes{}ed output image in \metavar{FILE}.  If \sample{--output} is omitted, \App{}
-  writes the resulting image to \genidx{filename!output!default}%
-  \gensee{default output filename}{filename, output, default}%
-  \filename{\val{val:default-output-filename}}.
+  writes the resulting image to \filename{\val{val:default-output-filename}}.
 
 
   \label{opt:verbose}%

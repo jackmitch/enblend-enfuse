@@ -11,16 +11,18 @@
   \label{opt:help}%
   \optidx[\defininglocation]{--help}%
   \shoptidx{-h}{--help}%
+  \genidx{help}%
 \item[\itempar{-h \\ --help}]\itemend
-  \genidx{help}Print information on the command-line syntax and all available options, giving a
-  boiled-down version of this manual.
+  Print information on the command-line syntax and all available options, giving a boiled-down
+  version of this manual.
 
 
   \label{opt:show-globbing-algorithms}%
   \optidx[\defininglocation]{--show-globbing-algorithms}%
+  \genidx{algorithm!globbing}%
+  \gensee{globbing algorithms}{algorithm, globbing}%
 \item[--show-globbing-algorithms]\itemend
-  \genidx{algorithm!globbing}\gensee{globbing algorithms}{algorithm, globbing}Show all globbing
-  algorithms.
+  Show all globbing algorithms.
 
   Depending on the build-time configuration and the operating system the binary may support
   different globbing algorithms.  See \sectionName~\fullref{sec:globbing-algorithms}.
@@ -28,19 +30,19 @@
 
   \label{opt:show-gpu-info}%
   \optidx[\defininglocation]{--show-gpu-info}%
-\item[--show-gpu-info \restrictednote{\acronym{OpenCL}-enabled versions only.}]\itemend
-  Print a list of all available \genidx{GPU@\acronym{GPU}}\acronym{GPU}~devices under
-  \genidx{OpenCL@\acronym{OpenCL}}\acronym{OpenCL}~control on all accessible platforms, the
-  current preferences, and then exit; it is the same enumeration that
-  \begin{literal}
-    \app{} --verbose --version
-  \end{literal}
-  reveals.%
+  \genidx{GPU@\acronym{GPU}}%
+  \genidx{OpenCL@\acronym{OpenCL}}%
   \genidx{GPU@\acronym{GPU}!information on}%
   \gensee{information!on \acronym{GPU}}{\acronym{GPU}, information}%
   \genidx{OpenCL@\acronym{OpenCL}!information on configuration}%
-  \gensee{information!on \acronym{OpenCL} configuration}{\acronym{OpenCL}, information}
-  \exampleName~\ref{ex:opencl-config} shows a complete output.
+  \gensee{information!on \acronym{OpenCL} configuration}{\acronym{OpenCL}, information}%
+\item[--show-gpu-info \restrictednote{\acronym{OpenCL}-enabled versions only.}]\itemend
+  Print a list of all available \acronym{GPU}~devices under \acronym{OpenCL}~control on all
+  accessible platforms, the current preferences, and then exit; it is the same enumeration that
+  \begin{literal}
+    \app{} --verbose --version
+  \end{literal}
+  reveals.  \exampleName~\ref{ex:opencl-config} shows a complete output.
 
   \begin{exemplar}
     \begin{maxipage}
@@ -85,9 +87,11 @@
 
   \label{opt:show-image-formats}%
   \optidx[\defininglocation]{--show-image-formats}%
+  \genidx{format!image}%
+  \gensee{image formats}{format, image}%
 \item[--show-image-formats]\itemend
-  \genidx{format!image}\gensee{image formats}{format, image}Show all recognized image formats,
-  their filename extensions and the supported per-channel depths.
+  Show all recognized image formats, their filename extensions and the supported per-channel
+  depths.
 
   Depending on the build-time configuration and the operating system, the binary supports
   different image formats, typically: \acronym{BMP}, \acronym{EXR}, \acronym{GIF},
@@ -119,25 +123,27 @@
 
   \label{opt:show-software-components}%
   \optidx[\defininglocation]{--show-software-components}%
-\item[--show-software-components]\itemend
   \genidx{information!on software components}%
   \gensee{software!components}{information, on software components}%
+  \genidx{dynamic-library environment}%
+  \genidx{header files}%
+\item[--show-software-components]\itemend
   Show the name and version of the compiler that built \App{} followed by the versions of all
   important libraries against which \App{} was compiled and linked.
 
-  \genidx{dynamic-library environment}Technically, the version information is taken from
-  \genidx{header files}header files, thus it is independent of the dynamic-library environment
-  the binary runs within.  The library versions printed here can help to reveal version
-  mismatches with respect to the actual dynamic libraries available to the binary.
+  Technically, the version information is taken from header files, thus it is independent of the
+  dynamic-library environment the binary runs within.  The library versions printed here can
+  help to reveal version mismatches with respect to the actual dynamic libraries available to
+  the binary.
 
 
   \label{opt:version}%
   \optidx[\defininglocation]{--version}%
   \shoptidx{-V}{--version}%
-\item[\itempar{-V \\ --version}]\itemend
   \genidx{software!version}%
   \gensee{version}{software, version}%
   \gensee{binary version}{software, version}%
+\item[\itempar{-V \\ --version}]\itemend
   Output information on the binary's version.
 
   Team this option with \flexipageref{\option{--verbose}}{opt:verbose} to show configuration

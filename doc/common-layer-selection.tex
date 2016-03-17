@@ -10,14 +10,16 @@ Some image formats, like for example \acronym{TIFF}, allow for storing more than
 single file, where all the contained images can have different sizes, number of channels,
 resolutions, compression schemes, etc.  The file there acts as a container for an \emph{ordered}
 set of images.
+
 \genidx[\defininglocation]{file!multi-page}%
 \gensee{multi-page file}{file, multi-page}%
 \gensea{multi-page file}{layer}%
 \genidx[\defininglocation]{image!directory}%
+\genidx[\defininglocation]{layer!image}%
 In the \acronym{TIFF}-documentation these are known as ``multi-page'' files and because the
 image data in a \acronym{TIFF}-file is associated with a ``directory'', the files sometimes are
-also called ``multi-directory'' files.  \genidx[\defininglocation]{layer!image}In this manual,
-multiple images in a file are called ``layers''.
+also called ``multi-directory'' files.  In this manual, multiple images in a file are called
+``layers''.
 
 The main advantage of multi-layer files over a set of single-layer ones is a cleaner work area
 with less image-files and thus an easier handling of the intermediate products which get created
@@ -77,9 +79,8 @@ multi-page image, such that the last layer always has index~\code{-1}, the next 
 index~\code{-2} and so on.  Out-of-range indexes are silently ignored whether forward or
 backward.
 
-\footnotetext{\genidx{Carter, Samantha@\propername{Maj.\ Samantha
-      Carter}}\propername{Maj.\ Samantha Carter} in Lost City~II: ``There has to be a way to
-  reverse the process.  The answer has to be here.''}
+\footnotetext{\genidx{Carter, Samantha@\propername{Samantha Carter}}\propername{Samantha
+    Carter}: ``There has to be a way to reverse the process.  The answer has to be here.''}
 
 The single layer of a single-layer file always can be accessed either with index~\sample{1} or
 \sample{-1}.
