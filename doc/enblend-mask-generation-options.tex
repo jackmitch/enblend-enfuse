@@ -22,13 +22,13 @@ These options control the generation and the usage of masks.
   If omitted \metavar{FACTOR} defaults to \val{val:default-coarseness-factor}, this means,
   option~\option{--coarse-mask} shrinks the overlapping \emph{areas} by a factor of
   $\val{val:default-coarseness-factor}\classictimes\val{val:default-coarseness-factor}$.  With
-  $\metavar{FACTOR} = 8$ the total memory allocated during a run of Enblend shrinks
-  approximately by 80\% and the maximum amount of memory in use at a time is decreased to some
-  40\% in comparison to a full-size (``fine'') mask.
+  $\metavar{FACTOR} = 8$ the total memory allocated during a run of \App{} shrinks approximately
+  by 80\% and the maximum amount of memory in use at a time is decreased to some 40\% in
+  comparison to a full-size (``fine'') mask.
 
   Valid range: $\metavar{FACTOR} = 1, 2, 3, \dots$, where 1 reproduces \sample{--fine-mask}.
 
-  Also see the negated option, \flexipageref{\sample{--fine-mask}}{opt:file-mask} and
+  Also see the negated option, \flexipageref{\sample{--fine-mask}}{opt:fine-mask} and
   \tableName~\ref{tab:mask-generation}.
 
   \begin{table}
