@@ -21,8 +21,6 @@
 
 #include <string>
 
-#include <boost/lexical_cast.hpp>
-
 #include "global.h"  // for enblend::trim
 
 #include "win32_implementation.h"
@@ -103,7 +101,7 @@ WinDynamicLoaderImplementation::GetLastErrorString()
 
     // add numeric error code
     errorMsg.append(" (Code: ");
-    errorMsg.append(boost::lexical_cast<std::string>(lastError));
+    errorMsg.append(std::to_string(lastError));
     errorMsg.append(")");
 
     return errorMsg;
