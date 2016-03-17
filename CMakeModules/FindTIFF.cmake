@@ -17,6 +17,7 @@
 FIND_PATH(TIFF_INCLUDE_DIR tiff.h
   /usr/local/include
   /usr/include
+  ${SOURCE_BASE_DIR}/tiff/include
   ${SOURCE_BASE_DIR}/tiff-4.0.3/libtiff
   ${SOURCE_BASE_DIR}/tiff-4.0.0beta5/libtiff
   ${SOURCE_BASE_DIR}/tiff-3.9.2/libtiff
@@ -29,6 +30,7 @@ find_library_with_debug(TIFF_LIBRARIES
   WIN32_DEBUG_POSTFIX d
   NAMES tiff libtiff 
   PATHS ${SYSTEM_LIB_DIRS}
+        ${SOURCE_BASE_DIR}/tiff/lib
         ${SOURCE_BASE_DIR}/tiff-4.0.3/libtiff
         ${SOURCE_BASE_DIR}/tiff-4.0.0beta5/libtiff
         ${SOURCE_BASE_DIR}/tiff-3.9.2/libtiff

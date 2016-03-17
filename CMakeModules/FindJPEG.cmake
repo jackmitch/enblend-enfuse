@@ -17,6 +17,7 @@
 FIND_PATH(JPEG_INCLUDE_DIR jpeglib.h
   /usr/local/include
   /usr/include
+  ${SOURCE_BASE_DIR}/jpeg-9b
   ${SOURCE_BASE_DIR}/jpeg-9a
   ${SOURCE_BASE_DIR}/jpeg-9
   ${SOURCE_BASE_DIR}/jpeg-8d
@@ -30,6 +31,8 @@ find_library_for_cpu(JPEG_LIBRARIES
   NAMES jpeg libjpeg
   PATHS 
     ${SYSTEM_LIB_DIRS}
+    ${SOURCE_BASE_DIR}/jpeg-9b/x64/Release
+    ${SOURCE_BASE_DIR}/jpeg-9b/Release
     ${SOURCE_BASE_DIR}/jpeg-9a/lib
     ${SOURCE_BASE_DIR}/jpeg-9/lib
     ${SOURCE_BASE_DIR}/jpeg-9/x64/Release
