@@ -231,14 +231,8 @@ AC_CHECK_HEADER(vigra/basicimage.hxx, [],
 AX_BOOST_BASE([1.55], [],
               AC_MSG_ERROR([Boost version 1.55 or later is required to compile Enblend.]))
 
-AC_CHECK_HEADER(boost/functional/hash.hpp, [],
-                AC_MSG_ERROR([Boost "hash" header file is required to compile Enblend.]))
-AC_CHECK_HEADER(boost/lexical_cast.hpp, [],
-                AC_MSG_ERROR([Boost "lexical_cast" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/optional.hpp, [],
                 AC_MSG_ERROR([Boost "optional" header file is required to compile Enblend.]))
-AC_CHECK_HEADER(boost/unordered_set.hpp, [],
-                AC_MSG_ERROR([Boost "unordered_set" header file is required to compile Enblend.]))
 
 AC_CHECK_HEADER(gsl/gsl_errno.h, [],
                 AC_MSG_ERROR([GNU Scientific Library (GSL) header file "gsl_errno" is required to compile Enblend.]))
@@ -250,66 +244,6 @@ AC_CHECK_HEADER(gsl/gsl_rng.h, [],
                 AC_MSG_ERROR([GNU Scientific Library (GSL) header file "gsl_rng" is required to compile Enblend.]))
 AC_CHECK_HEADER(gsl/gsl_vector.h, [],
                 AC_MSG_ERROR([GNU Scientific Library (GSL) header file "gsl_vector" is required to compile Enblend.]))
-
-AX_BOOST_SYSTEM
-LIBS="$BOOST_SYSTEM_LIB $LIBS"
-
-AC_ARG_WITH([boost-filesystem],
-            [AS_HELP_STRING([--with-boost-filesystem],
-             [use Boost filesystem library @<:@default=check@:>@])],
-            [],
-            [with_boost_filesystem=check])
-AS_IF([test "$with_boost_filesystem" = no],
-      [AC_MSG_NOTICE([disabling use of Boost "filesystem" library])],
-      [AS_IF([test "$with_boost_filesystem" = yes],
-             [AC_MSG_NOTICE([forcing use of Boost "filesystem" library])
-              AC_DEFINE(HAVE_BOOST_FILESYSTEM, 1,
-                        [Define if you have boost/filesystem.hpp])
-              EXTRA_LIBS="-lboost_filesystem ${EXTRA_LIBS}"],
-             [AC_CHECK_HEADER(boost/filesystem.hpp,
-                              [],
-                              AC_MSG_NOTICE([Boost "filesystem" header is missing.]))
-              if test "$ac_cv_header_boost_filesystem_hpp" = yes; then
-                  found_boost_filesystem_lib=no
-                  candidates="-lboost_filesystem"
-                  if test "$acx_pthread_ok" = yes; then
-                      candidates="-lboost_filesystem-mt $candidates"
-                  fi
-                  if test "$with_boost_filesystem" != check; then
-                      candidates="$with_boost_filesystem $candidates"
-                  fi
-                  LIBS_ORIG=$LIBS
-                  for x in $candidates; do
-                      LIBS="$LIBS_ORIG $x"
-                      AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-#include <string>
-#include "boost/filesystem.hpp"
-]],
-[[
-typedef boost::filesystem::path basic_path;
-basic_path p("foo/bar/baz.oo");
-p.parent_path();
-p.filename();
-basename(p);
-extension(p);
-]]
-)],
-                                     [EXTRA_LIBS="$x $y ${EXTRA_LIBS}"
-                                      found_boost_filesystem_lib=yes
-                                      AC_MSG_NOTICE([compiling with Boost's generic filename parsing support.])
-                                      break])
-                  done
-                  LIBS=$LIBS_ORIG
-              fi
-              if test "$ac_cv_header_boost_filesystem_hpp" = yes &&
-                 test "$found_boost_filesystem_lib" = yes; then
-                  AC_DEFINE(HAVE_BOOST_FILESYSTEM, 1,
-                            [Define if you have boost/filesystem.hpp])
-              else
-                  AC_MSG_NOTICE([Boost "filesystem" header or library not found.  Using built-in support.])
-              fi
-             ] ) dnl AS_IF($with_boost_filesystem = yes)
-      ] ) dnl  AS_IF($with_boost_filesystem = no)
 
 AC_LANG_POP([])
 AC_SUBST(EXTRA_LIBS)
