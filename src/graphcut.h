@@ -32,9 +32,7 @@
 #include <stdlib.h>
 #include <utility>
 #include <queue>
-
-#include <boost/functional/hash.hpp>
-#include <boost/unordered_set.hpp>
+#include <unordered_set>
 
 #include <vigra/functorexpression.hxx>
 #include <vigra/inspectimage.hxx>
@@ -76,14 +74,21 @@ using namespace vigra::functor;
 
 namespace enblend
 {
+    template <class T>
+    inline void hash_combine(std::size_t & seed, const T & value)
+    {
+        std::hash<T> hasher;
+        seed ^= hasher(value) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    }
+
     struct pointHash
     {
         std::size_t operator()(const vigra::Point2D& p) const
         {
             std::size_t seed = 0;
 
-            boost::hash_combine(seed, p.x);
-            boost::hash_combine(seed, p.y);
+            hash_combine(seed, p.x);
+            hash_combine(seed, p.y);
 
             return seed;
         }
@@ -94,7 +99,7 @@ namespace enblend
     {
     public:
         CheckpointPixels() {}
-        boost::unordered_set<vigra::Point2D, pointHash> top, bottom;
+        std::unordered_set<vigra::Point2D, pointHash> top, bottom;
 
         ~CheckpointPixels()
         {
@@ -339,8 +344,8 @@ namespace enblend
     struct OutputLabelingFunctor
     {
     public:
-        OutputLabelingFunctor(boost::unordered_set<vigra::Point2D, pointHash>* a_,
-                              boost::unordered_set<vigra::Point2D, pointHash>* b_,
+        OutputLabelingFunctor(std::unordered_set<vigra::Point2D, pointHash>* a_,
+                              std::unordered_set<vigra::Point2D, pointHash>* b_,
                               vigra::Point2D offset_) :
             left(a_), right(b_), offset(offset_) {}
 
@@ -359,8 +364,8 @@ namespace enblend
         }
 
     protected:
-        boost::unordered_set<vigra::Point2D, pointHash>* left;
-        boost::unordered_set<vigra::Point2D, pointHash>* right;
+        std::unordered_set<vigra::Point2D, pointHash>* left;
+        std::unordered_set<vigra::Point2D, pointHash>* right;
         vigra::Point2D offset;
     };
 
@@ -368,8 +373,8 @@ namespace enblend
     struct CutPixelsFunctor
     {
     public:
-        CutPixelsFunctor(boost::unordered_set<vigra::Point2D, pointHash>* a_,
-                         boost::unordered_set<vigra::Point2D, pointHash>* b_) :
+        CutPixelsFunctor(std::unordered_set<vigra::Point2D, pointHash>* a_,
+                         std::unordered_set<vigra::Point2D, pointHash>* b_) :
             left(a_), right(b_){}
 
         MaskPixelType operator()(const vigra::Diff2D& pos2, const MaskPixelType& a2) const
@@ -385,8 +390,8 @@ namespace enblend
         }
 
     protected:
-        boost::unordered_set<vigra::Point2D, pointHash>* left;
-        boost::unordered_set<vigra::Point2D, pointHash>* right;
+        std::unordered_set<vigra::Point2D, pointHash>* left;
+        std::unordered_set<vigra::Point2D, pointHash>* right;
     };
 
     template<class MaskPixelType>
@@ -489,8 +494,8 @@ namespace enblend
 
     void
     getNeighbourList(CheckpointPixels* srcDestPoints,
-                     boost::unordered_set<vigra::Point2D, pointHash>::iterator* auxList1,
-                     boost::unordered_set<vigra::Point2D, pointHash>::iterator* auxList2)
+                     std::unordered_set<vigra::Point2D, pointHash>::iterator* auxList1,
+                     std::unordered_set<vigra::Point2D, pointHash>::iterator* auxList2)
     {
         *auxList1 = srcDestPoints->top.begin();
         *auxList2 = srcDestPoints->top.end();
@@ -568,7 +573,7 @@ namespace enblend
     std::vector<vigra::Point2D>*
     A_star(vigra::Point2D srcpt, vigra::Point2D destpt, ImageType* img,
            GradientImageType* gradientX, GradientImageType* gradientY,
-           vigra::Diff2D bounds, CheckpointPixels* srcDestPoints, boost::unordered_set<vigra::Point2D, pointHash>* visited)
+           vigra::Diff2D bounds, CheckpointPixels* srcDestPoints, std::unordered_set<vigra::Point2D, pointHash>* visited)
     {
         MaskPixelType zeroVal = vigra::NumericTraits<MaskPixelType>::zero();
         typedef std::priority_queue<vigra::Point2D, std::vector<vigra::Point2D>, CostComparer<ImageType> > Queue;
@@ -586,8 +591,8 @@ namespace enblend
         vigra::Point2D current;
         vigra::Point2D neighbour;
         vigra::Point2D destNeighbour;
-        boost::unordered_set<vigra::Point2D, pointHash>::iterator auxListBegin;
-        boost::unordered_set<vigra::Point2D, pointHash>::iterator auxListEnd;
+        std::unordered_set<vigra::Point2D, pointHash>::iterator auxListBegin;
+        std::unordered_set<vigra::Point2D, pointHash>::iterator auxListEnd;
         openset->push(srcpt);
 
         while (!openset->empty()) {
@@ -678,7 +683,7 @@ namespace enblend
                     }
                 }
             } else {
-                for (boost::unordered_set<vigra::Point2D, pointHash>::iterator x = auxListBegin; x != auxListEnd; ++x) {
+                for (std::unordered_set<vigra::Point2D, pointHash>::iterator x = auxListBegin; x != auxListEnd; ++x) {
                     score = 0;
                     scoreIsBetter = false;
                     pushToList = false;
@@ -720,8 +725,8 @@ namespace enblend
 
 
     void dividePath(std::vector<vigra::Point2D>* cut,
-                    boost::unordered_set<vigra::Point2D, pointHash>* left,
-                    boost::unordered_set<vigra::Point2D, pointHash>* right,
+                    std::unordered_set<vigra::Point2D, pointHash>* left,
+                    std::unordered_set<vigra::Point2D, pointHash>* right,
                     const vigra::Rect2D& iBB)
     {
         vigra::Point2D previous;
@@ -1218,8 +1223,8 @@ namespace enblend
         typedef vigra::NumericTraits<BasePixelType> BasePixelTraits;
         typedef vigra::NumericTraits<MaskPixelType> MaskPixelTraits;
 
-        boost::unordered_set<vigra::Point2D, pointHash> pixelsLeftOfCut;
-        boost::unordered_set<vigra::Point2D, pointHash> pixelsRightOfCut;
+        std::unordered_set<vigra::Point2D, pointHash> pixelsLeftOfCut;
+        std::unordered_set<vigra::Point2D, pointHash> pixelsRightOfCut;
 
         dividePath(&totalDualPath, &pixelsLeftOfCut, &pixelsRightOfCut, iBB);
 
@@ -1436,7 +1441,7 @@ namespace enblend
 #endif
 
         // a set of points to keep visited points for subsequent graph-cut runs
-        boost::unordered_set<vigra::Point2D, pointHash> visited;
+        std::unordered_set<vigra::Point2D, pointHash> visited;
 
         // find optimal cuts in dual graph
         for (std::vector<vigra::Point2D>::iterator i = intermediatePointList->begin();
