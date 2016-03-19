@@ -177,16 +177,6 @@ Compile without optimizations and enable all debug-checking code.  The
 default is "no", build an optimized version without debugging symbols.
 
 
-** --with-boost-filesystem=CHECK/yes/no/<LIBRARY>
-
-Use Boost "filesystem" library to get platform-independent path
-generation.  The default is to check for usability.  "No" forces the
-use of the internal path generation library.  Supply a LIBRARY name if
-you want to override the default candidates "boost_filesystem-mt" for
-multi-threaded compilation and "boost_filesystem" for single-thread
-builds.
-
-
 ** --with-dl=CHECK/yes/no/dl/gmodule
 
 Enable user-defined exposure weight functions in Enblend.  With
@@ -595,8 +585,6 @@ Enblend/Enfuse also depend on the following libraries:
 
 - Boost  [1.51 in boost_1_51_0]
     - Only header files are used by default.
-    - Optionally, Enblend/Enfuse can use the Filesystem Library.
-      However, this library needs to compiled against STLport.
 - Little-CMS2  [2.4 in lcm2-2.4]
 
 

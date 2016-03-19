@@ -17,12 +17,13 @@
  * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef __FILENAMEPARSE_H__
-#define __FILENAMEPARSE_H__
+#ifndef FILENAMEPARSE_H_INCLUDED_
+#define FILENAMEPARSE_H_INCLUDED_
 
 #include <string>
 
-namespace enblend {
+namespace enblend
+{
     /** Answer whether aFilename is specified with a relative path not
      *  an absolute one. */
     bool isRelativePath(const std::string& aFilename);
@@ -53,7 +54,7 @@ namespace enblend {
                            const std::string& anotherPathname);
 } // namespace enblend
 
-#endif /* __FILENAMEPARSE_H__ */
+#endif // FILENAMEPARSE_H_INCLUDED_
 
 // Local Variables:
 // mode: c++
