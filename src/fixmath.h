@@ -30,11 +30,6 @@
 
 #include <time.h>
 
-#if defined _WIN32 && defined _MSC_VER && _MSC_VER < 1900
-#include <boost/math/special_functions.hpp>
-using namespace boost::math;
-#endif
-
 #include <vigra/basicimage.hxx>
 #include <vigra/colorconversions.hxx>
 #include <vigra/mathutil.hxx>
