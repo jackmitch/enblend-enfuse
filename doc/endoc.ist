@@ -1,0 +1,17 @@
+%%% Makeindex style definition
+
+
+%% define merge rules
+%--include "tex.ist"
+%--include "latex.ist"
+
+
+%% define sort rules
+%--include "english/digit.ist"
+%--include "english/special.ist"
+%--include         "icase.ist"
+
+
+headings_flag   1
+heading_prefix  "\\pagebreak[3]\\textbf{\\Large "
+heading_suffix  "\\ }\\hrulefill\\nopagebreak\n"

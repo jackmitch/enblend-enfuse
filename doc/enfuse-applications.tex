@@ -1,0 +1,674 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\chapter[Applications of \App]{\label{sec:applications}%
+  \genidx[\rangebeginlocation]{applications of \App}%
+  Applications of \App}
+
+This section describes some of the novel possibilities that \App{} offers the photographer.  In
+contrast to the previous chapters, it centers around the effects on the final image.
+
+\section[What Makes Images Fusable?]{\label{sec:what-makes-images-fusable}%
+  \genidx{images!fusable}%
+  What Makes Images Fusable?}
+
+\begin{sloppypar}
+  Images should align well to be suitable for fusion.  However, there is no hard mathematical
+  rule what ``well'' means.  The alignment requirements for 16~MPixel images to yield a sharp
+  $4" \times 6"$ print at 300\dmn{dpi} or even for web presentation are relatively low, whereas
+  the alignment of 8~MPixel images for a $12" \times 18"$ print ought to be tight.
+\end{sloppypar}
+
+If the input images need to be aligned, \application{Hugin}\appidx{Hugin} (see also
+Appendix~\fullref{app:hugin}) is the tool of choice.  It produces images exactly in the format
+that \App{} expects.
+
+Sometimes images naturally align extremely well so that no re-alignment is required.  An image
+series with preprogrammed exposure steps taken in rapid succession where the camera is mounted
+on a heavy tripod and a humongous ball head, mirror lockup, and a cable release are used, comes
+to mind.
+
+When in doubt about what will work, try it, and judge for yourself.
+
+\noindent Useful ideas for a good alignment:
+\begin{itemize}
+\item
+  Fix all camera parameters that are not explicitly varied.
+
+  \begin{description}
+  \item[Aperture:] Engage full manual or aperture-priority mode.
+
+  \item[Auto-focus:] Disable ``Auto Focus''.  Be aware that the auto-focus function could be
+    linked to shutter-release button position ``half pressed'' or to the shutter release in
+    insidious ways.
+
+  \item[Closed eyepiece:] Close the eyepiece when using a cable release to suppress variations
+    in stray light.  (This tip applies only to single lens reflex cameras.)
+
+  \item[Exposure time/Shutter speed:] Use the shortest possible exposure time or, in other
+    words, use the fastest shutter speed to avoid blur caused by camera shake or motion blur.
+
+  \item[Flash power:] Explicitly control the flash power of \emph{all} flashes.  This is
+    sometimes called ``flash exposure lock''.
+
+  \item[Sensitivity:] Disable ``Auto \acronym{ISO}''.
+
+  \item[White balance:] Disable ``Auto White Balance''.  Instead, use the most suitable fixed
+    white balance or take the white balance off a white card.  When in doubt, use the setting
+    ``Daylight'' or equivalent.
+  \end{description}
+
+\item
+  Steady the camera by any means.
+
+  \begin{itemize}
+  \item
+    Apply your best camera bracing technique combined with controlled breathing.
+
+  \item
+    Prefer a monopod, or better, a rigid tripod with a heavy head.
+
+  \item
+    Use a cable release if possible.
+
+  \item
+    (This applies to cameras with a moving mirror only.)  Engage ``mirror lockup''.
+
+  \item
+    Consider automatic bracketing when applicable.
+
+  \item
+    Activate camera- or lens-based image stabilization if you are sure that it improves the
+    image quality in your particular case; otherwise disengage the feature.
+
+    For some lens-based image stabilization systems, it is known that they ``lock'' into
+    different positions every time they are activated.  Moreover, some stabilization systems
+    decrease the image quality if the lens is mounted on a tripod.
+  \end{itemize}
+
+\item
+  Fire in rapid succession.
+\end{itemize}
+
+
+%% http://www.usa.canon.com/dlc/controller?act=GetArticleAct&articleID=1786
+
+
+\section[Repetition -- Noise Reduction]{\label{sec:repetition}%
+  \genidx{series!simple}%
+  \gensee{simple series}{series, simple}%
+  \genidx{noise reduction}%
+  Repetition -- Noise Reduction}
+
+\mainpurpose{Reduce noise}
+
+With the default settings, \App{} computes a weighted average of the input pixels.  For a series
+of images, repeated with identical settings, this results in a reduction of (photon shot) noise.
+In other words, the dynamic range increases slightly, because the higher signal-to-noise ratio
+makes darker shades usable.  Furthermore, smooth or glossy surfaces get a ``cleaner'' look, and
+edges become visually sharper.  The nitty-gritty reportage look that sometimes stems from a high
+sensitivity setting disappears.
+
+Averaged images, and therefore low-noise images, are the base for a multitude of techniques
+like, for example, differences.  The most prominent method in this class is dark-frame
+subtraction.
+
+\App{} sets defaults for the exposure-weight to \val{val:default-weight-exposure}, for
+saturation-weight to \val{val:default-weight-saturation} and for all other weights to zero, a
+good combination for noise reduction.  Eliminating the saturation component with
+\option{--saturation-weight=0.0} sometimes can be worth the extra run.
+
+
+\section[Exposure Series -- Dynamic Range Increase]{\label{sec:exposure-series--dynamic-range-increase}%
+  \genidx{series!exposure}%
+  \gensee{exposure series}{series, exposure}%
+  \genidx{dynamic range increase}%
+  Exposure Series -- Dynamic Range Increase}
+
+\mainpurpose{Increase manageable dynamic range}
+
+An exposure series is a set of images taken with identical parameters except for the exposure
+time.  Some cameras even provide special functions to automate recording exposure series.  See
+the instruction manual of your model for details.  Also check out the features that Magic
+Lantern offers to shoot \acronym{HDR}-series and to extend the dynamic range right in the
+camera.
+
+\App{}'s defaults, \code{exposure-weight}=\val{val:default-weight-exposure} and
+\code{saturation-weight}=\val{val:default-weight-saturation} are well suited for fusion of
+\emph{color} images.  Remember that saturation weighting only works for \acronym{RGB} data.
+Option~\option{--saturation-weight} helps to control burnt-out highlights, as these are heavily
+desaturated.  Alternatively, use option~\option{--exposure-cutoff} to suppress noise or
+blown-out highlights without altering the overall brightness too much.  If no image suffers from
+troublesome highlights, the relative saturation weight can be reduced and even be set to zero.
+
+For black and white images \sample{--entropy-weight} can be an alternative to
+\sample{--saturation-weight} because it suppresses overexposed pixels, as these contain little
+information.  However, entropy weighting is not limited to gray-scale data; it has been
+successfully applied to \acronym{RGB} images, too.  Note that entropy weighting considers
+\emph{each} color channel of an \acronym{RGB} image separately and chooses the channel with the
+minimum entropy as representative for the whole pixel.
+
+\App{} offers the photographer tremendous flexibility in fusing differently exposed images.
+Whether you combine only two pictures or a series of 21, \App{} imposes no limits on you.
+Accordingly, the photographic effects achieved range from subtle to surreal, like the late~1980s
+``Max Headroom'' \acronym{TV}-Series, to really unreal.  Like some time ago in the chemical days
+of photography, when a new developer opened unseen possibilities for artists, exposure fusion
+extends a photographer's expressive space in the digital age.  Whether the results look good or
+bad, whether the images are dull or exciting, is entirely up the artist.
+
+In the next sections we give assistance to starters, and rectify several misconceptions about
+\App{}.
+
+
+\subsection[Tips For Beginners]{\label{sec:tips-for-beginners}%
+  \genidx{exposure series!tips for beginners}%
+  Tips For Beginners}
+
+Here are some tips to get you in business quickly.
+
+\begin{description}
+\item[Include the best single exposure.]\itemend
+  Include the exposure you would have taken if you did not use \App{} in your series.  It gives
+  you a solid starting point.  Think of the other images as augmenting this best single exposure
+  to bring out the light and dark features you would like to see.
+
+\item[Begin with as small a number of images as possible.]\itemend
+  Pre-visualizing the results of \App{} is difficult.  The more images put into the fusion
+  process and the wider their \acronym{EV}-spacing is, the more challenging visualizing the
+  output image becomes.  Therefore, start off with as few images as possible.
+
+  You can take a larger series of images and only use part of it.
+
+\item[Start with a moderate \acronym{EV}-spacing.]\itemend
+  As has been pointed out in the previous item, a wide \acronym{EV}-spacing makes
+  pre-visualization harder.  So start out with a spacing of $\slfrac{2}{3}$\dmn{EV} to
+  $\slfrac{4}{3}$\dmn{EV}.
+
+\item[Use Magic Lantern's dual-\acronym{ISO} mode (and avoid \App).]\itemend
+  Magic Lantern can reprogram a camara to take a \emph{single} short with \emph{two different}
+  sensor speeds.  They call it ``dual-\acronym{ISO}'' mode.  The non-standard RAW~image created
+  that way must be processed with \command{cr2hdr}\footnote{\command{cr2hdr} is part of Magic
+    Lantern's source distribution.}, which produces a \acronym{DNG}~file readable with the usual
+  RAW~converters.
+\end{description}
+
+
+\subsection[Common Misconceptions]{\label{sec:common-misconceptions}%
+  \genidx{exposure series!common misconceptions}%
+  Common Misconceptions}
+
+Here are some surprisingly common misconceptions about exposure series.
+
+\begin{description}
+  \genidx{digital blending}%
+  \genidx{blending exposures}%
+\item[A single image cannot be the source of an exposure series.]\itemend
+  Raw-files in particular lend themselves to be converted multiple times and the results being
+  fused together.  The technique is simpler, faster, and usually even looks better than
+  \uref{\luminouslandscapedigitalblending}{digital blending} (as opposed to using a graduated
+  neutral density filter) or \uref{\gimpguruorgblendingexposures}{blending exposures} in an
+  image manipulation program.  Moreover, perfect alignment comes free of charge!
+
+\item[An exposure series must feature symmetrically-spaced exposures.]\itemend
+  Twice wrong!  Neither do the exposures have to be ``symmetric'' like \{0\dmn{EV},
+  $-\slfrac{2}{3}$\dmn{EV}, $+\slfrac{2}{3}$\dmn{EV}\}, nor does the number of exposures have to
+  be odd.  Series like \{$-\slfrac{4}{3}$\dmn{EV}, $-\slfrac{1}{3}$\dmn{EV},
+  $+\slfrac{1}{3}$\dmn{EV}\} or \{$-1$\dmn{EV}, 1\dmn{EV}\} might be just right.  By the way,
+  the order in which the images were taken does not matter either.
+
+  \genidx{light probe}%
+\item[An exposure series must cover the whole dynamic range of the scene.]\itemend
+  If you do not want to cover the whole range, you do not have to.  Some \acronym{HDR} programs
+  require the user to take a light probe, whereas \App{} offers the user complete freedom of
+  exposure.
+
+  \begin{geeknote}
+    \uref{\debevecorg}{Paul E.~Debevec} defines: ``A light probe image is an omnidirectional,
+    high dynamic range image that records the incident illumination conditions at a particular
+    point in space.''
+  \end{geeknote}
+
+\item[All exposure values must be different.]\itemend
+  You can repeat any exposure as often as you like.  That way you combine an exposure series
+  with parts of \sectionName~\ref{sec:repetition}, emphasizing the multiply occuring exposures
+  and reducing noise.
+\end{description}
+
+
+\section[Flash Exposure Series -- Directed Lighting]{%
+  \label{sec:flash-exposure-series--directedlighting}%
+  \genidx{series!flash exposure}%
+  \gensee{flash exposure series}{series, flash exposure}%
+  \genidx{dynamic range increase}%
+  Flash Exposure Series -- Directed Lighting}
+
+\mainpurpose{???}
+
+\fixme{Text?}
+
+
+\section[Polarization Series -- Saturation Enhancement]{%
+  \label{sec:polarization-series--saturation-enhancement}%
+  \genidx{series!polarization}%
+  \gensee{polarization series}{series, polarization}%
+  \genidx{saturation enhancement}%
+  Polarization Series -- Saturation Enhancement}
+
+\mainpurpose{Reflection suppression, saturation enhancement}
+
+In the current implementation of \App{}, it is not possible in general to fuse a polarization
+series.  Naively (ab)using \sample{--saturation-weight} will not work.
+
+
+\section[Focus Stacks -- Depth-of-Field Increase]{%
+  \label{sec:focus-stacks--depth-of-field-increase}%
+  \genidx{focus stacks}%
+  \genidx{depth-of-focus increase}%
+  Focus Stacks -- Depth-of-Field Increase}
+
+\mainpurpose{Synthetic Depth-of-Field Increase}
+
+\genidx{depth-of-field}%
+\gensee{DoF@\acronym{DoF}}{depth-of-field}%
+A focus stack is a series of images where the distance of the focal plane from the sensor
+varies.  Sloppily speaking, the images were focussed at different distances.  Fusing such a
+stack increases the depth-of-field (\acronym{DoF}) beyond the physical limits of diffraction.
+
+
+\subsection[Why create focus stacks?]{\label{sec:why-create-focus-stacks}%
+  \genidx{focus stacks!why to create them?}%
+  Why create focus stacks?}
+
+Given
+
+\begin{itemize}
+\item
+  a fixed sensor or film size,
+
+\item
+  a lens' particular focal length, and
+
+  \genidx{circle-of-confusion}%
+  \gensee{CoC@\acronym{CoC}}{circle-of-confusion}%
+\item
+  a notion about ``sharpness'', technically speaking the size of the circle-of-confusion
+  (\acronym{CoC})
+\end{itemize}
+
+\genidx{depth-of-field}%
+\noindent the photographer controls the depth-of-field with the aperture.  Smaller apertures --
+this is larger aperture numbers -- increase the \acronym{DoF} and vice versa.  However, smaller
+apertures increase diffraction which in turn renders the image unsharp.  So, there is an optimum
+aperture where the photographer gets maximum \acronym{DoF}.  Sadly, for some purposes like macro
+shots it is not enough.  One way out is to combine the sharp parts of images focused at
+different distances, thereby artificially increasing the total \acronym{DoF}.  This is exactly
+what \App{} can do.
+
+\genidx{aperture!sweet spot}%
+\gensee{sweet spot aperture}{aperture, sweet spot}%
+All lenses have a so called ``sweet spot'' aperture, where their resolution is best.  Taking
+pictures at this aperture, the photographer squeezes the maximum quality out of the lens.  But:
+the ``sweet spot'' aperture often is only one or two stops away from wide open.  Wouldn't it be
+great to be able combine these best-possible images to form one high-quality,
+sufficient-\acronym{DoF} image?  Welcome to \App{}'s local-contrast selection abilities.
+
+
+\subsection[Preparing Focus Stacks]{\label{sec:preparing-focus-stacks}%
+  \genidx{focus stacks!preparation}%
+  Preparing Focus Stacks}
+
+We are going to combine images with limited \acronym{DoF} to increase their in-focus parts.  The
+whole process is about image sharpness.  Therefore, the input images must align very well, not
+just well, but very well.  For optimum results the maximum control point distance in
+\application{Hugin} should not exceed 0.3--0.5~pixels to ensure perfect blending.
+
+\genidx{signal-to-noise ratio}%
+\gensee{SNR@\acronym{SNR}}{signal-to-noise ratio}%
+As in all image fusion operations it is preferable to use 16~bit linear (i.e. gamma = 1) images
+throughout, but 8~bit gamma-encoded images will do.  Naturally, high signal-to-noise
+(\acronym{SNR}) ratio input data always is welcome.
+
+
+\subsection[Local Contrast Based Fusing]{\label{sec:local-contrast-based-fusing}%
+  \genidx{local-contrast-based fusing}%
+  \genidx{fusing!local-contrast-based}%
+  \genidx{focus stacks!fusing}%
+  Local Contrast Based Fusing}
+
+A bare bones call to \App{} for focus stacking could look like this.
+
+\begin{terminal}
+  \$ enfuse \bslash \\
+  ~~~~--exposure-weight=0 \bslash \\
+  ~~~~--saturation-weight=0 \bslash \\
+  ~~~~--contrast-weight=1 \bslash \\
+  ~~~~--hard-mask \bslash \\
+  ~~~~\dots{} \bslash \\
+  ~~~~--output=output.tif \bslash \\
+  ~~~~input-<0000-9999>.tif
+\end{terminal}
+
+Here is what each option causes:
+
+\begin{codelist}
+\item[--exposure-weight=0]\itemend
+  Switch \strong{off} exposure based pixel selection.  The default weight is
+  \val{val:default-weight-exposure}.
+
+\item[--saturation-weight=0]\itemend
+  Switch \strong{off} saturation based pixel selection.  The default weight is
+  \val{val:default-weight-saturation}.
+
+\item[--contrast-weight=1]\itemend
+  Switch \strong{on} pixel selection based on local contrast.
+
+\item[--hard-mask]\itemend
+  Select the best pixel from the image stack and ignore all others.  Without this option, \App{}
+  uses all pixels in the stack and weights them according to their respective quality, which in
+  our case is local contrast.  Without \sample{--hard-mask}, the result will always look a bit
+  soft.  See also \sectionName~\fullref{sec:local-contrast-weighting}.
+\end{codelist}
+
+If you want to see some entertaining progress messages -- local-contrast weighting takes a while
+--, also pass the \option{--verbose}~option for an entertaining progress report.
+
+
+\subsection[Basic Focus Stacking]{\label{sec:basic-focus-stacking}%
+  \genidx{focus stacking!basic}%
+  \gensee{basic focus stacking}{focus stacking, basic}%
+  Basic Focus Stacking}
+
+For a large class of image stacks \App{}'s default algorithm, as selected in
+\ref{sec:local-contrast-based-fusing}, to determine the sharpness produces nice results.  The
+algorithm uses a moving square window, the so-called contrast window.  It computes the standard
+deviation of the pixels inside of the window.  The program then selects the window's center
+pixel of the image in the stack where the standard deviation is largest, that is, the local
+contrast reaches the maximum.
+
+However, the algorithm fails to deliver good masks for images which exhibit high contrast edges
+on the scale of the contrast window size.  The typical artifacts that show up are
+
+\begin{itemize}
+\item
+  faint dark seams on the light side of the high contrast edges and
+
+\item
+  extremely soft, slightly lighter seams on the dark side of the high contrast edges,
+\end{itemize}
+
+\noindent where the distance of the seams from the middle of the edge is comparable to the
+contrast window size.
+
+If your results do not show any of these artifacts, stick with the basic algorithm.  Advanced
+focus stacking, as described in the next sections, delivers superior results in case of
+artifacts, though requires manually tuning several parameters.
+
+
+\subsection[Advanced Focus Stacking]{\label{sec:advanced-focus-stacking}%
+  \genidx{focus stacking!advanced}%
+  \gensee{advanced focus stacking}{focus stacking, advanced}%
+  Advanced Focus Stacking}
+
+If your fused image shows any of the defects described in the previous section, you can try a
+more difficult-to-use algorithm that effectively works around the seam artifacts.  It is
+described in the next section.
+
+
+\subsubsection[Detailed Look at the Problem]{\label{sec:detailed-look-at-the-problem}%
+  \genidx{local contrast problem}%
+  Detailed Look at the Problem}
+
+Let us use an example to illustrate the problem of relating the sharpness with the local
+contrast variations.  Say we use a $5 \times 5$ contrast window.  Moreover, let
+\code{sharp\_edge} and \code{smooth\_edge} be two specific configurations:
+
+\begin{literal}
+  sharp\_edge~=~~[~~~~0,  ~~0,  200,  ~~0,  ~~0; \\
+    ~~~~~~~~~~~~~~~~~~~0,  225,  ~~0,  ~~0,  ~~0; \\
+    ~~~~~~~~~~~~~~~~~~~0,  255,  ~~0,  ~~0,  ~~0; \\
+    ~~~~~~~~~~~~~~~~~215,  ~~0,  ~~0,  ~~0,  ~~0; \\
+    ~~~~~~~~~~~~~~~~~200,  ~~0,  ~~0,  ~~0,  ~~0]
+\end{literal}
+
+\begin{literal}
+  smooth\_edge~=~[~~~~0,  ~62,  125,  187,  250; \\
+    ~~~~~~~~~~~~~~~~~~~1,  ~63,  126,  188,  251; \\
+    ~~~~~~~~~~~~~~~~~~~2,  ~65,  127,  190,  252; \\
+    ~~~~~~~~~~~~~~~~~~~3,  ~66,  128,  191,  253; \\
+    ~~~~~~~~~~~~~~~~~~~5,  ~67,  130,  192,  255]
+\end{literal}
+
+\noindent where \sample{;} separates the rows and \sample{,} separates the columns.  This is in
+fact \uref{\gnuorgoctave}{Octave} syntax.  \figureName~\ref{fig:sharp-edge}
+and~\ref{fig:smooth-edge} show plots of the matrices \code{sharp\_edge} and~\code{smooth\_edge}.
+
+
+\begin{figure}
+  \begin{maxipage}
+    \centering
+    \includeimage{sharp-edge}
+  \end{maxipage}
+
+  \caption[Sharp edge]{\label{fig:sharp-edge}%
+    3D-plot augmented by contour plot of the matrix~\code{sharp\_edge}.}
+\end{figure}
+
+
+\begin{figure}
+  \begin{maxipage}
+    \centering
+    \includeimage{smooth-edge}
+  \end{maxipage}
+
+  \caption[Smooth edge]{\label{fig:smooth-edge}%
+    3D-plot augmented by contour plot of the matrix~\code{smooth\_edge}.}
+\end{figure}
+
+
+Our intuition lets us ``see'' an extremely sharp edge in the first matrix, whereas the second
+one describes an extraordinarily smooth diagonal intensity ramp.  Which one will be selected?
+Well, \code{sharp\_edge} has a standard deviation of 88.07 and \code{smooth\_edge} has 88.41.
+Thus, \code{smooth\_edge} wins, contradicting our intuition, and even worse, our intention!
+Sadly, configurations like \code{smooth\_edge} occur more often with high-quality, good
+\uref{\luminouslandscapebokeh}{bokeh} lenses.  In fact, they are the very manifestation of
+``good bokeh''.  Therefore, Laplacian edge detection plays an important role when working with
+high-quality lenses.
+
+
+\subsubsection[\propername{Laplacian} Edge Detection]{\label{sec:laplacian-edge-detection}%
+  \genidx{edge detection!Laplacian@\propername{Laplacian}}%
+  \gensee{Laplacian edge detection@\propername{Laplacian} edge detection}%
+         {edge detection, \propername{Laplacian}}%
+  \propername{Laplacian} Edge Detection}
+
+\App{} provides a Laplacian-based algorithm that can help in situations where weighting based on
+the standard deviation fails.  It is activated with a positive value for \metavar{SCALE} in
+\option{--contrast-edge-scale}=\metavar{SCALE}.  The Laplacian will detect two-dimensional
+\emph{curvature} on the scale of \metavar{SCALE}.  Here and in the following we simply speak of
+``curvature'' where we mean ``magnitude of curvature''.  That is, we shall not distinguish
+between convex and concave edges.  \App{} always use the magnitude of curvature for weighting.
+
+Typically, \metavar{SCALE} ranges between 0.1~pixels and 0.5~pixels, where 0.3~pixels are a
+reasonable starting point.  To find the best value for \metavar{SCALE} though, usually some
+experimentation will be necessary.  Use \sample{--save-masks} to get all soft-mask (default:
+\mbox{\code{\val{val:default-soft-mask-template}}}) and hard-mask files
+(\mbox{\code{\val{val:default-hard-mask-template}}}).  Check how different scales affect the
+artifacts.  Also see Chapter~\fullref{sec:understanding-masks}.
+
+
+\subsubsection[Local Contrast Enhancement]{\label{sec:local-contrast-enhancement}%
+  \genidx{contrast enhancement!local}%
+  \gensee{local contrast enhancement}{contrast enhancement, local}%
+  Local Contrast Enhancement}
+
+Sometimes \App{} misses smoother edges with \sample{--contrast-edge-scale} and a little local
+contrast enhancement (\acronym{LCE}) helps.  Set \option{--contrast-edge-scale}=\feasiblebreak
+\metavar{SCALE}:\feasiblebreak \metavar{LCE-SCALE}:\feasiblebreak \metavar{LCE-FACTOR}, where
+\metavar{LCE-SCALE} and \metavar{LCE-FACTOR} work like the
+\uref{\cambridgeincolourcomunsharpmask}{unsharp mask} filters in various image manipulation
+programs.  Start with \metavar{LCE-SCALE} ten times the value of \metavar{SCALE} and a
+\metavar{LCE-FACTOR} of 2--5.
+
+\metavar{LCE-SCALE} can be specified as a percentage of \metavar{SCALE}.  \metavar{LCE-FACTOR}
+also can be specified as a percentage.  Examples:
+
+\begin{literal}
+--contrast-edge-scale=0.3:3.0:3 \\
+--contrast-edge-scale=0.3:1000\%:3.0 \\
+--contrast-edge-scale=0.3:3:300\% \\
+--contrast-edge-scale=0.3:1000\%:300\%
+\end{literal}
+
+By default \acronym{LCE} is turned off.
+
+
+\subsubsection[Suppressing Noise or Recognizing Faint Edges]{%
+  \label{sec:suppressing-noise-or-recognizing-faint-edges}%
+  \genidx{advanced focus stacking!suppressing noise}%
+  \genidx{advanced focus stacking!recognizing faint edges}%
+  Suppressing Noise or Recognizing Faint Edges}
+
+The \propername{Laplacian}-based algorithm is much better at resisting the seam problem than the
+local-contrast algorithm, but it has two shortcomings:
+
+\begin{enumerate}
+\item
+  The \propername{Laplacian} is very susceptible to noise and
+
+\item
+  it fails to recognize faint edges.
+\end{enumerate}
+
+\noindent The option~\option{--contrast-min-curvature} option helps to mitigate both flaws.
+
+The argument to \option{--contrast-min-curvature}=\metavar{CURVATURE} either is an absolute
+lightness value, e.g.\ 0\dots255 for 8~bit data and 0\dots65535 for 16~bit data, or, when given
+with a \sample{\%}-sign it is a relative lightness value ranging from 0\% to~100\%.
+
+To suppress unreal edges or counter excessive noise, use the
+\option{--contrast-min-curvature}~option with a \emph{negative} curvature
+measure~\metavar{CURVATURE}.  This forces all curvatures less than $-\metavar{CURVATURE}$ to
+zero.
+
+A \emph{positive} curvature measure~\metavar{CURVATURE} makes \App{} merge the \acronym{LoG}
+data with the local-contrast data.  Every curvature larger than or equal to \metavar{CURVATURE}
+is left unchanged, and every curvature less than \metavar{CURVATURE} gets replaced with the
+rescaled local-contrast data, such that the largest local contrast is just below
+\metavar{CURVATURE}.  This combines the best parts of both techniques and ensures a precise edge
+detection over the whole range of edge curvatures.
+
+\noindent\strong{Summary}
+
+\begin{codelist}
+\item[\option{--contrast-edge-scale=0.3}]\itemend
+  Use \acronym{LoG} to detect edges on a scale of 0.3~pixels.  Apply the default grayscale
+  projector: \code{average}.
+
+\item[\itempar{\option{--contrast-edge-scale=0.3} \option{--gray-projector=l-star}}]\itemend
+  Use \acronym{LoG} to detect edges on a scale of 0.3~pixels.  Apply the L*-grayscale projector.
+
+\item[\option{--contrast-edge-scale=0.3:3:300\%}]\itemend
+  Use \acronym{LoG} to detect edges on a scale of 0.3~pixels, pre-sharpen the input images by
+  300\% on a scale of 3~pixels.  Apply the default grayscale projector: \code{average}.
+
+\item[\itempar{\option{--contrast-edge-scale=0.3}
+    \mbox{\option{--contrast-min-curvature=-0.5\%}}}]\itemend
+  Use \acronym{LoG} to detect edges on a scale of 0.3~pixels.  Apply the default grayscale
+  projector: \code{average} and throw away all edges with a curvature of less than 0.5\%.
+
+\item[\itempar{\mbox{\option{--contrast-edge-scale=0.3}}
+    \mbox{\option{--contrast-min-curvature=0.5\%}}
+    \mbox{\option{--contrast-window-size=7}}}]\itemend
+  Use \acronym{LoG} to detect edges on a scale of 0.3~pixels.  Apply the default grayscale
+  projector: \code{average} and throw away all edges with a curvature of less than 0.5\% and
+  replace the \acronym{LoG} data between 0\% and 0.5\% with \acronym{SDev} data.  Use a window
+  of $7 \times 7$~pixel window to compute the \acronym{SDev}.
+\end{codelist}
+
+
+\subsubsection[Focus Stacking Decision Tree]{%
+  \label{sec:focus-stacking-decision-tree}%
+  \genidx{decision tree!focus stacking}%
+  \gensee{focus stacking decision tree}{decision tree, focus stacking}%
+  Focus Stacking Decision Tree}
+
+\figureName~\ref{fig:focus-stacking-decision-tree} helps the user to arrive at a well-fused
+focus stack with as few steps as possible.
+
+\begin{figure}
+  \begin{maxipage}
+    \centering
+    \includeimage{focus-stack-decision-tree}
+  \end{maxipage}
+
+  \caption[Focus stacking decision tree.]{\label{fig:focus-stacking-decision-tree}%
+    Focus stacking decision tree.}
+\end{figure}
+
+Always start with the default, contrast weighting with a local contrast window.  Only if seams
+appear as described in \sectionName~\ref{sec:advanced-focus-stacking} switch to
+\propername{Laplacian}-of-\propername{Gaussian} contrast detection.
+
+If some seams remain even in \acronym{LoG}-mode, decrease the sensitivity of the edge detection
+with a positive \sample{--contrast-min-curvature}.  A too high value of
+\sample{--contrast-min-curvature} suppresses fine detail though.  Part of the detail can be
+brought back with pre-sharpening, that is, \ref{sec:local-contrast-enhancement} or combining
+\acronym{LoG} with local-contrast-window mode by using a negative
+\sample{--contrast-min-curvature}.
+
+Carefully examining the masks (option~\option{--save-masks}) that \App{} uses helps to judge the
+effects of the parameters.
+
+
+\subsection[Tips For Focus Stacking Experts]{\label{sec:tips-for-focus-stacking-experts}%
+  \genidx{tips!focus stacking experts}%
+  \gensee{expert focus stacking tips}{tips, focus stacking experts}%
+  Tips For Focus Stacking Experts}
+
+We have collected some advice with which even focus-stacking adepts can benefit.
+
+\begin{itemize}
+  \genidx{sensor!use clean}%
+\item
+  Ensure that the sensor is clean.
+
+  Aligning focus stacks requires varying the viewing angle, which corresponds to a changing
+  focal length.  Hence, the same pixel on the sensor gets mapped onto different positions in the
+  final image.  Dirt spots will occur not only once but as many times as there are images in the
+  stack -- something that is no fun to correct in postprocessing.
+
+  \genidx{dark frame}%
+  \genidx{subtraction of dark frame}%
+  \genidx{hot pixels}%
+  \genidx{pixels!hot}%
+  Along the same lines, the photographer may want to consider to prepare dark frames before, and
+  possibly also after, the shoot of the focus stack, to subtract hot pixels before fusion.
+
+\item
+  Prefer a low-sensitivity setting (``\acronym{ISO}'') on the camera to get low-noise images.
+
+  Fusing with option~\option{--hard-mask}\optidx{--hard-mask} does not average, and thus does
+  not suppress any noise in the input images.
+
+\item
+  If the transition of in-focus to out-of-focus areas is too abrupt, record the images with
+  closest and farthest focusing distances twice: first with the intended working aperture, and a
+  second time with a small aperture (large aperture number).
+
+  \genidx{natural sharp-unsharp transition}%
+  \genidx{transition!natural sharp-unsharp}%
+  The small aperture will give the fused image a more natural in-focus to out-of-focus
+  transition and the working-aperture shots supply the detail in the in-focus regions.
+
+\item
+  Consider the use of Magic Lantern (\appendixName~\fullref{app:magiclantern}) to automate the
+  creation of focus stacks.
+\end{itemize}
+
+\genidx[\rangeendlocation]{applications of \App}
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:

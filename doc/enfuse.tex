@@ -1,0 +1,61 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\RequirePackage{fixltx2e}
+
+
+\input{dynamic-preamble}
+
+
+\ifreferencemanual
+  \documentclass{refrep}
+\else
+  \documentclass{report}
+\fi
+
+
+\input{static-preamble}
+
+\input{enfuse-variables}
+\input{enfuse-version}
+
+
+\newif\ifenfuse\enfusetrue
+\newif\ifenblend\enblendfalse
+
+
+\newcommand*{\App}{\application{Enfuse}}
+\newcommand*{\app}{enfuse}
+\newcommand*{\appcmd}{\command{enfuse}}
+\newcommand*{\appdoes}{fuse}
+\newcommand*{\appdid}{fused}
+
+\newcommand*{\OtherApp}{\application{Enblend}}
+\newcommand*{\otherapp}{enblend}
+\newcommand*{\otherappcmd}{\command{enblend}}
+
+
+\finishdynamicpreamble
+
+
+\begin{document}
+  \input{enfuse-title}
+  \input{lead-in}
+
+  \include{enfuse-overview}
+  \include{common-known-limitations}
+  \include{common-workflow}
+  \include{enfuse-invocation}
+  \include{enfuse-weighting-functions}
+  \include{common-color-spaces}
+  \include{common-understanding-masks}
+  \include{enfuse-applications}
+
+  \input{lead-out}
+\end{document}
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:

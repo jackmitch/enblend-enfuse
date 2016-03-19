@@ -1,0 +1,112 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\section[Standard Workflow]{\label{sec:standard-workflow}%
+  \genidx{workflow!standard}%
+  \gensee{standard workflow}{workflow, standard}%
+  Standard, All-In-One Workflow}
+
+\figureName~\ref{fig:photographic-workflow} shows where \application{Enblend} and
+\application{Enfuse} sit in the tool chain of the standard workflow.
+
+\begin{figure}
+  \begin{maxipage}
+    \centering
+    \includeimage{photographic-workflow}
+  \end{maxipage}
+
+  \caption[Photographic workflow]{\label{fig:photographic-workflow}%
+    \genidx{workflow!\application{Enblend}}%
+    \genidx{workflow!\application{Enfuse}}%
+    \prgidx{dcraw}%
+    \prgidx{ufraw}%
+    \appidx{Hugin}%
+    \appidx{PanoTools}%
+    \appidx{Gimp}%
+    Photographic workflow with \application{Enblend} and \application{Enfuse}.}
+\end{figure}
+
+\begin{description}
+\item[Take Images]\itemend
+  Take \emph{multiple} images to form a panorama, an exposure series, a focus stack, etc.\dots
+
+  There is one exception with \application{Enfuse} when a single raw image is converted multiple
+  times to get several -- typically differently ``exposed'' -- images.
+
+  \noindent\emph{Exemplary Benefits:}
+
+  \begin{itemize}
+  \item
+    Many pictures taken from the same vantage point but showing different viewing directions.
+    -- Panorama
+
+  \item
+    Pictures of the same subject exposed with different shutter speeds.  -- Exposure series
+
+  \item
+    Images of the same subject focussed at differing distances.  -- Focus stack
+  \end{itemize}
+
+  \noindent\emph{Remaining Problem:} The ``overlayed'' images may not fit together, that is the
+  overlay regions may not match exactly.
+
+  \genidx{conversion!raw}%
+  \gensee{raw conversion}{conversion, raw}%
+\item[Convert Images]\itemend
+  Convert the \uref{\luminouslandscaperawfiles}{raw data} exploiting the full dynamic range of
+  the camera and capitalize on a high-quality conversion.
+
+\item[Align Images]\itemend
+  Align the images so as to make them match as well as possible.
+
+  Again there is one exception and this is when images naturally align.  For example, a series
+  of images taken from a rock solid tripod with a cable release without touching the camera, or
+  images taken with a shift lens, can align without further user intervention.
+
+  \genidx{transformation!affine}%
+  \gensee{affine transformation}{transformation, affine}%
+  This step submits the images to affine transformations.
+
+  \genidx{lens distortion!correction of}%
+  If necessary, it rectifies the lens' distortions (e.g.\ barrel or pincushion), too.
+
+  \genidx{alignment!photometric}%
+  \gensee{photometric alignment}{alignment, photometric}%
+  Sometimes even luminance or color differences between pairs of overlaying images are corrected
+  (``photometric alignment'').
+
+  \noindent\emph{Benefit:} The overlay areas of images match as closely as possible given the
+  quality if the input images and the lens model used in the transformation.
+
+  \genidx{parallax error}%
+  \noindent\emph{Remaining Problem:} The images may still not align perfectly, for example,
+  because of \uref{\wikipediaparallax}{parallax} errors, or blur produced by camera shake.
+
+\item[Combine Images]\itemend
+  \application{Enblend} and \application{Enfuse} Enfuse combine the aligned images into one.
+
+  \noindent\emph{Benefit:} The overlay areas become imperceptible for
+  all but the most mal-aligned images.
+
+  \genidx{channel!alpha}%
+  \gensee{alpha channel}{channel, alpha}%
+  \noindent\emph{Remaining Problem:} Enblend and Enfuse write images with an alpha channel; for
+  more information on alpha channels see \chapterName~\fullref{sec:understanding-masks}.
+  Furthermore, the final image rarely is rectangular.
+
+\item[Postprocess]\itemend
+  Postprocess the combined image with your favorite tool.  Often the user will want to crop the
+  image and simultaneously throw away the alpha channel.
+
+\item[View]
+
+\item[Print]
+
+\item[Enjoy]
+\end{description}
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:

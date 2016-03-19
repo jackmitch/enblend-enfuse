@@ -1,0 +1,37 @@
+digraph InternalOptimizerChain
+{
+    graph [uml_activity_graph]
+
+    node [uml_activity]
+    _start [uml_start]
+    minimizer_prerequisites_fork [uml_fork]
+    vectorize_mask [label = "Vectorize seam-line of mask;\n--mask-vectorize"]
+    difference_image [label = "Compute difference image;\n--image-difference"]
+    minimizer_prerequisites_join [uml_join]
+    run_minimizer [label = "Path-length/difference minimizer;\n--optimizer-weights\n--anneal"]
+    dijkstra_search [label = "Dijkstra minimizer;\n--dijkstra"]
+    devectorize_seam_line [label = "Convert optimized\nseam-line to mask"]
+    _finish [uml_finish]
+
+    node [uml_note]
+    run_minimizer_note [label = "Simulated-Annealing\nminimizer"]
+    dijkstra_search_note [label = "Dijkstra's \"shortest-path\"\nalgorithm"]
+
+    {rank = same; run_minimizer; run_minimizer_note}
+    {rank = same; dijkstra_search; dijkstra_search_note}
+
+    edge [uml_edge]
+    _start -> minimizer_prerequisites_fork
+    minimizer_prerequisites_fork -> vectorize_mask
+    minimizer_prerequisites_fork -> difference_image
+    difference_image -> minimizer_prerequisites_join
+    vectorize_mask -> minimizer_prerequisites_join
+    minimizer_prerequisites_join -> run_minimizer
+    run_minimizer -> dijkstra_search
+    dijkstra_search -> devectorize_seam_line
+    devectorize_seam_line -> _finish
+
+    edge [uml_note_edge]
+    run_minimizer -> run_minimizer_note
+    dijkstra_search -> dijkstra_search_note
+}

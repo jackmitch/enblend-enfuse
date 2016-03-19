@@ -1,0 +1,105 @@
+#! /usr/bin/env perl
+
+# This file is part of Enblend.
+# Licence details can be found in the file COPYING.
+
+# name:         cleantex
+# synopsis:     Remove (La)TeX constructs from a file, but in contrast
+#               to detex(1) try to recover as much as possible.
+# author:       Dr. Christoph L. Spiel
+# perl version: 5.20.2
+
+
+use strict;
+use warnings;
+
+use English;
+use File::Basename ();
+use FindBin qw($Bin);
+use Getopt::Long;
+use Readonly;
+
+use lib $Bin;
+
+use OpenFile;
+
+
+Readonly my $COMMAND_NAME => File::Basename::basename($PROGRAM_NAME);
+
+
+sub replace {
+    my ($options, $filename) = @_;
+
+    my $file = OpenFile::open_file($filename);
+
+    while (my $line = readline $file) {
+        chomp $line;
+
+        # Tilde chars just represent spaces
+        $line =~ s/~/ /g;
+
+        # TeX inline math demimiters go away
+        $line =~ s/\$//g;
+
+        # Dutifully applied quotation marks become the profane
+        # version.  If we are sure to write out Unicode, we could use
+        # guillemets.
+        $line =~ s/``/"/g;
+        $line =~ s/''/"/g;
+
+        # Remove macro call remembering that we had to double backslashes
+        $line =~ s/\\\\[A-Za-z]*//g;
+
+        # Remove delimiters
+        $line =~ s/[{}]//g;
+
+        print "$line\n";
+    }
+
+    $file->close;
+}
+
+
+sub show_help {
+    my $options = shift;
+
+    print <<END_OF_HELP;
+Usage: $COMMAND_NAME [OPTION] FILE...
+
+Read all FILEs and remove (La)TeX constructs from them, but in
+contrast to detex(1) try to recover as much of the constructs as
+possible.  Write the result in standard output.  The original files
+are not changed.
+
+Options:
+  -h, --help            show this help screen
+END_OF_HELP
+
+    exit 0;
+}
+
+
+sub get_options {
+    my $options = shift;
+
+    Getopt::Long::Configure('no_ignore_case');
+
+    Getopt::Long::GetOptions('h|help' => sub {show_help($options)}) or
+        warn "$COMMAND_NAME: problems while parsing options\n";
+}
+
+
+sub main {
+    my $options = {};
+
+    get_options($options);
+
+    for my $filename (@ARGV) {
+        replace($options, $filename);
+    }
+
+    return 0;
+}
+
+
+main();

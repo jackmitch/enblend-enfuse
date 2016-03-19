@@ -1,0 +1,42 @@
+digraph FocusStackDecisionTree
+{
+    graph [uml_activity_graph, uml_compressed_layout]
+
+    node [uml_activity]
+    _start [uml_start]
+    local_contrast_window [label = "Use local contrast window"]
+    if_visible_seams_branch [uml_branch]
+    laplacian_of_gaussian [label = "Use Laplacian-of-Gaussian"]
+    if_still_visible_branch [uml_branch]
+    if_still_visible_merge [uml_merge]
+    positive_min_curvature [label = "Apply positive MinCurvature"]
+    if_loss_branch [uml_branch]
+    if_loss_merge [uml_merge]
+    local_contrast_enhancement [label = "Use local contrast\nenhancement"]
+    if_mild_loss_branch [uml_branch]
+    negative_min_curvature [label = "Apply negative MinCurvature"]
+    if_mild_loss_merge [uml_merge]
+    _finish [uml_finish]
+
+    {rank = same; if_still_visible_branch; if_still_visible_merge}
+    {rank = same; if_loss_branch; if_loss_merge}
+
+    edge [uml_edge]
+    _start -> local_contrast_window
+    local_contrast_window -> if_visible_seams_branch
+    if_visible_seams_branch -> laplacian_of_gaussian [taillabel = " [visible seams] ", weight = 10]
+    if_visible_seams_branch -> if_still_visible_merge [taillabel = " [else] "]
+    laplacian_of_gaussian -> if_still_visible_branch
+    if_still_visible_branch -> if_still_visible_merge [taillabel = " [else] " ]
+    if_still_visible_merge -> if_loss_merge
+    if_still_visible_branch -> positive_min_curvature [taillabel = " [still visible seams] ", weight = 10]
+    positive_min_curvature -> if_loss_branch
+    if_loss_branch -> if_mild_loss_branch [taillabel = " [loss of detail] ", weight = 10]
+    if_loss_branch -> if_loss_merge [taillabel = " [else] "]
+    if_loss_merge -> _finish
+    if_mild_loss_branch -> local_contrast_enhancement [taillabel = " [mild loss of detail] ", weight = 10]
+    local_contrast_enhancement -> if_mild_loss_merge
+    if_mild_loss_branch -> if_mild_loss_merge [taillabel = " [else] "]
+    if_mild_loss_merge -> negative_min_curvature
+    negative_min_curvature -> _finish [weight = 10]
+}

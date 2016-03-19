@@ -1,0 +1,197 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\subsection[Mask Generation Options]{\label{sec:mask-generation-options}%
+  \genidx[\rangebeginlocation]{mask generation options}%
+  \genidx{options!mask generation}%
+  Mask Generation Options}
+
+These options control the generation and the usage of masks.
+
+\begin{codelist}
+  \label{opt:coarse-mask}%
+  \optidx[\defininglocation]{--coarse-mask}%
+  \genidx{mask!coarse}
+  \gensee{coarse mask}{mask, coarse}%
+\item[--coarse-mask\optional{=\metavar{FACTOR}}]\itemend
+  Use a scaled-down or ``coarse'' version of the input images to create the seam line.  This
+  option reduces the number of computations necessary to compute the seam line and the amount of
+  memory necessary to do so.  It is the default.
+
+  If omitted \metavar{FACTOR} defaults to \val{val:default-coarseness-factor}, this means,
+  option~\option{--coarse-mask} shrinks the overlapping \emph{areas} by a factor of
+  $\val{val:default-coarseness-factor}\classictimes\val{val:default-coarseness-factor}$.  With
+  $\metavar{FACTOR} = 8$ the total memory allocated during a run of \App{} shrinks approximately
+  by 80\% and the maximum amount of memory in use at a time is decreased to some 40\% in
+  comparison to a full-size (``fine'') mask.
+
+  Valid range: $\metavar{FACTOR} = 1, 2, 3, \dots$, where 1 reproduces \sample{--fine-mask}.
+
+  Also see the negated option, \flexipageref{\sample{--fine-mask}}{opt:fine-mask} and
+  \tableName~\ref{tab:mask-generation}.
+
+  \begin{table}
+    \begin{tabular}{lp{.3\linewidth}p{.4\linewidth}}
+      \hline
+      \multicolumn{1}{c|}{Active Options} &
+      \multicolumn{1}{c|}{\option{--no-optimize}} &
+      \multicolumn{1}{c}{\option{--optimize}} \\
+      \hline\extraheadingsep
+      \option{--fine-mask} & Use \acronym{NFT} mask. & Vectorize \acronym{NFT} mask, optimize
+      vertices with simulated annealing and \propername{Dijkstra's} shortest path algorithm,
+      fill vector contours to recover mask. \\
+
+      \option{--coarse-mask} & Scale down overlap region, compute \acronym{NFT} mask and
+      vectorize it, fill vector contours. & Scale down overlap region, vectorize \acronym{NFT}
+      mask, optimize vertices with simulated annealing and \propername{Dijkstra's} shortest path
+      algorithm, fill vector contours to recover mask.
+    \end{tabular}
+
+    \caption[Mask generation options]{\label{tab:mask-generation}%
+      \genidx{nearest-feature transform (\acronym{NFT})}%
+      \genidx[\summarylocation]{mask!generation}%
+      Various options that control the generation of masks.  All mask computations are based on
+      the Nearest-Feature Transformation (\acronym{NFT}) of the overlap region.}
+  \end{table}
+
+
+  \label{opt:fine-mask}%
+  \optidx[\defininglocation]{--fine-mask}%
+  \genidx{mask!fine}
+  \gensee{fine mask}{mask, fine}%
+\item[--fine-mask]\itemend
+  Instruct \App{} to employ the full-size images to create the seam line, which can be slow.
+  Use this option, for example, if you have very narrow overlap regions.
+
+  Also see option~\flexipageref{\option{--coarse-mask}}{opt:coarse-mask} and
+  \tableName~\ref{tab:mask-generation}.
+
+
+  \label{opt:load-masks}%
+  \optidx[\defininglocation]{--load-masks}%
+  \genidx{mask!load}%
+  \gensee{load mask}{mask, load}%
+\item[--load-masks\optional{=\metavar{IMAGE-TEMPLATE}}]\itemend
+  Instead of generating masks, load those in \metavar{IMAGE\hyp{}TEMPLATE}.  The default is
+  \mbox{\sample{\val{val:default-mask-template}}}.  The mask images must be 8~bit grayscale
+  images.
+
+  See option~\flexipageref{\option{--save-masks}}{opt:save-masks} below for details.
+
+
+  \label{opt:optimize}%
+  \optidx[\defininglocation]{--optimize}%
+  \genidx{optimize!seam}%
+  \gensee{seam optimization}{optimize, seam}%
+\item[--optimize]\itemend
+  Use a multi-strategy approach to route the seam line around mismatches in the overlap region.
+  This is the default.  \tableName~\ref{tab:optimizer-strategies} explains these strategies;
+  also see Table~\ref{tab:mask-generation}.
+
+  \begin{table}
+    \begin{tabular}{p{.35\linewidth}p{.55\linewidth}}
+      \hline
+      \multicolumn{1}{c|}{Algorithm} &
+      \multicolumn{1}{c}{Tuning Parameters} \\
+      \hline\extraheadingsep
+      Simulated Annealing & Tune with option~\option{--anneal} = \metavar{TAU} :
+      \metavar{DELTA-E-MAX} : \metavar{DELTA-E-MIN} : \metavar{K-MAX}.
+      \uref{\wikipediasimulatedannealing}{Simulated-Annealing}.  \fixme{Explain
+        Simulated-Annealing!} \\
+      \propername{Dijkstra} Shortest Path & Tune with option~\option{--dijkstra} =
+      \metavar{RADIUS}.  \uref{\wikipediadijkstraalgorithm}{\propername{Dijkstra} algorithm}.
+      \fixme{Explain \propername{Dijkstra} algorithm!}
+    \end{tabular}
+
+    \caption[Optimizer strategies]{\label{tab:optimizer-strategies}%
+      \genidx[\summarylocation]{optimize!strategy}%
+      \App{}'s strategies to optimize the seam lines between overlapping images.}
+  \end{table}
+
+  \genidx{optimize!seam}%
+  \gensee{seam optimization}{optimize, seam}%
+  \genidx{nearest-feature transform (\acronym{NFT})}%
+  Option~\option{--no-optimize}\optidx[\defininglocation]{--no-optimize} negates
+  \option{--optimize} and thus turns off seam line optimization.  Combined with
+  option~\flexipageref{\option{--fine-mask}}{opt:fine-mask} this will produce the same type of
+  mask as \App{}~version~2.5, namely the result of a Nearest-Feature Transform (\acronym{NFT}).
+
+
+  \label{opt:save-masks}%
+  \optidx[\defininglocation]{--save-masks}%
+  \genidx{mask!save}%
+  \gensee{save mask}{mask, save}%
+\item[--save-masks\optional{=\metavar{IMAGE-TEMPLATE}}]\itemend
+  Save the generated masks to \metavar{IMAGE-TEMPLATE}, which defaults to
+  \mbox{\sample{\val{val:default-mask-template}}}.  \App{} saves masks as 8~bit grayscale,
+  i.e.\ single channel images.  For accuracy we recommend to choose a lossless format.
+
+  Use this option if you wish to edit the location of the seam line by hand.  This will give you
+  images of the right sizes that you can edit to make your changes.  Later, use
+  option~\flexipageref{\option{--load-masks}}{opt:load-masks} to blend the project with your
+  custom seam lines.
+
+  \genidx{save mask!only}%
+  \gensee{only save mask}{save mask, only}%
+  \begin{sloppypar}
+    \App{} will stop after saving all masks unless
+    option~\flexipageref{\option{--output}}{opt:output} is given, too.  With both options given,
+    this is, \sample{--save-masks} and \sample{--output}, \App{} saves all masks and then
+    proceeds to blend the output image.
+  \end{sloppypar}
+
+  \begin{geeknote}
+    \metavar{IMAGE-TEMPLATE} defines a template that is expanded for each input file.  In a
+    template a percent sign (\sample{\%}) introduces a variable part.  All other characters are
+    copied literally.  Lowercase letters refer to the name of the respective input file, whereas
+    uppercase ones refer to the name of the output file (see
+    Section~\fullref{sec:common-options}).  \tableName~\ref{tab:mask-template-characters} lists
+    all variables.
+
+    A fancy mask filename template could look like this:
+
+    \begin{literal}
+      \%D/mask-\%02n-\%f.tif
+    \end{literal}
+
+    It puts the mask files into the same directory as the output file~\sample{\%D}, generates a
+    two-digit index~\sample{\%02n} to keep the mask files nicely sorted, and decorates the mask
+    filename with the name of the associated input file~\sample{\%f} for easy recognition.
+  \end{geeknote}
+
+
+  \label{opt:visualize}%
+  \optidx[\defininglocation]{--visualize}%
+  \genidx{mask!optimization visualization}%
+  \gensee{visualization of mask}{mask, optimization visualization}%
+\item[--visualize\optional{=\metavar{VISUALIZE-TEMPLATE}}]\itemend
+  Create an image according to \metavar{VISUALIZE-TEMPLATE} that visualizes the unoptimized mask
+  and the applied optimizations (if any).  The default is
+  \mbox{\sample{\val{val:default-visualize-template}}}.
+
+  This image will show \App{}'s view of the overlap region and how it decided to route the seam
+  line.  If you are experiencing artifacts or unexpected output, it may be useful to include
+  this visualization image in your bug report.  For a detailed description of the image, consult
+  \chapterName~\fullref{sec:visualization-image}.
+
+  \begin{geeknote}
+    \metavar{VISUALIZE-TEMPLATE} defines a template that is expanded for each input file.  In a
+    template, a percent sign (\sample{\%}) introduces a variable part; all other characters are
+    copied literally.  Lowercase letters refer to the name of the respective input file, whereas
+    uppercase ones refer to the name of the output file (see
+    option~\flexipageref{\option{--output}}{opt:output}).
+    \tableName~\fullref{tab:mask-template-characters} lists all variables.
+  \end{geeknote}
+\end{codelist}
+
+
+\input{common-mask-template-characters}
+
+
+\genidx[\rangeendlocation]{mask generation options}
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:

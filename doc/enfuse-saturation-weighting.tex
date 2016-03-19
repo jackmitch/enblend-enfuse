@@ -1,0 +1,54 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\section[Saturation Weighting]{\label{sec:saturation-weighting}%
+  \genidx{weighting!saturation}%
+  \gensee{saturation weighting}{weighting, saturation}%
+  Saturation Weighting}
+
+\genidx{colorspace!\acronym{HSL}}%
+\gensee{HSL colorspace@\acronym{HSL} colorspace}{colorspace, \acronym{HSL}}%
+Saturation weighting prefers pixels with a high saturation, where the
+saturation~$S_{\mathrm{HSL}}$ is computed in \acronym{HSL}~color space.  For a an introduction
+to the \acronym{HSL}~color space, please consult \uref{\wikipediahslandhsv}{Wikipedia}.
+
+Taking the largest and smallest components of the \acronym{RGB}-value~$(R, G, B)$ in the
+normalized \acronym{RGB}-cube
+\begin{eqnarray*}
+  v_{\mathrm{min}} & = & \min(R, G, B) \mbox{ and} \\
+  v_{\mathrm{max}} & = & \max(R, G, B),
+\end{eqnarray*}
+we define chroma
+\[
+  C = v_{\mathrm{max}} - v_{\mathrm{min}}
+\]
+and lightness
+\[
+  L = (v_{\mathrm{max}} + v_{\mathrm{min}}) / 2.
+\]
+\noindent \App{} computes the saturation of the pixel according to the following formula:
+\begin{equation}\label{equ:saturationweight:hsl}
+  S_{\mathrm{HSL}} =
+  \left\{\begin{array}{cl}
+  0                       & \mbox{if } C = 0 \\
+  \frac{C}{1 - |2L - 1|}  & \mbox{otherwise.}
+  \end{array}\right.
+\end{equation}
+
+The saturation weighting algorithm only looks at a single pixel at a time.  The neighborhood of
+the pixel is not taken into account.
+
+\genidx{weighting!entropy}%
+Obviously, saturation weighting can only be defined for \acronym{RGB}-images, not for grayscale
+ones.  If you need something similar, check out \sectionName~\ref{sec:local-entropy-weighting}
+on Entropy Weighting, which works for both \acronym{RGB} and grayscale pictures.
+
+\begin{optionsummary}
+\item[--saturation-weight] \sectionName~\fullref{opt:saturation-weight}
+\end{optionsummary}
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:

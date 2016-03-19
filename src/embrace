@@ -1,0 +1,335 @@
+#! /usr/bin/env perl
+
+# This file is part of Enblend.
+# Licence details can be found in the file COPYING.
+
+# name:          embrace
+# synopsis:      convert text files to an assembler-, C-, or C++-string
+# author:        Dr. Ch. L. Spiel
+# Perl version:  5.14.2
+
+
+use strict;
+use warnings;
+
+use English;
+use File::Basename;
+use Getopt::Long;
+use IO::File;
+
+use constant COMMAND_NAME => basename $PROGRAM_NAME;
+
+
+
+my %param = (CHECKSUM => 0,        # no checksum
+             LABEL    => 'kernel', # string name in target format
+             FORMAT   => 'c',      # conversion format
+             VERBOSE  => 0);       # default: quiet
+
+
+
+sub gnu_quote {
+    return qq(\`@_');
+}
+
+
+
+package Converter;
+
+use strict;
+
+use Carp qw(croak);
+use Digest::MD5;
+use English;
+
+
+sub new {
+    my ($this, @arguments) = @_;
+
+    my $class = ref $this || $this;
+    my $self = {CHECKSUM => 0};
+
+    bless $self, $class;
+
+    $self->_initialize(@arguments);
+
+    return $self
+}
+
+
+sub _initialize {
+    my ($self, $label) = @_;
+
+    $self->{LABEL} = $label;
+}
+
+
+sub label {
+    my $self = shift;
+
+    return $self->{LABEL};
+}
+
+
+sub during_open {
+    my ($self, $filename, $function, @arguments) = @_;
+
+    my $file = IO::File->new($filename, 'r') or
+      die(main::COMMAND_NAME, ": error opening file ", main::gnu_quote($filename), ": $OS_ERROR\n");
+
+    while (defined(my $line = readline $file)) {
+        chomp $line;
+        $function->($self, $line, @arguments);
+    }
+
+    $file->close or
+      die(main::COMMAND_NAME, ": error closing file ", main::gnu_quote($filename), ": $OS_ERROR\n");
+}
+
+
+sub convert {
+    my ($self, $filename) = @_;
+
+    croak("does not understand `convert'")
+}
+
+
+sub add_checksum {
+    my ($self, $toggle) = @_;
+
+    $self->{CHECKSUM} = ($toggle != 0);
+}
+
+
+sub checksum {
+    my $self = shift;
+
+    return $self->{CHECKSUM};
+}
+
+
+sub md5sum {
+    my ($self, $filename) = @_;
+
+    my $md5 = Digest::MD5->new;
+    my $file = IO::File->new($filename, 'r');
+    my $md5sum = $md5->addfile($file);
+
+    my $result = $md5sum->hexdigest;
+    $file->close();
+
+    return $result;
+}
+
+
+
+package CXX_Converter;
+
+use strict;
+use base 'Converter';
+
+
+sub decorate_line {
+    my ($self, $line) = @_;
+
+    $line =~ s#\"#\\"#g;
+    print qq(\n    "$line\\n");
+}
+
+
+sub quote_source {
+    my ($self, $filename) = @_;
+
+    print "const std::string ", $self->label, "(";
+    $self->during_open($filename, \&decorate_line);
+    print ");\n";
+}
+
+
+sub compute_md5 {
+    my ($self, $filename) = @_;
+
+    print "const std::string ", $self->label, qq{_md5("}, $self->md5sum($filename), qq{");\n};
+}
+
+
+sub convert {
+    my ($self, $filename) = @_;
+
+    $self->quote_source($filename);
+    $self->compute_md5($filename) if $self->checksum;
+}
+
+
+
+package C_Converter;
+
+use strict;
+use base 'Converter';
+
+
+sub decorate_line {
+    my ($self, $line) = @_;
+
+    $line =~ s#\"#\\"#g;
+    print qq(\n    "$line\\n");
+}
+
+
+sub quote_source {
+    my ($self, $filename) = @_;
+
+    print "const char ", $self->label, "[] =";
+    $self->during_open($filename, \&decorate_line);
+    print ";\n";
+}
+
+
+sub compute_md5 {
+    my ($self, $filename) = @_;
+
+    print "const char ", $self->label, qq(_md5[] = "), $self->md5sum($filename), qq(";\n);
+}
+
+
+sub convert {
+    my ($self, $filename) = @_;
+
+    $self->quote_source($filename);
+    $self->compute_md5($filename) if $self->checksum;
+}
+
+
+
+package AS_Converter;
+
+use strict;
+use base 'Converter';
+
+
+sub decorate_line {
+    my ($self, $line) = @_;
+
+    $line =~ s#\"#\\"#g;
+    print qq(        .ascii "$line\\n"\n);
+}
+
+
+sub quote_source {
+    my ($self, $filename) = @_;
+
+    my $label = $self->label;
+    my $assembler_filename = $filename;
+
+    $assembler_filename =~ s#\..*$#.s#;
+
+    print <<END_OF_SOURCE_HEADER;
+        .file "$assembler_filename"
+
+.global $label
+        .section .data
+        .type $label, \@object
+$label:
+END_OF_SOURCE_HEADER
+
+    $self->during_open($filename, \&decorate_line);
+
+    print "        .byte 0\n";    # make symbol an ASCIIZ string
+    print "\n";
+}
+
+
+sub compute_md5 {
+    my ($self, $filename) = @_;
+
+    my $label = $self->label . '_md5';
+
+    print <<END_OF_MD5_HEADER;
+.global $label
+        .section .data
+        .type $label, \@object
+$label:
+END_OF_MD5_HEADER
+    print qq(        .ascii "), $self->md5sum($filename), qq("\n);
+    print "        .byte 0\n";    # make symbol an ASCIIZ string
+    print "\n";
+}
+
+
+sub convert {
+    my ($self, $filename) = @_;
+
+    $self->quote_source($filename);
+    $self->compute_md5($filename) if $self->checksum;
+    print "        .end\n";
+}
+
+
+
+package main;
+
+use strict;
+use warnings;
+
+
+sub make_converter {
+    my ($target_format, $label) = @_;
+
+    my $format = lc $target_format;
+
+    if ($format eq 'c') {
+        return C_Converter->new($label);
+    } elsif ($format eq 'c++') {
+        return CXX_Converter->new($label);
+    } elsif ($format eq 'as') {
+        return AS_Converter->new($label);
+    } else {
+        die(COMMAND_NAME, ": unknown target format ", gnu_quote($target_format), "\n");
+    }
+}
+
+
+sub show_help {
+    my @formats = qw(c c++ as);
+    my $known_formats = join(', ', map {gnu_quote($_)} @formats);
+
+    print <<EOF;
+Usage: @{[COMMAND_NAME]} [OPTION] [FILE]...
+
+Convert text files to an assemblable/compilable format.
+
+Options:
+    -c, --checksum            add MD5 checksum (label: @{[gnu_quote($param{LABEL} . '_md5')]})
+    -l, --label=LABEL         assign LABEL [default: @{[gnu_quote($param{LABEL})]}] to string
+    -f, --format=FORMAT       set FORMAT [default: @{[gnu_quote($param{FORMAT})]}] format;
+                              available formats are $known_formats
+    -v, --verbose             verbosely report progress
+
+    -h, --help                display this help and exit
+
+EOF
+
+    exit 0;
+}
+
+
+sub main {
+    Getopt::Long::Configure('no_ignore_case');
+    GetOptions('c|checksum!' => \$param{CHECKSUM},
+               'h|help' => \&show_help,
+               'l|label=s' => \$param{LABEL},
+               'f|format=s' => \$param{FORMAT},
+               'v|verbose' => \$param{VERBOSE}) or
+                 die(COMMAND_NAME, ": failed parsing command line options\n");
+
+    my $converter = make_converter($param{FORMAT}, $param{LABEL});
+
+    $converter->add_checksum($param{CHECKSUM});
+
+    foreach my $source (@ARGV) {
+        $converter->convert($source);
+    }
+}
+
+
+main();

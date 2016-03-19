@@ -1,0 +1,165 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\chapter[Weighting Functions]{\label{sec:weighting-functions}%
+  \genidx[\rangebeginlocation]{weighting functions}%
+  \genidx{exposure weighting!functions}%
+  Weighting Functions}
+
+As has been noted in the introductory \flexipageref*{Overview}{sec:overview}, \App{} supports
+four different types of weighting.  The following sections describe the concept of weighting and
+all weighting functions in detail.
+
+
+\section[Weighting Pixels]{\label{sec:weighting-pixels}%
+  \genidx{weighting!general concept of}%
+  Weighting Pixels}
+
+Image fusion maps each pixel~$P(i, x, y)$ of every input image~$i$ to a single pixel~$Q(x, y)$
+in the output image:
+\[
+    P(i, x, y) \rightarrow Q(x, y),
+\]
+\noindent where $x$ runs from~1 to the width of the images, $y$ from~1 to the height, and $i$
+from~1 to the number~$n$ of input images.
+
+\begin{equation}
+  \label{equ:weight}
+  w(P(1, x, y)) P(1, x, y) + \ldots + w(P(n, x, y)) P(n, x, y)
+  \rightarrow
+  Q(x, y),
+\end{equation}
+\noindent where
+
+\begin{itemize}
+\item
+  each $w$ is non-negative to yield a physical intensity and
+
+\item
+  the sum of all $w$ is 1 to leave the total intensity unchanged.
+\end{itemize}
+
+\noindent The pixel weights~$w$ themselves are weighted sums with the same constraints
+
+\begin{align*}
+    w(P) = \;
+    & w_{\mathrm{exp}} \; f_{\mathrm{exp}}(P) + \\
+    & w_{\mathrm{sat}} \; f_{\mathrm{sat}}(P) + \\
+    & w_{\mathrm{cont}} \; f_{\mathrm{cont}}(P, r_{\mathrm{cont}}) + \\
+    & w_{\mathrm{ent}} \; f_{\mathrm{ent}}(P, r_{\mathrm{ent}}).
+\end{align*}
+
+\noindent Here we have abbreviated $P(i, x, y)$ to $P$ for simplicity.  The user defines the
+constants~$w_{\mathrm{exp}}$, $w_{\mathrm{sat}}$, $w_{\mathrm{cont}}$, and $w_{\mathrm{ent}}$
+with the options~\option{--exposure-weight}, \option{--saturation-weight},
+\option{--contrast-weight}, and \option{--entropy-weight} respectively.  The
+functions~$f_{\mathrm{exp}}$, $f_{\mathrm{sat}}$, $f_{\mathrm{cont}}$, and $f_{\mathrm{ent}}$
+along with the window sizes~$r_{\mathrm{cont}}$ and $r_{\mathrm{ent}}$ are explained in the next
+sections.
+
+
+\subsection[Weighted Average]{\label{sec:weighted-average}%
+  \genidx{average!weighted}%
+  \gensee{weighted average}{average, weighted}%
+  Weighted Average}
+
+By default, \App{} uses a weighted average, where \emph{each} pixel contributes as much as its
+weight demands.  Of course the weights can be extreme, favoring only a few pixels or even only
+one pixel in the input stack.  Extremes are not typical, however.
+
+Equal weights are another extreme that turns \eqnref{equ:weight} into an arithmetic average.
+This is why we sometimes speak of the ``averaging property'' of this weighting algorithm, like
+smoothing out noise.
+
+
+\subsection[Disabling Averaging]{\label{sec:disabling-averaging}%
+  \genidx{average!disabling}%
+  \gensee{disabling average}{average, disabling}%
+  \optidx{--hard-mask}%
+  Disabling Averaging: Option~\sample{--hard-mask}}
+
+The weighted average computation as described above has proven to be widely successful with the
+exception of one special case: focus stacking, where the averaging noticeably softens the final
+image.
+
+Use \sample{--hard-mask} to switch \App{} into a different weighting mode, where the pixel with
+the highest weight wins, this is, gets weight~one, and all other pixels get the weight of zero.
+With option~\option{--hard-mask} \eqnref{equ:weight} becomes
+\[                              % equ:weight-hard-mask
+    P(i, x, y) \rightarrow Q(x, y),
+\]
+where
+\[
+    w(P(i, x, y)) \geq w(P(j, x, y)) \quad \mbox{for all}\quad 1 \leq j \leq n.
+\]
+\noindent Note that this ``averaging'' scheme lacks the nice noise-reduction property of the
+weighted average~\eqnref{equ:weight}, because only a single input pixel contributes to the
+output.
+
+
+\subsection[Single Criterion Fusing]{\label{sec:single-criterion-fusing}%
+  \genidx{fusing!single criterion}%
+  \gensee{single criterion fusing}{fusing, single criterion}%
+  Single Criterion Fusing}
+
+\App{} allows the user to weight each pixel of an input image by up to four different criteria
+(see e.g.\ \chapterName~\fullref{sec:overview}).  However, it does not force the user to do so.
+For some applications and more often simply to gain further insight into the weighting and
+fusing process, looking at only a single criterion is the preferred way to work.
+
+\genidx{criteria!active}%
+\gensee{active criteria}{criteria, active}%
+The version of \App{} for which this documentation was prepared, uses the default weights as
+stated in \tableName~\ref{tab:default-weights}.  Notice that by default \emph{more than one}
+weight is larger than zero, which means they are \emph{active}.
+
+
+\begin{table}
+  \centering
+  \begin{tabular}{lc}
+    \hline
+    \multicolumn{1}{c|}{Criterion} & Default Weight \\
+    \hline\extraheadingsep
+    Exposure       & \val{val:default-weight-exposure} \\
+    Saturation     & \val{val:default-weight-saturation} \\
+    Local Contrast & \val{val:default-weight-contrast} \\
+    Local Entropy  & \val{val:default-weight-entropy}
+  \end{tabular}
+
+  \caption[Default weights]{\label{tab:default-weights}%
+    \genidx{weights!default}%
+    \gensee{default weights}{weights, default}%
+    \App{}'s default weights as compiled into \app.}
+\end{table}
+
+
+To disable a particular criterion set its weight to zero as for example
+
+\begin{terminal}
+  \$ \app{} \bslash \\
+  ~~~~--exposure-weight=1 --saturation-weight=0 \bslash \\
+  ~~~~--contrast-weight=0 --entropy-weight=0 \bslash \\
+  ~~~~image\_[1-3].png
+\end{terminal}
+
+instructs \App{} to consider only the exposure weight.  Combine this with
+option~\option{--save-masks} and it will become clearer how \App{} computes the exposure weight
+for the set of images.
+
+\genidx{criteria!overpowering one another}%
+\gensee{overpowering criteria}{criteria, overpowering}%
+Another problem that can be inspected by fusing with just a single active criterion and saving
+the masks is if the weights of one criterion completely overpower all others.
+
+\input{enfuse-exposure-weighting}
+\input{enfuse-saturation-weighting}
+\input{enfuse-local-contrast-weighting}
+\input{enfuse-local-entropy-weighting}
+
+\genidx[\rangeendlocation]{weighting functions}
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:

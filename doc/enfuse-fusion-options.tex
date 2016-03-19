@@ -1,0 +1,135 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\subsection[Fusion Options]{\label{sec:fusion-options}%
+  \genidx[\rangebeginlocation]{fusion options}%
+  \genidx{options!fusion}%
+  Fusion Options}
+
+Fusion options define the proportion to which each input image's pixel contributes to the output
+image.
+
+\begin{codelist}
+  \label{opt:contrast-weight}%
+  \optidx[\defininglocation]{--contrast-weight}%
+  \genidx{weight!local contrast}%
+  \gensee{contrast weight}{weight, local contrast}%
+  \gensee{local contrast weight}{weight, local contrast}%
+\item[--contrast-weight=\metavar{WEIGHT}]\itemend
+  Sets the relative \metavar{WEIGHT} of high local-contrast pixels.
+
+  Valid range: $\val{val:minimum-weight-contrast} \leq \metavar{WEIGHT} \leq
+  \val{val:maximum-weight-contrast}$, default: \val{val:default-weight-contrast}.
+
+  See \sectionName~\ref{sec:local-contrast-weighting} and \ref{sec:expert-options},
+  option~\flexipageref{\option{--contrast-window-size}}{opt:contrast-window-size}.
+
+
+  \label{opt:entropy-weight}%
+  \optidx[\defininglocation]{--entropy-weight}%
+  \genidx{weight!entropy}%
+  \gensee{entropy weight}{weight, entropy}%
+\item[--entropy-weight=\metavar{WEIGHT}]\itemend
+  Sets the relative \metavar{WEIGHT} of high local entropy pixels.
+
+  Valid range: $\val{val:minimum-weight-entropy} \leq \metavar{WEIGHT} \leq
+  \val{val:maximum-weight-entropy}$, default: \val{val:default-weight-entropy}.
+
+  See \sectionName~\ref{sec:expert-options} and \ref{sec:local-entropy-weighting},
+  options~\flexipageref{\option{--entropy-window-size}}{opt:entropy-window-size} and
+  \flexipageref{\option{--entropy-cutoff}}{opt:entropy-cutoff}.
+
+
+  \label{opt:exposure-optimum}%
+  \optidx[\defininglocation]{--exposure-optimum}%
+  \genidx{exposure!optimum}%
+  \gensee{optimum exposure}{exposure, optimum}%
+\item[--exposure-optimum=\metavar{OPTIMUM}]\itemend
+  Determine at what normalized exposure value the \metavar{OPTIMUM} exposure of the input images
+  is.  This is, set the position of the maximum of the exposure weight curve.  Use this option
+  to fine-tune exposure weighting.
+
+  Valid range: $\val{val:minimum-exposure-optimum} \leq \metavar{OPTIMUM} \leq
+  \val{val:maximum-exposure-optimum}$, default: \val{val:default-exposure-optimum}.
+
+
+  \label{opt:exposure-weight}%
+  \optidx[\defininglocation]{--exposure-weight}%
+  \genidx{exposure!weight}%
+  \gensee{weight!exposure}{exposure, weight}%
+\item[--exposure-weight=\metavar{WEIGHT}]\itemend
+  Set the relative \metavar{WEIGHT} of the ``well-exposedness'' criterion as defined by the
+  chosen exposure weight function (see
+  option~\flexipageref{\option{--exposure-weight-function}}{opt:exposure-weight-function}
+  below).  Increasing this weight relative to the others will make well-exposed pixels
+  contribute more to the final output.
+
+  Valid range: $\val{val:minimum-weight-exposure} \leq
+  \metavar{WEIGHT} \leq \val{val:maximum-weight-exposure}$, default:
+  \val{val:default-weight-exposure}.
+
+  See Section~\fullref{sec:exposure-weighting}.
+
+
+  \label{opt:exposure-width}%
+  \optidx[\defininglocation]{--exposure-width}%
+  \genidx{exposure!width}%
+  \gensee{width of exposure weight curve}{exposure, width}%
+  \genidx{FWHM@\acronym{FWHM}}%
+\item[--exposure-width=\metavar{WIDTH}]\itemend
+  Set the characteristic \metavar{WIDTH} (\acronym{FWHM}) of the exposure weight function.  Low
+  numbers give less weight to pixels that are far from the user-defined optimum
+  (option~\flexipageref{\option{--exposure-optimum}}{opt:exposure-optimum}) and vice versa.  Use
+  this option to fine-tune exposure weighting (See Section~\fullref{sec:exposure-weighting}).
+
+  Valid range: $\metavar{WIDTH} > \val{val:minimum-exposure-width}$, default:
+  \val{val:default-exposure-width}.
+
+
+  \label{opt:hard-mask}%
+  \optidx[\defininglocation]{--hard-mask}%
+  \genidx{mask!hard}%
+  \gensee{hard mask}{mask, hard}%
+\item[--hard-mask]\itemend
+  Force hard blend masks on the finest scale.  This is the opposite flag of
+  option~\flexipageref{\option{--soft-mask}}{opt:soft-mask}.
+
+  This blending mode avoids averaging of fine details (only) at the expense of increasing the
+  noise.  However it considerably improves the sharpness of focus stacks.  Blending with hard
+  masks has only proven useful with focus stacks.
+
+  See also \sectionName~\ref{sec:fusion-options} and
+  options~\flexipageref{\option{--contrast-weight}}{opt:contrast-weight} as well as
+  \flexipageref{\option{--contrast-window-size}}{opt:contrast-window-size} above.
+
+
+  \label{opt:saturation-weight}%
+  \optidx[\defininglocation]{--saturation-weight}%
+  \genidx{saturation weight}%
+  \gensee{weight!saturation}{saturation weight}%
+\item[--saturation-weight=\metavar{WEIGHT}]\itemend
+  Set the relative \metavar{WEIGHT} of high-saturation pixels.  Increasing this weight makes
+  pixels with high saturation contribute more to the final output.
+
+  Valid range: $\val{val:minimum-weight-saturation} \leq \metavar{WEIGHT} \leq
+  \val{val:maximum-weight-saturation}$, default: \val{val:default-weight-saturation}.
+
+  Saturation weighting is only defined for color images; see
+  \sectionName~\ref{sec:saturation-weighting}.
+
+
+  \label{opt:soft-mask}%
+  \optidx[\defininglocation]{--soft-mask}%
+  \genidx{mask!soft}%
+  \gensee{soft mask}{mask, soft}%
+\item[--soft-mask]\itemend
+  Consider all masks when fusing.  This is the default.
+\end{codelist}
+
+\genidx[\rangeendlocation]{fusion options}
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:
