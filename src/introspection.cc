@@ -21,8 +21,8 @@
 
 #include <iostream>
 #include <string>
+#include <regex>
 
-#include <boost/algorithm/string.hpp>    // boost::replace_all
 #include <boost/version.hpp>             // BOOST_VERSION
 #include <gsl/gsl_version.h>             // GSL_VERSION
 #include <lcms2.h>                       // LCMS_VERSION
@@ -173,8 +173,9 @@ namespace introspection
         std::string formats(vigra::impexListFormats());
         std::string extensions(vigra::impexListExtensions());
 
-        boost::replace_all(formats, " ", "\n  ");
-        boost::replace_all(extensions, " ", "\n  ");
+        std::regex regexSpace(" ");
+        formats = std::regex_replace(formats, regexSpace, "\n  ");
+        extensions = std::regex_replace(extensions, regexSpace, "\n  ");
 
         std::cout <<
             "Following image formats are supported by " << command << ":\n" <<
