@@ -7,10 +7,10 @@
   \genidx{mask!external}%
   External Masks}
 
-In the usual workflow \application{Enblend} and \application{Enfuse} generate the blending and
-fusing masks according to the command-line options and the input images including their
-associated alpha-channels, and then they immediately use these masks for multi-resolution
-blending or multi-resolution fusing the output image.
+In the usual workflow \App{} and \OtherApp{} generate the blending and fusing masks according to
+the command-line options and the input images including their associated alpha-channels, and
+then they immediately use these masks for multi-resolution blending or multi-resolution fusing
+the output image.
 
 Sometimes more control over the masks is wanted.  To this end, both applications provide the
 option pair \option{--load-masks} and \option{--save-masks}.  See
@@ -51,11 +51,10 @@ as their geometries and offsets remain the same.  Thus the ``Combine Images'' bo
     multi-resolution algorithm just as for internal workflow without mask files.}
 \end{figure}
 
-To further optimize this kind of workflow, both \application{Enblend} and \application{Enfuse}
-stop after mask generation if option~\option{--save-masks} is given, but \emph{no output file}
-is specified with the \option{--output} option.  This way the time for pyramid generation,
-blending, fusing, and writing the final image to disk is saved, as well as no output image gets
-generated.
+To further optimize this kind of workflow, both \App{} and \OtherApp{} stop after mask
+generation if option~\option{--save-masks} is given, but \emph{no output file} is specified with
+the \option{--output} option.  This way the time for pyramid generation, blending, fusing, and
+writing the final image to disk is saved, as well as no output image gets generated.
 
 Note that options~\option{--save-masks} and \option{--load-masks} cannot be used simultaneously.
 

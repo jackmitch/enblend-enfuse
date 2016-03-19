@@ -10,8 +10,8 @@
 \genidx{profile!\acronym{ICC}}%
 \gensee{ICC@\acronym{ICC} profile}{profile, \acronym{ICC}}%
 This chapter explains the connection of pixel data types,
-\uref{\wikipediaiccprofile}{\acronym{ICC}}-color profiles, blend color spaces in
-\application{Enblend} or \application{Enfuse}.
+\uref{\wikipediaiccprofile}{\acronym{ICC}}-color profiles, blend color spaces in \App{} or
+\OtherApp.
 
 \genidx{pixels!blending}%
 \gensee{blending pixels}{pixels, blending}%
@@ -26,14 +26,13 @@ from the participating input pixels~$P_i, i = 1, 2, \dots$.
 \genidx{luminance}%
 In the simplest, non-trivial case we have to blend a pair of grayscale input pixels.  Given
 their luminances~$L_1$, $L_2$ and their weighting factor~$0 \leq w \leq 1$, what luminance~$L$
-is their ``weighted average''?  This is the heart of \application{Enblend's} and
-\application{Enfuse's} pyramidal blending operations!  We are in particular interested in a
-weighted average that appears \emph{visually} correct, this is, our eyes and brains consider $L$
-convincing or at the very least credible.
+is their ``weighted average''?  This is the heart of \App's and \OtherApp's pyramidal blending
+operations!  We are in particular interested in a weighted average that appears \emph{visually}
+correct, this is, our eyes and brains consider $L$ convincing or at the very least credible.
 
 \begin{geeknote}
-  \noindent Note that \application{Enblend} and \application{Enfuse} face different obstacles in
-  their respective domains of use.
+  \noindent Note that \App{} and \OtherApp{} face different obstacles in their respective
+  domains of use.
 
   \begin{description}
   \item[\application{Enblend}]\itemend
@@ -195,24 +194,23 @@ This transform serves two purposes:
   space making the blending a little more pleasing.
 \end{itemize}
 
-In the current version of \application{Enblend} and \application{Enfuse} it is \emph{strongly
-  recommended} to use blending inside the \acronym{RGB}-cube whenever the input data is in
-floating-point format; this is the default, too.
+In the current version of \App{} and \OtherApp{} it is \emph{strongly recommended} to use
+blending inside the \acronym{RGB}-cube whenever the input data is in floating-point format; this
+is the default, too.
 
 
 \section[Color Profiles]{\label{sec:color-profiles}%
   \genidx{color profile}%
   Color Profiles}
 
-\genidx{black-point}
-\gensee{ICC@\acronym{ICC} profile black-point}{black-point}
-\genidx{white-point}
-\gensee{ICC@\acronym{ICC} profile white-point}{white-point}
+\genidx{black-point}%
+\gensee{ICC@\acronym{ICC} profile black-point}{black-point}%
+\genidx{white-point}%
+\gensee{ICC@\acronym{ICC} profile white-point}{white-point}%
 \acronym{ICC}-color profiles completely absorb gamma
 encodings~\eqnref{equ:gamma-luminance-blend} and \acronym{ICC}~profile aware software like
-\application{Enblend} and \application{Enfuse} decode and encode images automatically respecting
-the gamma curves.  Moreover color profiles define what is the darkest representable black, so
-called black-point
+\App{} and \OtherApp{} decode and encode images automatically respecting the gamma curves.
+Moreover color profiles define what is the darkest representable black, so called black-point
 \[
   L = 0
   \quad \mbox{and}\quad
@@ -225,7 +223,7 @@ and analogously what is the purest and brightest white, the white-point
   \transpose{(r, g, b)} = \transpose{(1, 1, 1)}.
 \]
 
-\noindent By default, \application{Enblend} and \application{Enfuse} expect that either
+\noindent By default, \App{} and \OtherApp{} expect that either
 
 \begin{enumerate}
 \item\label{enum:no-profile}
@@ -266,11 +264,10 @@ the \acronym{RGB} cube by default.  The next section describes their treatment i
   \gensee{blending color space}{colorspace, for blending and fusing}%
   Blending Color Spaces}
 
-\application{Enblend} and \application{Enfuse} offer to work inside the
-\acronym{RGB}-cube~\eqnref{equ:rgb-cube} or in several perceptually uniform color spaces.  To
-override the default select a particular blending color space with
-option~\flexipageref{\option{--blend-colorspace}}{opt:blend-colorspace}.  Here are the four
-available color spaces.
+\App{} and \OtherApp{} offer to work inside the \acronym{RGB}-cube~\eqnref{equ:rgb-cube} or in
+several perceptually uniform color spaces.  To override the default select a particular blending
+color space with option~\flexipageref{\option{--blend-colorspace}}{opt:blend-colorspace}.  Here
+are the four available color spaces.
 
 \begin{description}
   \genidx{color cube!\acronym{RGB}}%
