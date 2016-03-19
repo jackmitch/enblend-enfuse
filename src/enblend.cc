@@ -68,7 +68,6 @@ extern "C" int optind;
 #include <io.h>
 #endif
 
-#include <boost/algorithm/string.hpp>
 #include <boost/tokenizer.hpp>
 
 #include <lcms2.h>
@@ -1612,7 +1611,7 @@ process_options(int argc, char** argv)
 
             for (auto token = tokenizer.begin(); token != tokenizer.end(); ++token) {
                 std::string key(*token);
-                boost::trim(key);
+                enblend::trim(key);
 
                 if (key == "*") {
                     parameter::erase_all();
