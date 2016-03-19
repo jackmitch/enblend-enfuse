@@ -69,7 +69,6 @@ extern "C" int optind;
 #endif
 
 #include <boost/tokenizer.hpp>
-#include <boost/version.hpp>    // BOOST_VERSION
 
 #include <gsl/gsl_version.h>    // GSL_VERSION
 
