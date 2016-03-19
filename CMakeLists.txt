@@ -228,32 +228,6 @@ FIND_PACKAGE(Boost 1.55 REQUIRED)
 #check some header and functions
 include(ConfigureChecks.cmake)
 
-# Boost Filesystem is optional
-IF(NOT HAVE_STD_FILESYSTEM)
-  FIND_PACKAGE(Boost COMPONENTS filesystem system)
-ENDIF()
-
-set(Boost_filesystem_FOUND ${Boost_FILESYSTEM_FOUND})
-set(Boost_system_FOUND ${Boost_SYSTEM_FOUND})
-message(STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}")
-
-IF(Boost_filesystem_FOUND)
-  ADD_DEFINITIONS(-DHAVE_BOOST_FILESYSTEM)
-ELSE(Boost_filesystem_FOUND)
-  MESSAGE(STATUS "Boost filesystem library found:     ${Boost_filesystem_FOUND}")
-  MESSAGE(STATUS "Boost system library found:         ${Boost_system_FOUND}")
-  MESSAGE(STATUS "Disabling Boost filesystem support")
-ENDIF(Boost_filesystem_FOUND)
-
-LIST(APPEND common_libs ${Boost_LIBRARIES})
-link_directories(${Boost_LIBRARY_DIRS})
-
-IF(NOT MSVC)
-  # MSVC supports auto-linking and will always choose the appropriate
-  # library for the config. Use explicit specifiers for the other platforms
-  LIST(APPEND common_libs ${Boost_LIBRARIES})
-ENDIF(NOT MSVC)
-
 include_directories(${Boost_INCLUDE_DIR})
 
 # Optional Libraries
