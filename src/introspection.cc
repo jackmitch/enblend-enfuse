@@ -23,7 +23,6 @@
 #include <string>
 #include <regex>
 
-#include <boost/version.hpp>             // BOOST_VERSION
 #include <gsl/gsl_version.h>             // GSL_VERSION
 #include <lcms2.h>                       // LCMS_VERSION
 #include <vigra/imageinfo.hxx>           // VIGRA_VERSION, impexListExtensions(), impexListFormats()
@@ -276,7 +275,6 @@ namespace introspection
 #endif // OPENCL
 
         std::cout << "Libraries\n" <<
-            "  Boost:      " << BOOST_VERSION / 100000 << '.' << (BOOST_VERSION / 100) % 1000 << '.' << BOOST_VERSION % 100 << "\n" <<
             "  GSL:        " << GSL_VERSION << "\n" <<
             //"  JPEG:       " << "\n" <<
             "  Little CMS: " << LCMS_VERSION / 1000 << '.' << (LCMS_VERSION / 10) % 100 << '.' << LCMS_VERSION % 10 << "\n" <<
