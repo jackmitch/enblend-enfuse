@@ -172,9 +172,11 @@ namespace introspection
         std::string formats(vigra::impexListFormats());
         std::string extensions(vigra::impexListExtensions());
 
-        std::regex regexSpace(" ");
-        formats = std::regex_replace(formats, regexSpace, "\n  ");
-        extensions = std::regex_replace(extensions, regexSpace, "\n  ");
+        const std::regex space(" ");
+        const std::string replacement("\n  ");
+
+        formats = std::regex_replace(formats, space, replacement);
+        extensions = std::regex_replace(extensions, space, replacement);
 
         std::cout <<
             "Following image formats are supported by " << command << ":\n" <<
