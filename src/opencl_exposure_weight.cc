@@ -86,6 +86,8 @@ namespace opencl_exposure_weight
             case ocl::vendor::amd:
                 f_->add_build_option("-g");
                 break;
+            case ::ocl::vendor::apple:
+                break;
             case ocl::vendor::nvidia:
                 f_->add_build_option("-cl-nv-verbose");
                 break;
