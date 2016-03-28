@@ -2,7 +2,11 @@
 %% Licence details can be found in the file COPYING.
 
 
-\urldef{\allinoneeedersch}{\url}{http://www.all-in-one.ee/~dersch/}
+%% Superficially check the state of the URLs with wget(1):
+%%     wget --spider --no-verbose --tries=1 --timeout=30 --output-file=url-state.log --input-file=`tr '~' '\0376' < url-def.tex | detex -l | tr '\0376' '~' | sed --expression='/^$/d'` &
+%%     tail --follow url-state.log
+
+
 \urldef{\awaresystemsbeextrasamples}{\url}{http://www.awaresystems.be/imaging/tiff/tifftags/extrasamples.html}
 \urldef{\brucelindbloomworkingspaceinfo}{\url}{http://www.brucelindbloom.com/index.html?WorkingSpaceInfo.html}
 \urldef{\cambridgeincolourcomunsharpmask}{\url}{http://www.cambridgeincolour.com/tutorials/unsharp-mask.htm}
@@ -11,42 +15,43 @@
 \urldef{\clangllvm}{\url}{http://clang.llvm.org/}
 \urldef{\cybercomnetdcraw}{\url}{http://www.cybercom.net/~dcoffin/dcraw/}
 \urldef{\darktableorg}{\url}{http://www.darktable.org/}
-\urldef{\debevecorg}{\url}{http://www.debevec.org/}
+\urldef{\debevecorg}{\url}{http://www.pauldebevec.com/}
 \urldef{\enblendhgcodesfnet}{\url}{http://hg.code.sf.net/p/enblend/code}
 \urldef{\enblendsourceforgenet}{\url}{http://enblend.sourceforge.net/}
 \urldef{\ericbrasseurgamma}{\url}{http://www.4p8.com/eric.brasseur/gamma.html}
 \urldef{\gccgnuorg}{\url}{https://gcc.gnu.org/}
-\urldef{\gimpguruorgblendingexposures}{\url}{http://www.gimpguru.org/Tutorials/BlendingExposures/}
+\urldef{\gimpguruorgblendingexposures}{\url}{https://www.gimp.org/tutorials/Blending_Exposures/}
 \urldef{\gimporg}{\url}{http://www.gimp.org/}
 \urldef{\gimpsavvy}{\url}{http://gimp-savvy.com/BOOK/index.html?node42.html}
 \urldef{\gmicsourceforgenet}{\url}{http://gmic.sourceforge.net/}
 \urldef{\gnuorgcopyleft}{\url}{http://www.gnu.org/copyleft/}
 \urldef{\gnuorgoctave}{\url}{http://www.gnu.org/software/octave/}
 \urldef{\graphicsmagickorg}{\url}{http://www.graphicsmagick.org/}
-\urldef{\hciiwrvigracommonfilters}{\url}{http://hci.iwr.uni-heidelberg.de/vigra/doc/vigra/group__CommonConvolutionFilters.html}
-\urldef{\hciiwrvigra}{\url}{http://hci.iwr.uni-heidelberg.de/vigra/}
+\urldef{\hciiwrvigracommonfilters}{\url}{https://ukoethe.github.io/vigra/doc-release/vigra/group__ConvolutionFilters.html}
+\urldef{\hciiwrvigra}{\url}{https://ukoethe.github.io/vigra/}
 \urldef{\hipriilog}{\url}{http://homepages.inf.ed.ac.uk/rbf/HIPR2/log.htm}
+\urldef{\homepagehelmutdersch}{\url}{http://webuser.fh-furtwangen.de/~dersch/}
 \urldef{\huginsourceforgenet}{\url}{http://hugin.sourceforge.net/}
 \urldef{\ijgorg}{\url}{http://www.ijg.org/}
-\urldef{\imagemagickorgcommandlineprocessinginput}{\url}{http://www.imagemagick.org/script/command-line-processing.php#input}
-\urldef{\imagemagickorgusagechannelstrans}{\url}{http://www.imagemagick.org/Usage/channels/#trans}
-\urldef{\imagemagickorgusagefileshistogram}{\url}{http://www.imagemagick.org/Usage/files/#histogram}
-\urldef{\imagemagickorg}{\url}{http://www.imagemagick.org/}
-\urldef{\kernelorgglob}{\url}{http://www.kernel.org/doc/man-pages/online/pages/man7/glob.7.html}
+\urldef{\imagefuser}{\url}{http://imagefuser.sourceforge.net/onlinemanual/}
+\urldef{\imagemagickorgcommandlineprocessinginput}{\url}{https://www.imagemagick.org/script/command-line-processing.php#input}
+\urldef{\imagemagickorgusagechannelstrans}{\url}{https://www.imagemagick.org/Usage/transform/}
+\urldef{\imagemagickorgusagefileshistogram}{\url}{https://www.imagemagick.org/Usage/files/#histogram}
+\urldef{\imagemagickorg}{\url}{https://www.imagemagick.org/script/index.php}
+\urldef{\kernelorgglob}{\url}{http://man7.org/linux/man-pages/man7/glob.7.html}
 \urldef{\khronosorgopencl}{\url}{https://www.khronos.org/opencl/}
 \urldef{\launchpadnet}{\url}{https://launchpad.net/}
 \urldef{\libpngorg}{\url}{http://www.libpng.org/pub/png/libpng.html}
 \urldef{\littlecmscom}{\url}{http://www.littlecms.com/}
 \urldef{\llvm}{\url}{http://llvm.org/}
-\urldef{\luminouslandscapebokeh}{\url}{http://www.luminous-landscape.com/essays/bokeh.shtml}
-\urldef{\luminouslandscapedigitalblending}{\url}{http://luminous-landscape.com/tutorials/digital-blending.shtml}
-\urldef{\luminouslandscaperawfiles}{\url}{http://www.luminous-landscape.com/tutorials/understanding-series/u-raw-files.shtml}
+\urldef{\luminouslandscapebokeh}{\url}{https://luminous-landscape.com/bokeh/}
+\urldef{\luminouslandscapedigitalblending}{\url}{https://luminous-landscape.com/digital-blending/}
+\urldef{\luminouslandscaperawfiles}{\url}{https://luminous-landscape.com/understanding-raw-files-explained/}
 \urldef{\magiclanternfm}{\url}{http://www.magiclantern.fm/index.html}
-\urldef{\mercurialseleniccom}{\url}{http://mercurial.selenic.com/}
+\urldef{\mercurialseleniccom}{\url}{https://www.mercurial-scm.org/}
 \urldef{\openexrcomfeatures}{\url}{http://www.openexr.com/about.html#features}
 \urldef{\openexrcom}{\url}{http://www.openexr.com/}
 \urldef{\openmporg}{\url}{http://openmp.org/wp/}
-\urldef{\panoramadyndnsorgkimagefuser}{\url}{http://panorama.dyndns.org/index.php?lang=en&subject=KImageFuser&texttag=KImagefuser}
 \urldef{\panotoolssourceforgenet}{\url}{http://panotools.sourceforge.net/}
 \urldef{\pfstoolssourceforgenet}{\url}{http://pfstools.sourceforge.net/}
 \urldef{\rawtherapeecom}{\url}{http://www.rawtherapee.com/}
@@ -55,22 +60,22 @@
 \urldef{\sourceforgenet}{\url}{http://sourceforge.net/}
 \urldef{\stargatewikiathetomb}{\url}{http://stargate.wikia.com/wiki/The_Tomb}
 \urldef{\ufrawsourceforgenet}{\url}{http://ufraw.sourceforge.net/}
-\urldef{\wikipediabornvonkarman}{\url}{http://en.wikipedia.org/wiki/Born-von_Karman_boundary_condition}
-\urldef{\wikipediaciecam}{\url}{http://en.wikipedia.org/wiki/CIECAM02}
+\urldef{\wikipediabornvonkarman}{\url}{https://en.wikipedia.org/wiki/Born-von_Karman_boundary_condition}
+\urldef{\wikipediaciecam}{\url}{https://en.wikipedia.org/wiki/CIECAM02}
 \urldef{\wikipediacieluvcolorspace}{\url}{https://en.wikipedia.org/wiki/CIELUV_color_space}
-\urldef{\wikipediadiffunifiedformat}{\url}{http://en.wikipedia.org/wiki/Diff#Unified_format}
-\urldef{\wikipediadijkstraalgorithm}{\url}{http://en.wikipedia.org/wiki/Dijkstra_algorithm}
-\urldef{\wikipediadistancetransform}{\url}{http://en.wikipedia.org/wiki/Distance_transform}
-\urldef{\wikipediaebnf}{\url}{http://en.wikipedia.org/wiki/Ebnf}
-\urldef{\wikipediagraphcuts}{\url}{http://en.wikipedia.org/wiki/Graph_cuts_in_computer_vision}
+\urldef{\wikipediadiffunifiedformat}{\url}{https://en.wikipedia.org/wiki/Diff#Unified_format}
+\urldef{\wikipediadijkstraalgorithm}{\url}{https://en.wikipedia.org/wiki/Dijkstra_algorithm}
+\urldef{\wikipediadistancetransform}{\url}{https://en.wikipedia.org/wiki/Distance_transform}
+\urldef{\wikipediaebnf}{\url}{https://en.wikipedia.org/wiki/Ebnf}
+\urldef{\wikipediagraphcuts}{\url}{https://en.wikipedia.org/wiki/Graph_cuts_in_computer_vision}
 \urldef{\wikipediahslandhsv}{\url}{https://en.wikipedia.org/wiki/HSL_and_HSV}
-\urldef{\wikipediaiccprofile}{\url}{http://en.wikipedia.org/wiki/ICC_profile}
-\urldef{\wikipediainformationentropy}{\url}{http://en.wikipedia.org/wiki/Information_entropy}
+\urldef{\wikipediaiccprofile}{\url}{https://en.wikipedia.org/wiki/ICC_profile}
+\urldef{\wikipediainformationentropy}{\url}{https://en.wikipedia.org/wiki/Information_entropy}
 \urldef{\wikipedialabcolorspace}{\url}{https://en.wikipedia.org/wiki/Lab_color_space}
-\urldef{\wikipediaparallax}{\url}{http://en.wikipedia.org/wiki/Parallax}
-\urldef{\wikipediasimulatedannealing}{\url}{http://en.wikipedia.org/wiki/Simulated_annealing}
+\urldef{\wikipediaparallax}{\url}{https://en.wikipedia.org/wiki/Parallax}
+\urldef{\wikipediasimulatedannealing}{\url}{https://en.wikipedia.org/wiki/Simulated_annealing}
 \urldef{\wikipediastandardilluminant}{\url}{https://en.wikipedia.org/wiki/Standard_illuminant}
-\urldef{\wikipediaziggaurat}{\url}{http://en.wikipedia.org/wiki/Ziggaurat}
+\urldef{\wikipediaziggaurat}{\url}{https://en.wikipedia.org/wiki/Ziggaurat}
 
 
 %%% Local Variables:
