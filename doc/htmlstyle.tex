@@ -109,6 +109,12 @@
 }
 
 
+\newstyle{.clearfix}%
+{%
+    overflow: auto;
+}
+
+
 \newstyle{.cxxlisting}%
 {%
   font-family: \fixedfontfamily;
@@ -138,6 +144,29 @@
 {%
   background: \@getcolor{\literalbackgroundcolor};
   padding: 0.5em;
+}
+
+
+\newstyle{.marginpar}%
+{%
+  border-color: lightgray;
+  border-style: none;
+  border-width: medium;
+  font-size: small;
+}
+
+
+\newstyle{.marginparright}%
+{%
+  border-left-style: solid;
+  padding-left: .667em;
+}
+
+
+\newstyle{.marginparleft}%
+{%
+  border-right-style: solid;
+  padding-right: .667em;
 }
 
 
