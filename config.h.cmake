@@ -31,12 +31,6 @@ ${CMAKE_FUNCTION_EXISTS}
 /* define to 1 if you have dlfcn.h header file and dl lib. */
 #cmakedefine HAVE_DL 1
 
-/* define to 1 if you have opencl.h header file in "CL" dir. */
-#cmakedefine HAVE_CL_CL_HPP 1
-
-/* define to 1 if you have opencl.h header file in "OpenCL" dir. */
-#cmakedefine HAVE_OPENCL_CL_HPP 1
-
 /* Define to 1 if the system has the type `_Bool'. */
 /* #undef HAVE__BOOL */
 
@@ -107,12 +101,6 @@ ${CMAKE_FUNCTION_EXISTS}
 #if ! defined(HAVE_SIZE_T)
   #define size_t unsigned int
 #endif
-
-/* Define to the implicit search path for OpenCL kernels. */
-#define DEFAULT_OPENCL_PATH "${DEFAULT_OPENCL_PATH}"
-
-/* Prefer separate OpenCL kernels or use build-in strings. */
-#cmakedefine PREFER_SEPARATE_OPENCL_SOURCE 1
 
 /* MSVC compiler is using _DEBUG instead of DEBUG, so redefine here */
 #if defined _DEBUG && !defined DEBUG

@@ -17,37 +17,6 @@ add_custom_command(
   )
 add_custom_target(signature DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/signature.h")
 
-IF(ENABLE_OPENCL)
-  # prepare all OpenCL sources
-  SET(OPENCL_SOURCES)
-  FILE(GLOB opencl_sources ${TOP_SRC_DIR}/src/*.cl)
-  IF(PREFER_SEPARATE_OPENCL_SOURCE)
-    INSTALL(FILES ${opencl_sources} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/enblend/kernels)
-  ELSE()
-    FILE(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/kernels")
-    FOREACH(_cl_source ${opencl_sources})
-      GET_FILENAME_COMPONENT(_cl_filename "${_cl_source}" NAME)
-
-      STRING(REGEX REPLACE "[.]cl$" ".icl" _icl_source "${_cl_filename}")
-      SET(_icl_source "${CMAKE_CURRENT_BINARY_DIR}/kernels/${_icl_source}")
-      STRING(REGEX REPLACE "[.]cl$" "_source_code" _cl_label "${_cl_filename}")
-
-      ADD_CUSTOM_COMMAND(
-        OUTPUT "${_icl_source}"
-        COMMAND ${PERL_EXECUTABLE} "${TOP_SRC_DIR}/src/embrace"
-          "--format=c++" "--label=${_cl_label}" "${_cl_source}" ">" "${_icl_source}"
-        DEPENDS "${_cl_source}"
-        COMMENT "Generating ${_icl_source}"
-      )
-      SET_SOURCE_FILES_PROPERTIES("${_icl_source}" GENERATED)
-      LIST(APPEND OPENCL_SOURCES "${_icl_source}")
-    ENDFOREACH()
-
-    ADD_CUSTOM_TARGET(cl_sources ALL DEPENDS ${OPENCL_SOURCES})
-    INCLUDE_DIRECTORIES("${CMAKE_CURRENT_BINARY_DIR}/kernels")
-  ENDIF()
-ENDIF()
-
 include_directories(${TOP_SRC_DIR}/src)
 set(ENBLEND_SOURCES 
     fillpolygon.hxx functoraccessor.hxx rect2d.hxx stride.hxx 
@@ -133,17 +102,7 @@ if(OpenMP_CXX_FLAGS AND NOT MSVC)
 endif(OpenMP_CXX_FLAGS AND NOT MSVC)
 target_link_libraries(enblend ${common_libs} ${additional_libs})
 target_link_libraries(enfuse ${common_libs} ${additional_libs})
-if(ENABLE_OPENCL AND MSVC)
-  # provide delay loading of opencl.dll
-  set_target_properties(enblend PROPERTIES LINK_FLAGS "/DELAYLOAD:opencl.dll")
-  set_target_properties(enfuse PROPERTIES LINK_FLAGS "/DELAYLOAD:opencl.dll")
-endif()
 install(TARGETS enblend enfuse DESTINATION bin CONFIGURATIONS Release RelWithDebInfo MinSizeRel)
-
-IF(ENABLE_OPENCL AND NOT ${PREFER_SEPARATE_OPENCL_SOURCE})
-    add_dependencies(enblend cl_sources)
-    add_dependencies(enfuse cl_sources)
-ENDIF()
 
 if(NOT WIN32)
     # create enblend.1 and enfuse.1
