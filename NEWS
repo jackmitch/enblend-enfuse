@@ -122,8 +122,8 @@ Unreleased.  Current line of development.
 - A C++11-compatible compiler is required to compile Enblend and
   Enfuse.
 
-- Support for older versions of the Boost filesystem library has been
-  dropped.
+- Support of the Boost filesystem library has been dropped.  There is
+  no Boost library dependence anymore.
 
 - Empty `--parameter' options default to "1".  This behavior in
   conjunction with boolean parameter expansion taking "0" and "1" as
