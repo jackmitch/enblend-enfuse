@@ -186,7 +186,7 @@ Here are some tips to get you in business quickly.
   $\slfrac{4}{3}$\dmn{EV}.
 
 \item[Use Magic Lantern's dual-\acronym{ISO} mode (and avoid \App).]\itemend
-  Magic Lantern can reprogram a camara to take a \emph{single} short with \emph{two different}
+  Magic Lantern can reprogram a camera to take a \emph{single} short with \emph{two different}
   sensor speeds.  They call it ``dual-\acronym{ISO}'' mode.  The non-standard RAW~image created
   that way must be processed with \command{cr2hdr}\footnote{\command{cr2hdr} is part of Magic
     Lantern's source distribution.}, which produces a \acronym{DNG}~file readable with the usual
@@ -231,7 +231,7 @@ Here are some surprisingly common misconceptions about exposure series.
 
 \item[All exposure values must be different.]\itemend
   You can repeat any exposure as often as you like.  That way you combine an exposure series
-  with parts of \sectionName~\ref{sec:repetition}, emphasizing the multiply occuring exposures
+  with parts of \sectionName~\ref{sec:repetition}, emphasizing the multiply occurring exposures
   and reducing noise.
 \end{description}
 
@@ -258,7 +258,7 @@ Here are some surprisingly common misconceptions about exposure series.
 \mainpurpose{Reflection suppression, saturation enhancement}
 
 In the current implementation of \App{}, it is not possible in general to fuse a polarization
-series.  Naively (ab)using \sample{--saturation-weight} will not work.
+series.  Na\"ively (ab)using \sample{--saturation-weight} will not work.
 
 
 \section[Focus Stacks -- Depth-of-Field Increase]{%
@@ -272,8 +272,8 @@ series.  Naively (ab)using \sample{--saturation-weight} will not work.
 \genidx{depth-of-field}%
 \gensee{DoF@\acronym{DoF}}{depth-of-field}%
 A focus stack is a series of images where the distance of the focal plane from the sensor
-varies.  Sloppily speaking, the images were focussed at different distances.  Fusing such a
-stack increases the depth-of-field (\acronym{DoF}) beyond the physical limits of diffraction.
+varies.  Sloppily speaking, the images were focused at different distances.  Fusing such a stack
+increases the depth-of-field (\acronym{DoF}) beyond the physical limits of diffraction.
 
 
 \subsection[Why create focus stacks?]{\label{sec:why-create-focus-stacks}%
@@ -636,7 +636,7 @@ We have collected some advice with which even focus-stacking adepts can benefit.
   Aligning focus stacks requires varying the viewing angle, which corresponds to a changing
   focal length.  Hence, the same pixel on the sensor gets mapped onto different positions in the
   final image.  Dirt spots will occur not only once but as many times as there are images in the
-  stack -- something that is no fun to correct in postprocessing.
+  stack -- something that is no fun to correct in post-processing.
 
   \genidx{dark frame}%
   \genidx{subtraction of dark frame}%

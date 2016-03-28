@@ -384,7 +384,7 @@ printUsage(const bool error = true)
     }
     std::cout <<
 #ifdef OPENCL
-        "  --prefer-gpu=DEVICE    select DEVICE on autodetected platform as GPU\n" <<
+        "  --prefer-gpu=DEVICE    select DEVICE on auto-detected platform as GPU\n" <<
         "  --prefer-gpu=PLATFORM:DEVICE\n" <<
         "                         select DEVICE on PLATFORM as GPU\n" <<
 #endif

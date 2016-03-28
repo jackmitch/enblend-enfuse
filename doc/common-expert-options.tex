@@ -144,7 +144,7 @@
     \optidx[\defininglocation]{--pre-assemble}%
     \shoptidx{-a}{--pre-assemble}%
     \genidx{preassemble}%
-    \gensee{assemble}{preasselble}%
+    \gensee{assemble}{preassemble}%
     \genidx{blending!sequential}%
     \gensee{sequential blending}{blending, sequential}%
   \item[\itempar{-a \\ --pre-assemble}]\itemend
@@ -166,9 +166,10 @@
   \genidx{OpenCL!platform}%
 \item[--prefer-gpu=\optional{\metavar{PLATFORM}:}\metavar{DEVICE}
   \restrictednote{\acronym{OpenCL}-enabled versions only.}]\itemend
-  Direct \App{} towards a particular \acronym{OpenCL} \metavar{DEVICE} on the first autodetected
-  \metavar{PLATFORM} or directly to the given \metavar{PLATFORM}\slash\metavar{DEVICE}
-  combination.  Use the numbers of platform and device found either with
+  Direct \App{} towards a particular \acronym{OpenCL} \metavar{DEVICE} on the first
+  auto-detected \metavar{PLATFORM} or directly to the given
+  \metavar{PLATFORM}\slash\metavar{DEVICE} combination.  Use the numbers of platform and device
+  found either with
 
   \begin{terminal}
     \$ \app{} --verbose --version
@@ -182,7 +183,7 @@
   option~\flexipageref{\option{--gpu}}{opt:gpu} for that.
 
   When told to employ the \acronym{GPU} with \sample{--gpu}, by default \App{} uses the first
-  device on the first autodetected platform it finds via queries of the \acronym{OpenCL}
+  device on the first auto-detected platform it finds via queries of the \acronym{OpenCL}
   subsystem, where neither the device, nor the platform may be the ones the user wants.  Usually
   she will select the device with the highest performance, maximum possible number of
   work-items, and largest associated memory.

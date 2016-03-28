@@ -63,17 +63,19 @@ $Y_{\mathrm{opt}}$ defaults to \val{val:default-exposure-optimum} and $width$ de
 \end{figure}
 
 
-The options \option{--exposure-optimum}\optidx{--exposure-optimum}
-and~\option{--exposure-width}\optidx{--exposure-width} serve to fine-tune the final result
-without changing the set of input images.  Option~\option{--exposure-optimum} sets the point of
-optimum exposure.  Increasing the \metavar{optimum} makes \App{} prefer lighter pixels,
-rendering the final image lighter, and vice versa.  Option~\option{--exposure-width} defines the
-\metavar{width} of acceptable exposures.  Small values of \metavar{width} penalize exposures
-that deviate from \metavar{optimum} more, and vice versa.
+\optidx{--exposure-optimum}%
+\optidx{--exposure-width}%
+The options \option{--exposure-optimum} and~\option{--exposure-width} serve to fine-tune the
+final result without changing the set of input images.  Option~\option{--exposure-optimum} sets
+the point of optimum exposure.  Increasing the \metavar{optimum} makes \App{} prefer lighter
+pixels, rendering the final image lighter, and vice versa.  Option~\option{--exposure-width}
+defines the \metavar{width} of acceptable exposures.  Small values of \metavar{width} penalize
+exposures that deviate from \metavar{optimum} more, and vice versa.
 
+\optidx{--exposure-weight-function}%
 In \App{} version~4.2 several new exposure weight functions have been added.  Select them with
-option~\option{--exposure-weight-function}.\optidx{--exposure-weight-function} For the following
-presentation we refer to the linear luminance transform
+option~\option{--exposure-weight-function}.  For the following presentation we refer to the
+linear luminance transform
 \begin{equation*}\refrep{equ:linear-luminance-transform}
   z = \frac{Y - Y_{\mathrm{opt}}}{\mathit{width}}.
 \end{equation*}
@@ -233,12 +235,13 @@ This can lead to pathologies if the luminances of the same pixel position in all
 images are assigned a weight of zero.  For all-zero weights \App{} falls back to weighing
 equally.  This is, each pixel gets a weight of $\slfrac{1}{N}$, which may or may not be the
 desired result.  However, if the \metavar{width} is chosen so large that the weight never
-vanishes or the imput images span a large enough range of luminances for each and every pixel,
+vanishes or the input images span a large enough range of luminances for each and every pixel,
 the problem is circumnavigated.
 
+\optidx{--exposure-cutoff}%
 Another way of cutting off underexposed or overexposed pixels is to use
-option~\option{--exposure-cutoff},\optidx{--exposure-cutoff} which has the additional benefit of
-allowing to choose upper and lower cutoff separately.
+option~\option{--exposure-cutoff}, which has the additional benefit of allowing to choose upper
+and lower cutoff separately.
 
 
 \begin{figure}

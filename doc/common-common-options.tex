@@ -80,7 +80,7 @@ are used most often.  However, in fact, \App{} and \OtherApp{} do have these opt
   \item[Any other format.]\itemend
     Other formats do not accept a \metavar{COMPRESSION} setting.  However, the underlying
     \uref{\hciiwrvigra}{\acronym{VIGRA}} library automatically compresses \filename{png}-files
-    with the \propername{Deflate} method.  (\acronym{VIGRA} is the image manipulaton library
+    with the \propername{Deflate} method.  (\acronym{VIGRA} is the image manipulation library
     upon which \App{} is based.)
   \end{description}
 
@@ -131,8 +131,8 @@ are used most often.  However, in fact, \App{} and \OtherApp{} do have these opt
   \begin{geeknote}
     As a guideline, remember that each new level works on a linear scale twice as large as the
     previous one.  So, the zeroth layer, the original image, obviously defines the image at
-    single-pixel scale, the first level works at two-pixel scale, and generally, the $n$-th
-    level contains image data at $2^n$-pixel scale.  This is the reason why an image of
+    single-pixel scale, the first level works at two-pixel scale, and generally, the $n^{\mathrm
+      th}$ level contains image data at $2^n$-pixel scale.  This is the reason why an image of
     $\mbox{width} \times \mbox{height}$~pixels cannot be deconstructed into a pyramid of more
     than $\lfloor \log_2(\min(\mbox{width}, \mbox{height})) \rfloor$ levels.
 
@@ -175,7 +175,7 @@ are used most often.  However, in fact, \App{} and \OtherApp{} do have these opt
 \item[\itempar{-v \optional{\metavar{LEVEL}} \\ --verbose\optional{=\metavar{LEVEL}}}]\itemend
   Without an argument, increase the verbosity of progress reporting.  Giving more
   \option{--verbose}~options will make \App{} more verbose; see
-  \sectionName~\fullref{sec:finding-out-details} for an examplary output.  Directly set a
+  \sectionName~\fullref{sec:finding-out-details} for an exemplary output.  Directly set a
   verbosity level with a non-negative integral~\metavar{LEVEL}.
   \tableName~\ref{tab:verbosity-levels} shows the messages available at a particular
   \metavar{LEVEL}.

@@ -601,7 +601,7 @@ namespace ocl
             std::cout <<
                 "Currently preferred GPU is device #" << a_preferred_device_id <<
                 " on platform #" << platform_id <<
-                (a_preferred_platform_id == 0U ? " (autodetected)" : "") << ".\n";
+                (a_preferred_platform_id == 0U ? " (auto-detected)" : "") << ".\n";
         }
         catch (no_platform&)
         {
@@ -615,7 +615,7 @@ namespace ocl
         {
             std::cout <<
                 "Platform number #" << a_preferred_platform_id <<
-                (a_preferred_platform_id == 0U ? " (autodetected)" : "") <<
+                (a_preferred_platform_id == 0U ? " (auto-detected)" : "") <<
                 "/device number #" <<
                 a_preferred_device_id << " combination is invalid for this system.\n" <<
                 an_error.what() << "\n";

@@ -7,8 +7,8 @@
   \genidx{options!mask generation for experts}%
   Expert Mask Generation Options}
 
-These options allow for a detailed control of the seam-line optimizers
-which govern the mask generation.
+These options allow for a detailed control of the seam-line optimizers which govern the mask
+generation.
 
 \begin{codelist}
   \label{opt:anneal}%
@@ -124,7 +124,7 @@ which govern the mask generation.
     \genidx{delta-E}%
     \genidx{colorspace!\acronym{L*a*b*}}%
   \item[\itempar{delta-e \\ de}]\itemend
-    Calulate the difference~$d$ as the \propername{Euclidean} distance of the pixels in
+    Calculate the difference~$d$ as the \propername{Euclidean} distance of the pixels in
     \acronym{L*a*b*} space:
 
     \begin{align*}
@@ -245,10 +245,10 @@ which govern the mask generation.
   criteria.  \App{} up to version~3.2 used 1:1.  This version of \App{} uses
   \val{val:default-optimizer-weight-distance}:\val{val:default-optimizer-weight-mismatch}.
 
-  A large \metavar{DISTANCE-WEIGHT} pulls the optimized seam line closer to the initial postion.
-  A large \metavar{MISMATCH\hyp{}WEIGHT} makes the seam line go on detours to find a path along
-  which the mismatch between the images is small.  If the optimized seam line shows cusps or
-  loops (see option~\flexipageref{\option{--visualize}}{opt:visualize}), reduce
+  A large \metavar{DISTANCE-WEIGHT} pulls the optimized seam line closer to the initial
+  position.  A large \metavar{MISMATCH\hyp{}WEIGHT} makes the seam line go on detours to find a
+  path along which the mismatch between the images is small.  If the optimized seam line shows
+  cusps or loops (see option~\flexipageref{\option{--visualize}}{opt:visualize}), reduce
   \metavar{MISMATCH\hyp{}WEIGHT} or increase \metavar{DISTANCE\hyp{}WEIGHT}.
 
   Both weights must be non-negative.  They cannot be both zero at the same time.  Otherwise,

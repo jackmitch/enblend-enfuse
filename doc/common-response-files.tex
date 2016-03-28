@@ -127,10 +127,11 @@ to the current-working directory of the application.
 The above grammar might surprise the user in the some ways.
 
 \begin{description}
-\item[Whitespace trimmed at both line ends]\itemend
-  For convenience, whitespace at the beginning and at the end of each line is ignored.  However,
-  this implies that response files cannot represent filenames that start or end with whitespace,
-  as there is no quoting syntax.  Filenames with embedded whitespace cause no problems, though.
+\item[White-space trimmed at both line ends]\itemend
+  For convenience, white-space at the beginning and at the end of each line is ignored.
+  However, this implies that response files cannot represent filenames that start or end with
+  white-space, as there is no quoting syntax.  Filenames with embedded white-space cause no
+  problems, though.
 
 \item[Only whole-line comments]\itemend
   Comments in response files always occupy a complete line.  There are no ``line-ending
@@ -258,7 +259,7 @@ all possible globbing algorithms.  To find out about the algorithms in your vers
     \item[literal]\itemend
       Do not glob.  Interpret all filenames in response files as literals. This is the default.
 
-      Please remember that whitespace at both ends of a line in a response file \emph{always}
+      Please remember that white-space at both ends of a line in a response file \emph{always}
       gets discarded.
 
       \genidx{globbing algorithm!\code{wildcard}}%
