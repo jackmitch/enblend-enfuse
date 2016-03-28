@@ -47,7 +47,7 @@
 
 \ifhyperref
   \usepackage{hyperref}    % MUST BE LOADED LATE!  See: https://www.tug.org/applications/hyperref/manual.html
-  \usepackage[all]{hypcap} % MUST BE LOADAD AFTER `hyperref' package!
+  \usepackage[all]{hypcap} % MUST BE LOADED AFTER `hyperref' package!
 
   \hypersetup{%
     colorlinks = true,     % color the links themselves, do not use ghastly boxes
@@ -64,6 +64,13 @@
 \pagestyle{myheadings}
 \renewcommand{\chaptermark}[1]{\markboth{\MakeUppercase{\chaptername\ \thechapter.\ #1}}{}}
 \renewcommand{\sectionmark}[1]{\markright{\MakeUppercase{\thesection.\ #1}}}
+
+
+%% Our preferred LaTeX document classes enumerate equations at chapter level.  For consistency
+%% we need that for Hevea, too.
+\ifhevea
+  \renewcommand{\theequation}{\thechapter.\arabic{equation}}
+\fi
 
 
 \tocnumber                 % let Hacha put section numbers into table-of-contents entries
