@@ -171,6 +171,10 @@ special treatment.  Their values~$L$ are first converted by the \LogTransform-tr
 \noindent which is undone by the inverse transform after blending.  Here, $\log(x)$ with a
 lower-case initial denotes the natural logarithmic function (i.e.\ to base~$e$).
 \figureName~\ref{fig:log-transform} shows the forward transform in the range from $-20$ to~100.
+Around $L = 0$ function~$\mbox{Log}(L)$ has the series expansion
+\[
+\mbox{Log}(L) = 1 + L + \frac{L^2}{2} + O(L^3), \mbox{for } 0 \leq L < 1.
+\]
 
 \begin{figure}
   \centering
