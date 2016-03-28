@@ -7,7 +7,7 @@
   \genidx{color profile}%
   Color Spaces And Color Profiles\commonpart}
 
-\genidx{profile!\acronym{ICC}}%
+\genidx{profile!ICC@\acronym{ICC}}%
 \gensee{ICC@\acronym{ICC} profile}{profile, \acronym{ICC}}%
 This chapter explains the connection of pixel data types,
 \uref{\wikipediaiccprofile}{\acronym{ICC}}-color profiles, blend color spaces in \App{} or
@@ -81,12 +81,12 @@ Sometimes images are gamma-encoded with exponent~$\gamma$ and the blended lumina
 \begin{equation}\label{equ:gamma-luminance-blend}
 L' = \left(t L_1^{1/\gamma} + (1 - t) L_2^{1/\gamma}\right)^\gamma,
 \end{equation}
-\genidx{Brasseur@\propername{Eric Brasseur}}%
+\genidx{Brasseur@\propername{Brasseur, Eric}}%
 which couples $t$ and $L'$ in a non-linear way.  See also \propername{Eric Brasseur's}
 explanation of the \uref{\ericbrasseurgamma}{gamma error in picture scaling}.
 
 \begin{geeknote}
-  \genidx{Lindbloom@\propername{Bruce Lindbloom}}%
+  \genidx{Lindbloom@\propername{Lindbloom, Bruce}}%
   Typical gamma values are $\gamma = 2.2$ for \acronym{sRGB} and \acronym{AdobeRGB}, 1.8 for
   \acronym{AppleRGB}, and \acronym{ProPhotoRGB}, 1.0 for Linear Rec709 \acronym{RGB} and any
   others with ``linear'' in their names.  For an extensive overview check out \propername{Bruce
@@ -129,7 +129,7 @@ and trivially arrive at
 \end{equation}
 but this means
 
-\begin{itemize}
+\begin{compactitemize}
 \item
   we implicitly treat the color components $r_i, g_i, b_i$ as \emph{separate} luminances, which
   they are not and moreover
@@ -137,7 +137,7 @@ but this means
 \item
   we neglect the visual aspects, namely luminance, saturation, and~hue of the blended color
   pixel~$P$.
-\end{itemize}
+\end{compactitemize}
 
 
 \section[Floating-Point Images]{\label{sec:floating-point-images}%
@@ -229,12 +229,12 @@ and analogously what is the purest and brightest white, the white-point
 
 \noindent By default, \App{} and \OtherApp{} expect that either
 
-\begin{enumerate}
+\begin{compactenumerate}
 \item\label{enum:no-profile}
   no input image has a color profile or
 \item\label{enum:same-profile}
   all images come with the \emph{same} \acronym{ICC}~profile.
-\end{enumerate}
+\end{compactenumerate}
 
 \genidx{image!black-and-white}%
 \gensee{black-and-white image}{image, black-and-white}%

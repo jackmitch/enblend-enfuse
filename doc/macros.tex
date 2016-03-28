@@ -128,8 +128,9 @@
 \newcommand{\fixme}[1]{\ifhevea\colorbox{\fixmebackgroundcolor}{FIX}\else\fbox{FIX}\fi
                        {#1}%
                        \ifhevea\colorbox{\fixmebackgroundcolor}{ME}\else\fbox{ME}\fi}
-\newcommand*{\fourier}[1]{\widehat{#1}}   % fourier transformed variable
-\newcommand{\fullref}[1]{\ifhevea \ref{#1}\else \ref{#1} on \pagename~\pageref{#1}\fi}
+\newcommand*{\fourier}[1]{\widehat{#1}}   % Fourier-transformed variable
+\newcommand*{\fullref}[1]{\ifhevea \ref{#1}\else \ref{#1} on \pagename~\pageref{#1}\fi}
+\WithSuffix\newcommand\fullref*[1]{\ifhevea \ref{#1}\else \ref{#1}, \pageabbr~\pageref{#1}\fi}
 \newcommand*{\guielement}[1]{\textsc{#1}}
 %%\newcommand*{\hangingitem}{\ifhevea\relax\else\hangindent=2em\hangafter=1\fi}
 \newcommand{\itempar}[1]{\ifhevea #1\else \parbox[t]{.98\linewidth}{#1\vspace{.667ex}}\fi}
@@ -154,6 +155,9 @@
   \hspace{.1em}\raisebox{.5ex}{\scriptsize #1}\hspace{-.1em}/%
   \hspace{-.15em}\raisebox{-.25ex}{\scriptsize #2}%
  \fi}
+
+
+\def\itemx[#1]{\mbox{}\vspace*{-\itemsep}\vspace*{-\parsep}\item[#1]}
 
 
 %% Source-of-document-date on the title page
@@ -287,6 +291,22 @@
 {\end{list}}
 
 
+%% Decent Lists
+\newenvironment{compactenumerate}%
+{\ifhevea\begin{enumerate}\else
+  \begin{enumerate}[noitemsep]\fi}%
+{\end{enumerate}}
+
+\newenvironment{compactitemize}%
+{\ifhevea\begin{itemize}\else
+  \begin{itemize}[noitemsep]%
+    \renewcommand{\labelitemi}{$-$}%
+    \renewcommand{\labelitemii}{$\circ$}%
+    \renewcommand{\labelitemiii}{$\box$}%
+    \renewcommand{\labelitemiv}{$\cdot$}\fi}%
+{\end{itemize}}
+
+
 %% Material that is not essential, but that we do not want to see as footnotes.
 %% Use the macro like `{\geekytext foo\/}'.
 \newcommand{\geekytext}{\small\slshape}
@@ -317,6 +337,15 @@
 \begin{list}{}{\ifhevea\relax\else\topsep=0pt\leftmargin=4em\fi
     \renewcommand{\makelabel}[1]{\option{##1}:\ }}}%
 {\end{list}}
+
+
+%% Special list for `Question-and-Answer' items.  Requires package `enumitem'.
+\newenvironment{qandalist}%
+{\ifhevea \begin{enumerate}\else \begin{enumerate}[label={\normalfont(\arabic*.)}]\fi
+      \itshape}
+{\end{enumerate}}
+
+\newenvironment{qandaanswer}{\par\normalfont}{}
 
 
 %% Specially grouped quote.

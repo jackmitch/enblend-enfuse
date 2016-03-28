@@ -318,21 +318,20 @@ enhanced :=
   (\code{\val{val:exposure-weight-function}}) and instead use one of the weight-functions in
   \tableName~\fullref{tab:exposure-weight-functions}.
 
-  \restrictednote{Versions with dynamic-linking support only.}  See
-  \sectionName~\fullref{sec:finding-out-details} on how to check for this feature.
-
   \genidx{shared object}%
   \gensee{object!shared}{shared object}%
-  \noindent \oldstylesecond~form: dynamically load \metavar{SHARED-OBJECT} and use
-  \metavar{SYMBOL} as user-defined exposure weight function.  Optionally pass the user-defined
-  function \metavar{ARGUMENT}s.
+  \begin{restrictedmaterial}{Versions with dynamic-linking support only.}
+    \noindent \oldstylesecond~form: dynamically load \metavar{SHARED-OBJECT} and use
+    \metavar{SYMBOL} as user-defined exposure weight function.  Optionally pass the user-defined
+    function \metavar{ARGUMENT}s.
 
-  \genidx{dynamic library}%
-  \gensee{library!dynamic}{dynamic library}%
-  \begin{geeknote}
-    Depending on the operating system environment, a ``shared object'' is sometimes also called
-    a ``dynamic library''.
-  \end{geeknote}
+    \genidx{dynamic library}%
+    \gensee{library!dynamic}{dynamic library}%
+    \begin{geeknote}
+      Depending on the operating system environment, a ``shared object'' is sometimes also called
+      a ``dynamic library''.
+    \end{geeknote}
+  \end{restrictedmaterial}
 
   \genidx{exposure weight!linear transform}%
 

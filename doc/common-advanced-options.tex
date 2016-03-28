@@ -24,14 +24,14 @@ image.
   Usually, \App{} chooses defaults depending on the input images:
 
   \begin{itemize}
-    \genidx{profile!\acronym{ICC}}%
+    \genidx{profile!ICC@\acronym{ICC}}%
     \gensee{ICC@\acronym{ICC} profile}{profile, \acronym{ICC}}%
-    \genidx{colorspace!\acronym{CIELUV}}%
+    \genidx{colorspace!CIELUV@\acronym{CIELUV}}%
   \item
     For grayscale or color input images \emph{with} \acronym{ICC}~profiles the default is to use
     \acronym{CIELUV}~colorspace.
 
-    \genidx{color cube!\acronym{RGB}}%
+    \genidx{color cube!RGB@\acronym{RGB}}%
     \gensee{RGB@\acronym{RGB} color cube}{color cube, \acronym{RGB}}%
   \item
     Images \emph{without} color profiles and floating-point images are blended in the trivial
@@ -128,19 +128,19 @@ image.
   integer format, use
 
   \begin{description}
-  \item[\itempar{\code{8} \\ \code{uint8}}]\itemend
+  \item[\code{8}]\itemx[\code{uint8}]\itemend
     Unsigned 8~bit; range: $0\dots255$
 
   \item[\code{int16}]\itemend
     Signed 16~bit; range: $-32768\dots32767$
 
-  \item[\itempar{\code{16} \\ \code{uint16}}]\itemend
+  \item[\code{16}]\itemx[\code{uint16}]\itemend
     Unsigned 16~bit; range: $0\dots65535$
 
   \item[\code{int32}]\itemend
     Signed 32~bit; range: $-2147483648\dots2147483647$
 
-  \item[\itempar{\code{32} \\ \code{uint32}}]\itemend
+  \item[\code{32}]\itemx[\code{uint32}]\itemend
     Unsigned 32~bit; range: $0\dots4294967295$
   \end{description}
 
@@ -152,33 +152,33 @@ image.
   \begin{description}
     \genidx{IEEE754@\acronym{IEEE754}!single precision float}%
     \gensee{single precision float (\acronym{IEEE754})}{\acronym{IEEE754}, single precision float}%
-  \item[\itempar{\code{r32} \\ \code{real32} \\ \code{float}}]\itemend
+  \item[\code{r32}]\itemx[\code{real32}]\itemx[\code{float}]\itemend
     %% IEEE single: 32 bits, n = 24, k = 32 - n - 1 = 7
     \acronym{IEEE754} single precision floating-point, 32~bit wide, 24~bit significant;
 
-    \begin{itemize}
+    \begin{compactitemize}
     \item
       Minimum normalized value: \semilog{1.2}{-38}
     \item
       Epsilon: \semilog{1.2}{-7}
     \item
       Maximum finite value: \semilog{3.4}{38}
-    \end{itemize}
+    \end{compactitemize}
 
     \genidx{IEEE754@\acronym{IEEE754}!double precision float}%
     \gensee{double precision float (\acronym{IEEE754})}{\acronym{IEEE754}, double precision float}%
-  \item[\itempar{\code{r64} \\ \code{real64} \\ \code{double}}]\itemend
+  \item[\code{r64}]\itemx[\code{real64}]\itemx[\code{double}]\itemend
     %% IEEE double: 64 bits, n = 53, k = 64 - n - 1 = 10
     \acronym{IEEE754} double precision floating-point, 64~bit wide, 53~bit significant;
 
-    \begin{itemize}
+    \begin{compactitemize}
     \item
       Minimum normalized value: \semilog{2.2}{-308}
     \item
       Epsilon: \semilog{2.2}{-16}
     \item
       Maximum finite value: \semilog{1.8}{308}
-    \end{itemize}
+    \end{compactitemize}
   \end{description}
 
   If the requested \metavar{DEPTH} is not supported by the output file format, \App{} warns and
@@ -196,14 +196,14 @@ image.
     \uref{\openexrcomfeatures}{\acronym{OpenEXR}} half precision floating-point, 16~bit wide,
     10~bit significant;
 
-    \begin{itemize}
+    \begin{compactitemize}
     \item
       Minimum normalized value: \semilog{9.3}{-10}
     \item
       Epsilon: \semilog{2.0}{-3}
     \item
       Maximum finite value: \semilog{4.3}{9}
-    \end{itemize}
+    \end{compactitemize}
   \end{restrictedmaterial}
 
   \label{opt:f}%
@@ -252,7 +252,7 @@ image.
   As this option significantly increases memory usage and computation time only use it, if the
   panorama will be
 
-  \begin{itemize}
+  \begin{compactitemize}
   \item
     consulted for any kind measurement, this is, all boundaries must match as accurately as
     possible, or
@@ -264,7 +264,7 @@ image.
     \gensee{VR@\acronym{VR}}{virtual reality}%
   \item
     fed into a virtual reality~(\acronym{VR}) generator, which creates a seamless environment.
-  \end{itemize}
+  \end{compactitemize}
 
   \noindent Otherwise, always avoid this option!
 

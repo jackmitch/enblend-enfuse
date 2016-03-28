@@ -89,7 +89,7 @@ generation.
   primary seam with a Graph-Cut and also before it optimizes the seams.  It employs a
   user-selectable \metavar{ALGORITHM} that is controlled by the
 
-  \begin{itemize}
+  \begin{compactitemize}
     \genidx{weight!luminance}%
     \gensee{luminance weight}{weight, luminance}%
   \item
@@ -100,7 +100,7 @@ generation.
     \gensee{chrominance weight}{weight, chrominance}%
   \item
     color differences, \metavar{CHROMINANCE-WEIGHT}, $w_{\mathrm{chroma}}$.
-  \end{itemize}
+  \end{compactitemize}
 
   For black-and-white images the difference is simple the absolute difference of each pair of
   pixels.
@@ -269,15 +269,15 @@ generation.
   (\acronym{GC}) algorithm, which is the default for version~4.2 and later.
 
   Valid \metavar{ALGORITHM} names are:
+  \begin{description}
+    \genidx{nearest feature transform (\acronym{NFT})}%
+  \item[\code{nearest-feature-transform}]\itemx[\code{nft}]\itemend
+    Nearest Feature Transform
 
-  \begin{center}
-    \begin{tabular}{p{.45\linewidth}l}
-      \code{nearest-feature-transform}, \code{nft}\genidx{nearest
-        feature transform (\acronym{NFT})} & Nearest Feature Transform \\
-    \code{graph-cut}, \code{gc}\genidx{graph-cut (\acronym{GC})} &
+    \genidx{graph-cut (\acronym{GC})}%
+  \item[\code{graph-cut}]\itemx[\code{gc}]\itemend
     Graph-Cut
-    \end{tabular}
-  \end{center}
+  \end{description}
 
   See \chapterName~\fullref{sec:seam-generators} for details on \App's primary seam generators.
 \end{codelist}

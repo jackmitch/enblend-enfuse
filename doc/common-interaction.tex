@@ -19,31 +19,33 @@ An \appcmd{} binary can come in several configurations.  The exact name of the b
 and it may or may not reflect the ``kind of \app''.  Therefore, \appcmd{} offers several options
 that allow the user to query exactly\dots
 
-\begin{tabular}%
-  {@{--\hspace{.667\tabcolsep}} p{.3\linewidth} @{\extracolsep{2em}} p{.3\linewidth} @{\extracolsep{2\tabcolsep}} l}
-  \multicolumn{1}{c}{} &
-  \multicolumn{1}{l}{\emph{Option\/\ldots}} &
-  \multicolumn{1}{l}{\emph{Description\/\ldots}} \\
-  %%\cline{2-3}\extraheadingsep
-  what its exact version number is, &
-  \flexipageref{\option{--version}}{opt:version} &
-  \sectionabbr~\fullref{sec:exact-version} \\
-  what features it does support, &
-  \flexipageref{\option{--version}}{opt:version} and \flexipageref{\option{--verbose}}{opt:verbose} &
-  \sectionabbr~\fullref{sec:compiled-in-features} \\
-  which image formats it can read and write without the need of conversion, &
-  \flexipageref{\option{--show-image-for\shyp mats}}{opt:show-image-formats} &
-  \sectionabbr~\fullref{sec:image-formats} \\
-  who built it, &
-  \flexipageref{\option{--show-signature}}{opt:show-signature} &
-  \sectionabbr~\fullref{sec:name-of-builder} \\
-  and what compiler and libraries were used to do so. &
-  \flexipageref{\option{--show-soft\shyp ware-com\shyp po\shyp
-      nents}}{opt:show-software-components} &
-  \sectionabbr~\fullref{sec:compiler-and-libraries}
-\end{tabular}
+\begin{compactitemize}
+\item
+  what its exact version number is (see \sectionabbr~\fullref{sec:exact-version} and
+  option~\flexipageref{\option{--ver\shyp sion}}{opt:version}),
 
-\noindent The information are explained in detail in the following sections.
+\item
+  what features it does support (see \sectionabbr~\fullref{sec:compiled-in-features} and
+  options~\flexipageref{\option{--ver\shyp sion}}{opt:version} and
+  \flexipageref{\option{--ver\shyp bose}}{opt:verbose}),
+
+\item
+  which image formats it can read and write without the need of conversion (see
+  \sectionabbr~\fullref{sec:image-formats} and
+  option~\flexipageref{\option{--show-image-for\shyp mats}}{opt:show-image-formats}),
+
+\item
+  who built it, (see \sectionabbr~\fullref{sec:name-of-builder} and
+  option~\flexipageref{\option{--show-signature}}{opt:show-signature}), and finally
+
+\item
+  what compiler and libraries were used to do so (see
+  \sectionabbr~\fullref{sec:compiler-and-libraries} and
+  option~\flexipageref{\option{--show-soft\shyp ware-com\shyp po\shyp
+      nents}}{opt:show-software-components}).
+\end{compactitemize}
+
+The information are explained in detail in the following sections.
 
 \subsubsection[Exact Version]{\label{sec:exact-version}%
   \genidx{version!software}%
@@ -207,39 +209,50 @@ may include more or less of the features displayed there.
 The \sample{--version --verbose}~combo is one of the first things test if \appcmd{} ``suddenly''
 behaves strangely.
 
-\begin{exemplar}
-  \begin{tabular}{@{--\hspace{.667\tabcolsep}} p{.45\linewidth} p{.45\linewidth}}
-    \hline
-    \multicolumn{1}{c|}{Question/Problem} & \multicolumn{1}{c}{Hint} \\
-    \hline\extraheadingsep
-    ``I'm running my \appcmd{} on a multi-core system, but it does not make use of it.'' &
-        {\RaggedRight Check for extra feature \acronym{OpenMP}.} \\\extraheadingsep
-        ``My \appcmd{} complains when I call it with \sample{--gpu}!'' &
-        {\RaggedRight Check for extra feature \acronym{OpenCL}.} \\\extraheadingsep
-        ``\appcmd{} is so slow!'' &
-        Ensure that \emph{neither} feature \code{mmap-view}
-        \emph{nor} \code{image-cache} has been compiled in. \\\extraheadingsep
-        ``\appcmd{} eats away too much memory!  Can I tell it to
-        unload that onto the disk?'' &
-        No, there is no command-line switch for that, but you can use
-        a version with \code{mmap-view}~feature. \\\extraheadingsep
-        My \appcmd{} has \acronym{OpenMP} enabled.  Does it support
-        dynamic adjustment of the number of threads? &
-        Under extra feature \acronym{OpenMP} look for ``support for
-        dynamic adjustment of the number of threads''. \\\extraheadingsep
-        My \appcmd{} has \acronym{OpenCL} enabled.  Does it need
-        separate \acronym{OpenCL} source files? &
-        Under extra feature \acronym{OpenCL} look for ``Search
-        path''.  If there is none, all sources have been included in
-        the binary, otherwise the \acronym{OpenCL} source files
-        should be put somewhere on the \acronym{OpenCL} search path.
-  \end{tabular}
+\begin{qandalist}
+\item
+  ``I'm running my \appcmd{} on a multi-core system, but it does not make use of it.''
+  \begin{qandaanswer}
+    Check for extra feature \acronym{OpenMP}.
+  \end{qandaanswer}
 
-  \caption[Questions answered by \sample{\app{} --version --verbose}]%
-          {\label{ex:qanda-option-version-verbose}%
-            Some questions that calling \appcmd{} with the option pair \option*{--version}
-            and~\option*{--verbose} can answer.}
-\end{exemplar}
+\item
+  ``My \appcmd{} complains when I call it with \sample{--gpu}!''
+  \begin{qandaanswer}
+    Check for extra feature \acronym{OpenCL}.
+  \end{qandaanswer}
+
+\item
+  ``\appcmd{} is so slow!''
+  \begin{qandaanswer}
+    Ensure that \emph{neither} feature \code{mmap-view} \emph{nor} \code{image-cache} has been
+    compiled in.
+  \end{qandaanswer}
+
+  \item
+    ``\appcmd{} eats away too much memory!  Can I tell it to unload that onto the disk?''
+    \begin{qandaanswer}
+      No, there is no command-line switch for that, but you can use a version with
+      \code{mmap-view}~feature.
+    \end{qandaanswer}
+
+  \item
+    ``My \appcmd{} has \acronym{OpenMP} enabled.  Does it support dynamic adjustment of the
+    number of threads?''
+    \begin{qandaanswer}
+      Under extra feature \acronym{OpenMP} look for ``support for dynamic adjustment of the
+      number of threads''.
+    \end{qandaanswer}
+
+  \item
+    ``My \appcmd{} has \acronym{OpenCL} enabled.  Does it need separate \acronym{OpenCL} source
+    files?''
+    \begin{qandaanswer}
+      Under extra feature \acronym{OpenCL} look for ``Search path''.  If there is none, all
+      sources have been included in the binary, otherwise the \acronym{OpenCL} source files
+      should be put somewhere on the \acronym{OpenCL} search path.
+    \end{qandaanswer}
+\end{qandalist}
 
 
 \subsubsection[Image Formats]{\label{sec:image-formats}%
@@ -252,7 +265,7 @@ behaves strangely.
 example the \acronym{EXR}-format requires special support libraries.  Use
 option~\option{--show-image-formats} to find out
 
-\begin{itemize}
+\begin{compactitemize}
 \item
   what image-data formats are supported,
 
@@ -261,11 +274,11 @@ option~\option{--show-image-formats} to find out
 
 \item
   what per-channel depths have been compiled into the \appcmd{} binary.
-\end{itemize}
+\end{compactitemize}
 
 \noindent The only three image formats always supported are
 
-\begin{itemize}
+\begin{compactitemize}
   \genidx{image formats!JPEG@\acronym{JPEG}}%
 \item
   \acronym{JPEG},
@@ -277,86 +290,102 @@ option~\option{--show-image-formats} to find out
   \genidx{image formats!TIFF@\acronym{TIFF}}%
 \item
   \acronym{TIFF}.
-\end{itemize}
+\end{compactitemize}
 
 \genidx{image formats!OpenEXR@\acronym{OpenEXR}}%
 \noindent All others are optional.  In particular the high-dynamic range (\acronym{HDR}) format
 \acronym{OpenEXR} only gets compiled if several non-standard libraries are available.
 
-The provided per-channel depths range from just one, namely ``8~bits
-unsigned integral'' (\code{uint8}) up to seven:
-  \begin{itemize}
-  \item 8~bits unsigned integral -- \sample{uint8}
-  \item 16~bits unsigned or signed integral -- \sample{uint16} or \sample{int16}
-  \item 32~bits unsigned or signed integral -- \sample{uint32} or \sample{int32}
-  \item 32~bits floating-point -- \sample{float}
-  \item 64~bits floating-point -- \sample{double}
-  \end{itemize}
+The provided per-channel depths range from just one, namely ``8~bits unsigned integral''
+(\code{uint8}) up to seven:
 
-  \tableName~\ref{tab:image-format-and-bit-depth} summarizes the channel bit depths of some
-  prominent image formats.
+\begin{compactitemize}
+\item
+  8~bits unsigned integral, \sample{uint8}
 
-  %% With the exception of TIFF, VIFF, PNG, and PNM all file types
-  %% store only 1 byte (gray scale and mapped RGB) or 3 bytes (RGB)
-  %% per pixel.
-  %%
-  %% PNG can store UInt8 and UInt16 values, and supports 1 and 3
-  %% channel images. One additional alpha channel is also supported.
-  %%
-  %% PNM can store 1 and 3 channel images with UInt8, UInt16 and
-  %% UInt32 values in each channel.
-  %%
-  %% TIFF and VIFF are additionally able to store short and long
-  %% integers (2 or 4 bytes) and real values (32 bit float and 64 bit
-  %% double) without conversion.
-  \begin{table}
-    \def\avail{$\bullet$}%
-    \def\unava{$-$}%
-    \def\unkwn{?}%
-    \ifreferencemanual\begin{maxipage}\fi
-    \centering
-    \begin{tabular}{l cc ccccc}
-      \hline
-      \multicolumn{1}{c|}{} &
-      \multicolumn{1}{c|}{} &
-      \multicolumn{1}{c|}{} &
-      \multicolumn{5}{c}{Channel Bit-Depth} \\
-      \cline{4-8}
+\item
+  16~bits unsigned or signed integral, \sample{uint16} or \sample{int16}
 
-      \multicolumn{1}{c|}{Format} &
-      \multicolumn{1}{c|}{Mask} &
-      \multicolumn{1}{c|}{Profile} &
-      \multicolumn{3}{c|}{Integral} &
-      \multicolumn{2}{c}{Floating-Point} \\
-      \cline{4-8}
+\item
+  32~bits unsigned or signed integral, \sample{uint32} or \sample{int32}
 
-      \multicolumn{1}{c|}{} &
-      \multicolumn{1}{c|}{} &
-      \multicolumn{1}{c|}{} &
-      \multicolumn{1}{c|}{\code{uint8}} &
-      \multicolumn{1}{c|}{\code{uint16}} &
-      \multicolumn{1}{c|}{\code{uint32}} &
-      \multicolumn{1}{c|}{\code{float}} &
-      \multicolumn{1}{c}{\code{double}} \\
+\item
+  32~bits floating-point, \sample{float}
 
-      \hline\extraheadingsep
-      \acronym{JPEG}  &  \unava  &  \avail  &  \avail  &  \unava  &  \unava  &  \unava  &  \unava \\
-      \acronym{PNG}   &  \avail  &  \avail  &  \avail  &  \avail  &  \unava  &  \unava  &  \unava \\
-      \acronym{PNM}   &  \unkwn  &  \unava  &  \avail  &  \avail  &  \avail  &  \unava  &  \unava \\
-      \optional{\acronym{V}}\acronym{TIFF} &
-                         \avail  &  \avail  &  \avail  &  \avail  &  \avail  &  \avail  &  \avail
-    \end{tabular}
-    \ifreferencemanual\end{maxipage}\fi
+\item
+  64~bits floating-point, \sample{double}
+\end{compactitemize}
 
-    \caption[Image formats and bit-depths]%
-            {\label{tab:image-format-and-bit-depth}%
-              Bit-depths of selected image formats.  These are the maximum capabilities of the
-              formats themselves, not \App's.  The ``Mask''-column indicates whether the format
-              supports an image mask (alpha-channel), see also
-              \chapterName~\ref{sec:understanding-masks}.  Column~``Profile'' shows whether the
-              image format allows for \acronym{ICC}-profiles to be included; see also
-              \chapterName~\ref{sec:color-spaces}.}
-  \end{table}
+\tableName~\ref{tab:image-format-and-bit-depth} summarizes the channel bit depths of some
+prominent image formats.
+
+%% With the exception of TIFF, VIFF, PNG, and PNM all file types
+%% store only 1 byte (gray scale and mapped RGB) or 3 bytes (RGB)
+%% per pixel.
+%%
+%% PNG can store UInt8 and UInt16 values, and supports 1 and 3
+%% channel images. One additional alpha channel is also supported.
+%%
+%% PNM can store 1 and 3 channel images with UInt8, UInt16 and
+%% UInt32 values in each channel.
+%%
+%% TIFF and VIFF are additionally able to store short and long
+%% integers (2 or 4 bytes) and real values (32 bit float and 64 bit
+%% double) without conversion.
+\begin{table}
+  \genidx{image formats}%
+  \genidx{bits per channel}%
+  \gensee{bit depth}{bits per channel}%
+  \genidx{channel!alpha}%
+  \genidx{profile!ICC@\acronym{ICC}}%
+  \gensee{ICC profile@\acronym{ICC} profile}{profile, \acronym{ICC}}%
+  \def\avail{$\bullet$}%
+  \def\unava{$-$}%
+  \def\unkwn{?}%
+  \ifreferencemanual\begin{maxipage}\fi
+  \centering
+  \begin{tabular}{l cc ccccc}
+    \hline
+    \multicolumn{1}{c|}{} &
+    \multicolumn{1}{c|}{} &
+    \multicolumn{1}{c|}{} &
+    \multicolumn{5}{c}{Channel Bit-Depth} \\
+    \cline{4-8}
+
+    \multicolumn{1}{c|}{Format} &
+    \multicolumn{1}{c|}{Mask} &
+    \multicolumn{1}{c|}{Profile} &
+    \multicolumn{3}{c|}{Integral} &
+    \multicolumn{2}{c}{Floating-Point} \\
+    \cline{4-8}
+
+    \multicolumn{1}{c|}{} &
+    \multicolumn{1}{c|}{} &
+    \multicolumn{1}{c|}{} &
+    \multicolumn{1}{c|}{\code{uint8}} &
+    \multicolumn{1}{c|}{\code{uint16}} &
+    \multicolumn{1}{c|}{\code{uint32}} &
+    \multicolumn{1}{c|}{\code{float}} &
+    \multicolumn{1}{c}{\code{double}} \\
+
+    \hline\extraheadingsep
+    \acronym{JPEG}  &  \unava  &  \avail  &  \avail  &  \unava  &  \unava  &  \unava  &  \unava \\
+    \acronym{PNG}   &  \avail  &  \avail  &  \avail  &  \avail  &  \unava  &  \unava  &  \unava \\
+    \acronym{PNM}   &  \unkwn  &  \unava  &  \avail  &  \avail  &  \avail  &  \unava  &  \unava \\
+    \optional{\acronym{V}}\acronym{TIFF} &
+                       \avail  &  \avail  &  \avail  &  \avail  &  \avail  &  \avail  &  \avail
+  \end{tabular}
+  \ifreferencemanual\end{maxipage}\fi
+
+  \caption[Image formats and bit-depths]%
+          {\label{tab:image-format-and-bit-depth}%
+            Bit-depths of selected image formats.  These are the maximum capabilities of the
+            formats themselves, not \App's.  The ``Mask''-column indicates whether the format
+            supports an image mask (alpha-channel), see also
+            \chapterName~\ref{sec:understanding-masks}.  Column~``Profile'' shows whether the
+            image format allows for \acronym{ICC}-profiles to be included; see also
+            \chapterName~\ref{sec:color-spaces}.}
+\end{table}
 
 
 \subsubsection[Builder]{\label{sec:name-of-builder}%
