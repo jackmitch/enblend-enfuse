@@ -50,6 +50,17 @@
 \newcommand*{\abbreviation}[2][\relax]{\ifx\relax#1{#2}\else{#2~(#1)}\fi}
 
 
+%% Configure look of footnote marks for the printable versions.  See "source2e.pdf", Sec. 62.2.
+\ifhevea\relax\else
+  \renewcommand{\thefootnote}{\oldstylenums{\arabic{footnote}}}
+  \makeatletter
+  \let\prev@makefnmark\@makefnmark
+  \def\@makefnmark{\prev@makefnmark\hspace*{-.0625em})}% Very old style!
+  \long\def\@makefntext#1{\RaggedRight\parindent 1em\noindent\hb@xt@ 1.8em{\hss\@makefnmark}~#1}
+  \makeatother
+\fi
+
+
 \newif\ifinfootnote
 \ifhevea\relax\else
   \let\oldfootnote\footnote
@@ -179,6 +190,7 @@
   \def\makesavenoteenv{\relax}
   \def\newfloat{\relax}
   \def\obeylines{\relax}
+  \def\oldstylenums{\relax}
   \def\overfullrule=#1{\relax}
   \def\savenotes{\relax}
   \def\selectfont{\relax}
@@ -271,9 +283,8 @@
 
 %% Description list with definitions marked with `\code'.
 \newenvironment{codelist}%
-{\begin{savenotes}\begin{list}{}{\renewcommand{\makelabel}[1]{\code{##1}}}}%
-{\end{list}\end{savenotes}}
-\makesavenoteenv{codelist}
+{\begin{list}{}{\renewcommand{\makelabel}[1]{\code{##1}}}}%
+{\end{list}}
 
 
 %% Material that is not essential, but that we do not want to see as footnotes.

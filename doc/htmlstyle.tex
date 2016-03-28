@@ -75,8 +75,11 @@
 
 
 %% Font Family Definitions
-\newcommand*{\seriffontfamily}{Verdana, sans-serif}% Georgia, serif
-\newcommand*{\sansfontfamily}{Verdana, sans-serif}
+%%   * Helpful page: http://www.w3schools.com/css/css_font.asp
+%%   * Note: We use sans-serif fonts for \seriffontfamily.
+%%     A possible serif-set for \seriffontfamily is Georgia, serif.
+\newcommand*{\seriffontfamily}{Verdana, Geneva, sans-serif}
+\newcommand*{\sansfontfamily}{Verdana, Geneva, sans-serif}
 \newcommand*{\fixedfontfamily}{"Andale Mono", Courier, monospace}
 
 
@@ -116,6 +119,18 @@
 \newstyle{.dt-list}%
 {%
   font-weight: bold;
+}
+
+
+\newstyle{.dt-thefootnotes}%
+{%
+  font-size: smaller;
+}
+
+
+\newstyle{.footnotetext}%
+{%
+  font-size: smaller;
 }
 
 
