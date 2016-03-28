@@ -315,14 +315,17 @@ generation of the documentation.  The contents of the variable goes
 _before_ `\documentclass' so that even the document class can be
 selected dynamically.
 
-DYNAMIC_TEX_PREAMBLE can define the argument-less macro
-`\finishdynamicpreamble', which is expanded right before
-`\begin{document}' and thus _after_ all packages have been loaded.
+DYNAMIC_TEX_PREAMBLE can define the argument-less macros
+`\documentclassoptions' which defines LaTeX \documentclass options
+(thingies within square brackets) and `\finishdynamicpreamble' which
+is expanded right before `\begin{document}' and thus _after_ all
+packages have been loaded.
 
 Some possibilities for `DYNAMIC_TEX_PREAMBLE' are
         \hyperreftrue
         \referencemanualtrue
         \usepackage[showframe]{geometry}
+        \def\documentclassoptions{11pt,twoside}
         \def\finishdynamicpreamble{\overfullrule=2pt\relax}
 
 

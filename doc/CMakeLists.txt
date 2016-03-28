@@ -56,7 +56,7 @@ add_custom_command(
     DEPENDS "${CMAKE_BINARY_DIR}/config.h"
 )
 
-set(_dynamic_preamble "\\PassOptionsToPackage{${PAPERSIZE}paper}{report}\n\\PassOptionsToPackage{${PAPERSIZE}paper}{refrep}\n\\newif\\ifreferencemanual\n\\newif\\ifhyperref\n\\def\\finishdynamicpreamble{}\n${DYNAMIC_TEX_PREAMBLE}\n")
+set(_dynamic_preamble "\\PassOptionsToPackage{${PAPERSIZE}paper}{report}\n\\PassOptionsToPackage{${PAPERSIZE}paper}{refrep}\n\\newif\\ifreferencemanual\n\\newif\\ifhyperref\n\\def\\documentclassoptions{}\n\\def\\finishdynamicpreamble{}\n${DYNAMIC_TEX_PREAMBLE}\n")
 if(INSTALL_PDF_DOC AND NOT ${_dynamic_preamble} MATCHES "\\hyperreftrue")
   string(REPLACE "\\newif\\ifhyperref\n" "\\newif\\ifhyperref\n\\hyperreftrue\n" _dynamic_preamble "${_dynamic_preamble}")
 endif()
