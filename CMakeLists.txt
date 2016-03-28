@@ -427,7 +427,7 @@ if (PERL_FOUND AND DOC)
     endif()	
     set(PAPERSIZE "a4" CACHE STRING "Papersize for some converters: a4, a5, b5, executive, legal, letter")
     set(PRINTRESOLUTION "600" CACHE STRING "Resolution for some converters in dots-per-inch")
-    set(DYNAMIC_TEX_PREAMBLE "\\def\\finishdynamicpreamble{\\overfullrule=2pt\\relax}" CACHE STRING "LaTeX commands to add to preamble")
+    set(DYNAMIC_TEX_PREAMBLE "\\def\\finishdynamicpreamble{\\relax}" CACHE STRING "LaTeX commands to add to preamble")
 endif()
 
 MESSAGE(STATUS "")

@@ -480,7 +480,7 @@ fi
 
 
 AC_ARG_VAR(DYNAMIC_TEX_PREAMBLE, [LaTeX commands to add to top of preamble])
-DYNAMIC_TEX_PREAMBLE=\\def\\finishdynamicpreamble{\\overfullrule=2pt\\relax}
+DYNAMIC_TEX_PREAMBLE=\\def\\finishdynamicpreamble{\\relax}
 
 
 AC_MSG_CHECKING(whether to enable debugging)
@@ -542,22 +542,6 @@ else
     enable_openmp=yes
 fi
 
-built_in_opencl_path=/usr/local/share/enblend/kernels:/usr/share/enblend/kernels
-AC_ARG_WITH([opencl-path],
-            AS_HELP_STRING([--with-opencl-path=<PATH>],
-                           [set to-be-built-in OpenCL search path]),
-            [opencl_path="$withval"],
-            [opencl_path="$built_in_opencl_path"])
-AC_DEFINE_UNQUOTED(DEFAULT_OPENCL_PATH, ["$opencl_path"], [Default search path for OpenCL files])
-AC_DEFINE(PREFER_SEPARATE_OPENCL_SOURCE, 1,
-          [Define if you want to access OpenCL files, not compile-in their string equivalents])
-
-
-AX_OPENCL([C++])
-CFLAGS="$CFLAGS $CL_CFLAGS"
-CXXFLAGS="$CXXFLAGS $CL_CFLAGS"
-LIBS="$LIBS $CL_LIBS"
-
 AC_CONFIG_FILES([doc/Makefile
                  doc/examples/Makefile
                  doc/examples/enfuse/Makefile
@@ -590,6 +574,5 @@ AC_MSG_RESULT([
    OpenEXR image format            ${have_exr}
    use image cache:                ${enable_image_cache}
    use OpenMP:                     ${enable_openmp}
-   use OpenCL:                     ${enable_opencl} (search path: $opencl_path)
    use TCMalloc:                   ${use_tcmalloc}
 ${warnings}])

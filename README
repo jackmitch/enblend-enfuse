@@ -149,28 +149,6 @@ OMP_NESTED and OMP_DYNAMIC.  See the OpenMP specification for details
 on the usage of these variables.
 
 
-** --enable-opencl=YES/no
-
-Enable parallel execution of parts of Enblend and Enfuse with OpenCL
-on machines providing the proper hardware.  See
-        http://www.khronos.org/opencl/
-As Enblend and Enfuse are written in C++ we prefer the C++-header of
-OpenCL, namely "cl.hpp".  This file does not always come
-(pre-)installed, but can be downloaded from the canonical site,
-Khronos OpenCL API Registry
-        http://www.khronos.org/registry/cl/
-
-Currently, we compile and test against OpenCL API version 1.2.  The
-header files associated with the older versions 1.0 and 1.1 are
-flawed; They do not compile with some compilers (e.g. CLang++).
-
-It is advisable to match the API versions of C-headers and the
-C++-header file.  On systems with multiple header hierarchies
-(e.g. /usr/include and /usr/local/include) particular care must be
-taken that the correct headers are used at configuration time and at
-compile time.
-
-
 ** --enable-debug=yes/NO
 
 Compile without optimizations and enable all debug-checking code.  The
