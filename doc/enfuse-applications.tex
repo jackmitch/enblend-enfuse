@@ -117,7 +117,7 @@ subtraction.
 \App{} sets defaults for the exposure-weight to \val{val:default-weight-exposure}, for
 saturation-weight to \val{val:default-weight-saturation} and for all other weights to zero, a
 good combination for noise reduction.  Eliminating the saturation component with
-\option{--saturation-weight=0.0} sometimes can be worth the extra run.
+\option{--saturation\hyp weight=0.0} sometimes can be worth the extra run.
 
 
 \section[Exposure Series -- Dynamic Range Increase]{\label{sec:exposure-series--dynamic-range-increase}%
@@ -134,9 +134,9 @@ the instruction manual of your model for details.  Also check out the features t
 Lantern offers to shoot \acronym{HDR}-series and to extend the dynamic range right in the
 camera.
 
-\App{}'s defaults, \code{exposure-weight}=\val{val:default-weight-exposure} and
-\code{saturation-weight}=\val{val:default-weight-saturation} are well suited for fusion of
-\emph{color} images.  Remember that saturation weighting only works for \acronym{RGB} data.
+\App{}'s defaults for exposure weight, \val{val:default-weight-exposure} and saturation weight,
+\val{val:default-weight-saturation} are well suited for fusion of \emph{color} images.  Remember
+that saturation weighting only works for \acronym{RGB} data.
 Option~\option{--saturation-weight} helps to control burnt-out highlights, as these are heavily
 desaturated.  Alternatively, use option~\option{--exposure-cutoff} to suppress noise or
 blown-out highlights without altering the overall brightness too much.  If no image suffers from
@@ -492,8 +492,8 @@ between convex and concave edges.  \App{} always use the magnitude of curvature 
 Typically, \metavar{SCALE} ranges between 0.1~pixels and 0.5~pixels, where 0.3~pixels are a
 reasonable starting point.  To find the best value for \metavar{SCALE} though, usually some
 experimentation will be necessary.  Use \sample{--save-masks} to get all soft-mask (default:
-\mbox{\code{\val{val:default-soft-mask-template}}}) and hard-mask files
-(\mbox{\code{\val{val:default-hard-mask-template}}}).  Check how different scales affect the
+\mbox{\code{\val{val:default-soft-mask-template}}}) and hard-mask files (default:
+\mbox{\code{\val{val:default-hard-mask-template}}}).  Check how different scales affect the
 artifacts.  Also see Chapter~\fullref{sec:understanding-masks}.
 
 
@@ -503,15 +503,15 @@ artifacts.  Also see Chapter~\fullref{sec:understanding-masks}.
   Local Contrast Enhancement}
 
 Sometimes \App{} misses smoother edges with \sample{--contrast-edge-scale} and a little local
-contrast enhancement (\acronym{LCE}) helps.  Set \option{--contrast-edge-scale}=\feasiblebreak
-\metavar{SCALE}:\feasiblebreak \metavar{LCE-SCALE}:\feasiblebreak \metavar{LCE-FACTOR}, where
-\metavar{LCE-SCALE} and \metavar{LCE-FACTOR} work like the
-\uref{\cambridgeincolourcomunsharpmask}{unsharp mask} filters in various image manipulation
-programs.  Start with \metavar{LCE-SCALE} ten times the value of \metavar{SCALE} and a
-\metavar{LCE-FACTOR} of 2--5.
+contrast enhancement (\acronym{LCE}) helps.  Set \option{--contrast\hyp edge\hyp
+  scale}=\feasiblebreak \metavar{SCALE}:\feasiblebreak \metavar{LCE\hyp SCALE}:\feasiblebreak
+\metavar{LCE\hyp FACTOR}, where \metavar{LCE\hyp SCALE} and \metavar{LCE\hyp FACTOR} work like
+the \uref{\cambridgeincolourcomunsharpmask}{unsharp mask} filters in various image manipulation
+programs.  Start with \metavar{LCE\hyp SCALE} ten times the value of \metavar{SCALE} and a
+\metavar{LCE\hyp FACTOR} of 2--5.
 
-\metavar{LCE-SCALE} can be specified as a percentage of \metavar{SCALE}.  \metavar{LCE-FACTOR}
-also can be specified as a percentage.  Examples:
+\metavar{LCE\hyp SCALE} can be specified as a percentage of \metavar{SCALE}.  \metavar{LCE\hyp
+  FACTOR} also can be specified as a percentage.  Examples:
 
 \begin{literal}
 --contrast-edge-scale=0.3:3.0:3 \\
@@ -546,10 +546,9 @@ The argument to \option{--contrast-min-curvature}=\metavar{CURVATURE} either is 
 lightness value, e.g.\ 0\dots255 for 8~bit data and 0\dots65535 for 16~bit data, or, when given
 with a \sample{\%}-sign it is a relative lightness value ranging from 0\% to~100\%.
 
-To suppress unreal edges or counter excessive noise, use the
-\option{--contrast-min-curvature}~option with a \emph{negative} curvature
-measure~\metavar{CURVATURE}.  This forces all curvatures less than $-\metavar{CURVATURE}$ to
-zero.
+To suppress unreal edges or counter excessive noise, use the \option{--contrast\hyp min\hyp
+  curvature}~option with a \emph{negative} curvature measure~\metavar{CURVATURE}.  This forces
+all curvatures less than $-\metavar{CURVATURE}$ to zero.
 
 A \emph{positive} curvature measure~\metavar{CURVATURE} makes \App{} merge the \acronym{LoG}
 data with the local-contrast data.  Every curvature larger than or equal to \metavar{CURVATURE}
@@ -611,11 +610,11 @@ appear as described in \sectionName~\ref{sec:advanced-focus-stacking} switch to
 \propername{Laplacian}-of-\propername{Gaussian} contrast detection.
 
 If some seams remain even in \acronym{LoG}-mode, decrease the sensitivity of the edge detection
-with a positive \sample{--contrast-min-curvature}.  A too high value of
-\sample{--contrast-min-curvature} suppresses fine detail though.  Part of the detail can be
-brought back with pre-sharpening, that is, \ref{sec:local-contrast-enhancement} or combining
-\acronym{LoG} with local-contrast-window mode by using a negative
-\sample{--contrast-min-curvature}.
+with a positive \code{--contrast\hyp min\hyp curvature}.  A too high value of
+\code{--contrast\hyp min\hyp curvature} suppresses fine detail though.  Part of the detail can
+be brought back with pre-sharpening, that is, \ref{sec:local-contrast-enhancement} or combining
+\acronym{LoG} with local-contrast-window mode by using a negative \code{--contrast\hyp min\hyp
+  curvature}.
 
 Carefully examining the masks (option~\option{--save-masks}) that \App{} uses helps to judge the
 effects of the parameters.

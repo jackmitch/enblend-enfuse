@@ -109,8 +109,9 @@ Some notes on the arguments of this option:
   \end{restrictedmaterial}
 
 \item
-  There is no way knowing which of the symbols inside of \metavar{SHARED-OBJECT} are suitable
-  for \metavar{SYMBOL} without knowledge of source code of \metavar{SHARED-OBJECT}.
+  There is no way knowing which of the symbols inside of \metavar{SHARED-OB\shyp
+    JECT} are suitable for \metavar{SYMBOL} without knowledge of source code of
+  \metavar{SHARED-OBJECT}.
 
 \item
   A weight function has access to additional \metavar{ARGUMENT}s passed in by appending them
@@ -168,8 +169,10 @@ side
   \acronym{ABI}-compatible compilers is \acronym{GNU}'s~\command{g++} and
   \propername{Intel's}~\command{icpc}.
 
+  \optidx{--show-software-components}%
   To find out which compiler built \emph{your} version of \appcmd{} use
-  option~\option{--show-software-components}.\optidx{--show-software-components}
+  option~\option{--show\hyp soft\shyp ware\hyp com\shyp po\shyp
+    nents}.
 
 \item
   The base-class header file \filename{exposure\_weight\_base.h} is available.
@@ -258,9 +261,12 @@ Between chair and keyboard:
   \sample{-fopenmp} and for \command{icpc} it is \sample{-fopenmp} or \sample{-openmp}.
 
 \item
-  To raise an exception associated with the derived, user-defined exposure-weight class, throw
-  \code{ExposureWeight::error(const std::string\& message)}.  \App{} catches these exceptions at
-  an enclosing scope, displays \metavar{message}, and aborts.
+  To raise an exception associated with the derived, user\hyp defined exposure\hyp weight class,
+  throw
+  \begin{literal}
+    ExposureWeight::error(const std::string\& message)
+  \end{literal}
+  \App{} catches these exceptions at an enclosing scope, displays \metavar{message}, and aborts.
 
 \item
   Define an object of the derived class.  This creates the \metavar{SYMBOL} to refer to at the

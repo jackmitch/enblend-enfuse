@@ -103,7 +103,7 @@ are used most often.  However, in fact, \App{} and \OtherApp{} do have these opt
 
   This option enables \acronym{GPU} processing on the selected \acronym{GPU}s.  To choose a
   particular \acronym{GPU} or override \App's default choice use
-  \flexipageref{\sample{--prefer-gpu}}{opt:prefer-gpu}.
+  option~\flexipageref{\option{--pre\shyp fer\hyp gpu}}{opt:prefer-gpu}.
 
   Negate this option with \sample{--no-gpu}\optidx[\defininglocation]{--no-gpu}.
 
@@ -134,7 +134,10 @@ are used most often.  However, in fact, \App{} and \OtherApp{} do have these opt
     single-pixel scale, the first level works at two-pixel scale, and generally, the $n^{\mathrm
       th}$ level contains image data at $2^n$-pixel scale.  This is the reason why an image of
     $\mbox{width} \times \mbox{height}$~pixels cannot be deconstructed into a pyramid of more
-    than $\lfloor \log_2(\min(\mbox{width}, \mbox{height})) \rfloor$ levels.
+    than
+    \[
+    \lfloor \log_2(\min(\mbox{width}, \mbox{height})) \rfloor\quad\mbox{levels.}
+    \]
 
     If too few levels are used, ``halos'' around regions of strong local feature variation can
     show up.  On the other hand, if too many levels are used, the image might contain too much

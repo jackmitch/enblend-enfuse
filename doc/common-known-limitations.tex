@@ -32,21 +32,24 @@ some of the known ones.
   \begin{geeknote}
     The overlap is exclusively defined by the masks of the overlapping images.  This is exactly
     what the input masks are built for.  Let $A$ be the number of pixels that overlap in both
-    masks.  We use $A$ as a measure of the overlap area -- something 2-dimensional; technically
-    it is a pixel count.
+    masks.  We use $A$ as a measure of the overlap area -- something 2\hyp dimensional;
+    technically it is a pixel count.
 
     Construct the smallest circumscribed, par-axial rectangle of the overlap area.  The
-    rectangle has a circumference~$U = 2 (a + b)$, which is of course 1-dimensional.  Internally
-    $U$ again is a number of pixels just as $A$.
+    rectangle has a circumference
+    \[
+    U = 2 (a + b),
+    \]
+    which is of course 1-dimensional.  Internally $U$ again is a number of pixels just as $A$.
 
     The threshold when we consider a pair of images sufficiently different is when $A$ is larger
     than \val{val:overlap-check-threshold}~times the number of pixels on the circumference~$U$
     \[
     A > \val{val:overlap-check-threshold} \times U.
     \]
-    Avoiding the term ``fractal dimension'', we have constructed a simple measure of how
-    2-dimensional the overlap area is.  This way we steer clear of feeding later processing
-    stages with nearly 1-dimensional overlap regions, something that wreaks havoc on them.
+    Avoiding the term ``fractal dimension'', we have constructed a simple measure of how 2\hyp
+    dimensional the overlap area is.  This way we steer clear of feeding later processing stages
+    with nearly 1\hyp dimensional overlap regions, something that wreaks havoc on them.
   \end{geeknote}
 
   \optidx{--wrap}

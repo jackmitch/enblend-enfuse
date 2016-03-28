@@ -193,7 +193,9 @@
 
 
 %% Allow for some hyphenation of typewriter fonts.
-\newenvironment{makehyphenatable}[1]{#1\hyphenchar\the\font=`\-}{}
+\newenvironment{makehyphenatable}[1]{#1\hyphenchar\the\font=`\=}{}
+\newcommand*{\signalinghyphenchar}{\char61}% `='
+\newcommand*{\shyp}{\ifhevea\relax\else\discretionary{\signalinghyphenchar}{}{}\fi}
 
 
 %% Taken from Refman style and adapted.

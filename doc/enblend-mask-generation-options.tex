@@ -20,13 +20,13 @@ These options control the generation and the usage of masks.
   memory necessary to do so.  It is the default.
 
   If omitted \metavar{FACTOR} defaults to \val{val:default-coarseness-factor}, this means,
-  option~\option{--coarse-mask} shrinks the overlapping \emph{areas} by a factor of
+  option~\option{--coarse\hyp mask} shrinks the overlapping \emph{areas} by a factor of
   $\val{val:default-coarseness-factor}\classictimes\val{val:default-coarseness-factor}$.  With
   $\metavar{FACTOR} = 8$ the total memory allocated during a run of \App{} shrinks approximately
   by 80\% and the maximum amount of memory in use at a time is decreased to some 40\% in
   comparison to a full-size (``fine'') mask.
 
-  Valid range: $\metavar{FACTOR} = 1, 2, 3, \dots$, where 1 reproduces \sample{--fine-mask}.
+  Valid range: $\metavar{FACTOR} = 1, 2, 3, \dots$, where 1 reproduces \code{--fine\hyp mask}.
 
   Also see the negated option, \flexipageref{\sample{--fine-mask}}{opt:fine-mask} and
   \tableName~\ref{tab:mask-generation}.

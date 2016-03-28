@@ -32,13 +32,14 @@ that allow the user to query exactly\dots
   \flexipageref{\option{--version}}{opt:version} and \flexipageref{\option{--verbose}}{opt:verbose} &
   \sectionabbr~\fullref{sec:compiled-in-features} \\
   which image formats it can read and write without the need of conversion, &
-  \flexipageref{\option{--show-image-formats}}{opt:show-image-formats} &
+  \flexipageref{\option{--show-image-for\shyp mats}}{opt:show-image-formats} &
   \sectionabbr~\fullref{sec:image-formats} \\
   who built it, &
   \flexipageref{\option{--show-signature}}{opt:show-signature} &
   \sectionabbr~\fullref{sec:name-of-builder} \\
   and what compiler and libraries were used to do so. &
-  \flexipageref{\option{--show-software-components}}{opt:show-software-components} &
+  \flexipageref{\option{--show-soft\shyp ware-com\shyp po\shyp
+      nents}}{opt:show-software-components} &
   \sectionabbr~\fullref{sec:compiler-and-libraries}
 \end{tabular}
 
@@ -388,9 +389,10 @@ build.
   Compiler And Libraries Used To Build}
 
 Sometimes \appcmd{} refuses to start or runs into trouble because the libraries supplied to it
-do not match the ones it was compiled with.  Option~\option{--show-software-components} can be
-helpful to diagnose the problem in such cases, because it shows the version information of
-\App's most important libraries as they have identified themselves during compile-time.
+do not match the ones it was compiled with.  Option~\option{--show\hyp soft\shyp
+  ware\hyp components} can be helpful to diagnose the problem in such cases, because it shows
+the version information of \App's most important libraries as they have identified themselves
+during compile-time.
 
 \genidx{OpenMP@\acronym{OpenMP}}%
 Furthermore the report reveals the compiler used to build \appcmd{} along with the most

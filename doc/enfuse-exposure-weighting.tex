@@ -66,11 +66,12 @@ $Y_{\mathrm{opt}}$ defaults to \val{val:default-exposure-optimum} and $width$ de
 \optidx{--exposure-optimum}%
 \optidx{--exposure-width}%
 The options \option{--exposure-optimum} and~\option{--exposure-width} serve to fine-tune the
-final result without changing the set of input images.  Option~\option{--exposure-optimum} sets
-the point of optimum exposure.  Increasing the \metavar{optimum} makes \App{} prefer lighter
-pixels, rendering the final image lighter, and vice versa.  Option~\option{--exposure-width}
-defines the \metavar{width} of acceptable exposures.  Small values of \metavar{width} penalize
-exposures that deviate from \metavar{optimum} more, and vice versa.
+final result without changing the set of input images.  Option~\option{--ex\shyp po\shyp
+  sure\hyp op\shyp ti\shyp mum} sets the point of optimum exposure.  Increasing the
+\metavar{optimum} makes \App{} prefer lighter pixels, rendering the final image lighter, and
+vice versa.  Option~\option{--exposure-width} defines the \metavar{width} of acceptable
+exposures.  Small values of \metavar{width} penalize exposures that deviate from
+\metavar{optimum} more, and vice versa.
 
 \optidx{--exposure-weight-function}%
 In \App{} version~4.2 several new exposure weight functions have been added.  Select them with
@@ -82,6 +83,7 @@ linear luminance transform
 as introduced in \equationabbr~\fullref{equ:linear-luminance-transform}.
 
 \begin{table}
+  \ifreferencemanual\begin{maxipage}\fi
   \centering
   \begin{tabular}{p{.28\textwidth}lcc}
     \hline
@@ -122,6 +124,7 @@ as introduced in \equationabbr~\fullref{equ:linear-luminance-transform}.
     \fullref{equ:weight:bisquare} &
     \fullref{fig:power}
   \end{tabular}
+  \ifreferencemanual\end{maxipage}\fi
 
   \caption[Exposure weight functions]{\label{tab:weight-functions}%
     \genidx{exposure weight functions}%

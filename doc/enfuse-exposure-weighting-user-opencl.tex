@@ -38,15 +38,15 @@ C-dialect -- to \App{} without the need to install and maintain all the tools to
 For \App{} executables compiled with \acronym{OpenCL} support (see
 \sectionName~\fullref{sec:finding-out-details} on how to check this feature), \App{} can work
 with user-defined exposure weighting functions, passed with the long form of
-option~\option{--exposure-weight-function} after \acronym{GPU}-support has been requested with
-option~\option{--gpu}.  \App{} compiles, links and evaluates the exposure-weight function
-identified by \metavar{SYMBOL} from \metavar{OPENCL-SOURCE}, where \metavar{OPENCL-SOURCE} has
-extension~\filename{.cl}:
+option~\option{--ex\shyp po\shyp sure\hyp weight\hyp function} after \acronym{GPU}-support has
+been requested with option~\option{--gpu}.  \App{} compiles, links and evaluates the
+exposure-weight function identified by \metavar{SYMBOL} from \metavar{OPENCL-SOURCE}, where
+\metavar{OPENCL-SOURCE} has extension~\filename{.cl}:
 
 \begin{literal}
   --gpu --exposure-weight-function=\metavar{OPENCL-SOURCE}:\feasiblebreak
   \metavar{SYMBOL}\optional{:\feasiblebreak
-    \metavar{ARGUMENT}\optional{:\dots}}
+    \metavar{AR\shyp GU\shyp MENT}\optional{:\dots}}
 \end{literal}
 
 If \metavar{SYMBOL} is not found in \metavar{OPENCL-SOURCE} or does not define a suitable
@@ -280,23 +280,22 @@ Say \exampleName~\ref{ex:variable-opencl-exposure-weight-function} is stored in
 \filename{variable\_power.cl} and reachable via an element in
 \envvar{ENBLEND\_OPENCL\_PATH} then is can be used as
 \begin{literal}
-  \app{} --gpu --exposure-weight-function=\feasiblebreak
-  variable\_power.cl:\feasiblebreak
-  variable\_power\_weight \dots
+  \app{} --gpu \bslash \\
+  ~~~~--exposure-weight-function=\bslash \\
+  ~~~~variable\_power.cl:variable\_power\_weight \dots
 \end{literal}
 or
 \begin{literal}
-  \app{} --gpu --exposure-weight-function=\feasiblebreak
-  variable\_power.cl:\feasiblebreak
-  variable\_power\_weight:\feasiblebreak
-  EXPONENT=3 \dots
+  \app{} --gpu \bslash \\
+  ~~~~--exposure-weight-function=\bslash \\
+  ~~~~variable\_power.cl:variable\_power\_weight:EXPONENT=3 \dots
 \end{literal}
 
 \optidx{--exposure-weight}%
 \optidx{--exposure-optimum}%
 \optidx{--exposure-width}%
-The options~\option{--exposure-weight}, \option{--exposure-optimum} and
-\option{--exposure-width} work as expected for user-defined functions, too.
+Options~\option{--exposure-weight}, \option{--exposure-optimum} as well as \option{--ex\shyp
+  po\shyp sure\hyp width} work as expected for user-defined functions, too.
 
 \begin{sgquote}
   \Quote{All debts have now been paid.}  --

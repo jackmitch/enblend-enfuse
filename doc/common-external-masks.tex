@@ -2,6 +2,9 @@
 %% Licence details can be found in the file COPYING.
 
 
+\newcommand*{\multiresolutiontext}{mul\-ti-res\-o\-lu\-tion}
+
+
 \section[External Masks]{\label{sec:external-masks}%
   \genidx{external mask}%
   \genidx{mask!external}%
@@ -9,8 +12,8 @@
 
 In the usual workflow \App{} and \OtherApp{} generate the blending and fusing masks according to
 the command-line options and the input images including their associated alpha-channels, and
-then they immediately use these masks for multi-resolution blending or multi-resolution fusing
-the output image.
+then they immediately use these masks for \multiresolutiontext{} blending or
+\multiresolutiontext{} fusing the output image.
 
 Sometimes more control over the masks is wanted.  To this end, both applications provide the
 option pair \option{--load-masks} and \option{--save-masks}.  See
@@ -31,7 +34,7 @@ of these options the processing can be broken up into two phases:
   final image with the help of the loaded masks only.
 
   Neither application (re-)generates any mask in this phase.  The loaded masks completely
-  control the multi-resolution blending or multi-resolution fusing the output image.
+  control the \multiresolutiontext{} blending or \multiresolutiontext{} fusing the output image.
 \end{enumerate}
 
 In between these two steps the user may apply whatever transformation to the mask files, as long
@@ -48,7 +51,7 @@ as their geometries and offsets remain the same.  Thus the ``Combine Images'' bo
   \caption[External mask workflow]{\label{fig:external-mask-workflow}%
     \genidx{workflow!external mask}%
     Workflow for externally modified masks.  The ``Blend or Fuse Using Masks'' step utilizes the
-    multi-resolution algorithm just as for internal workflow without mask files.}
+    \multiresolutiontext{} algorithm just as for internal workflow without mask files.}
 \end{figure}
 
 To further optimize this kind of workflow, both \App{} and \OtherApp{} stop after mask

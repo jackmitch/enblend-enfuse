@@ -167,9 +167,9 @@
 \item[--prefer-gpu=\optional{\metavar{PLATFORM}:}\metavar{DEVICE}
   \restrictednote{\acronym{OpenCL}-enabled versions only.}]\itemend
   Direct \App{} towards a particular \acronym{OpenCL} \metavar{DEVICE} on the first
-  auto-detected \metavar{PLATFORM} or directly to the given
-  \metavar{PLATFORM}\slash\metavar{DEVICE} combination.  Use the numbers of platform and device
-  found either with
+  auto-detected \metavar{PLATFORM} or directly to the given \metavar{PLAT\shyp
+    FORM}\slash\metavar{DE\shyp VICE} combination.  Use the numbers of platform and
+  device found either with
 
   \begin{terminal}
     \$ \app{} --verbose --version
@@ -239,10 +239,14 @@
     refer to the name of the output file.  \tableName~\fullref{tab:mask-template-characters}
     lists all variables.
 
-    A fancy mask filename template could look like \sample{\%D/mask-\%02n-\%f.tif}.  It puts the
-    mask files into the same directory as the output file (\sample{\%D}), generates a two-digit
-    index (\sample{\%02n}) to keep the mask files nicely sorted, and decorates the mask filename
-    with the name of the associated input file (\sample{\%f}) for easy recognition.
+    A fancy mask filename template could look like
+    \begin{literal}
+      \%D/mask-\%02n-\%f.tif
+    \end{literal}
+    It puts the mask files into the same directory as the output file (\sample{\%D}), generates
+    a two-digit index (\sample{\%02n}) to keep the mask files nicely sorted, and decorates the
+    mask filename with the name of the associated input file (\sample{\%f}) for easy
+    recognition.
 
     \genidx{mask!floating-point \acronym{TIFF}}%
     \gensee{floating-point \acronym{TIFF} mask}{mask, floating-point \acronym{TIFF}}%

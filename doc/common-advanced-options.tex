@@ -91,7 +91,7 @@ image.
   \shoptidx{-c}{--ciecam}%
 \item[\itempar{-c \\ --ciecam}]\itemend
   Deprecated.  Use \sample{--blend-colorspace=ciecam} instead.  To emulate the negated
-  option~\option{--no-ciecam}\optidx{--no-ciecam} use \sample{--blend-colorspace=identity}.
+  option~\option{--no-ciecam}\optidx{--no-ciecam} use \code{--blend-colorspace=identity}.
 
   \label{opt:depth}%
   \optidx[\defininglocation]{--depth}%
@@ -185,26 +185,26 @@ image.
   chooses the \metavar{DEPTH} that matches best.
 
   \genidx{OpenEXR@\acronym{OpenEXR}!data format}%
-  \restrictednote{Versions with \acronym{OpenEXR} read\slash write support only.}%
-  \noindent The \acronym{OpenEXR} data format is treated as \acronym{IEEE754}~float internally.
-  Externally, on disk, \acronym{OpenEXR} data is represented by ``half'' precision
-  floating-point numbers.
+  \begin{restrictedmaterial}{Versions with \acronym{OpenEXR} read\slash write support only.}
+    \noindent The \acronym{OpenEXR} data format is treated as \acronym{IEEE754}~float
+    internally.  Externally, on disk, \acronym{OpenEXR} data is represented by ``half''
+    precision floating-point numbers.
 
-  %% ILM half: 16 bits, n = 10, k = 16 - n - 1 = 5
-  \genidx{OpenEXR@\acronym{OpenEXR}!half precision float}%
-  \gensee{half precision float (\acronym{OpenEXR})}{\acronym{OpenEXR}, half precision float}%
-  \uref{\openexrcomfeatures}{\acronym{OpenEXR}} half precision floating-point, 16~bit wide,
-  10~bit significant;
+    %% ILM half: 16 bits, n = 10, k = 16 - n - 1 = 5
+    \genidx{OpenEXR@\acronym{OpenEXR}!half precision float}%
+    \gensee{half precision float (\acronym{OpenEXR})}{\acronym{OpenEXR}, half precision float}%
+    \uref{\openexrcomfeatures}{\acronym{OpenEXR}} half precision floating-point, 16~bit wide,
+    10~bit significant;
 
-  \begin{itemize}
-  \item
-    Minimum normalized value: \semilog{9.3}{-10}
-  \item
-    Epsilon: \semilog{2.0}{-3}
-  \item
-    Maximum finite value: \semilog{4.3}{9}
-  \end{itemize}
-
+    \begin{itemize}
+    \item
+      Minimum normalized value: \semilog{9.3}{-10}
+    \item
+      Epsilon: \semilog{2.0}{-3}
+    \item
+      Maximum finite value: \semilog{4.3}{9}
+    \end{itemize}
+  \end{restrictedmaterial}
 
   \label{opt:f}%
   \optidx[\defininglocation]{-f}%

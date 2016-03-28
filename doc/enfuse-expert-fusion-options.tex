@@ -2,6 +2,14 @@
 %% Licence details can be found in the file COPYING.
 
 
+\newcommand*{\metalowercutoff}{\metavar{LOWER\hyp{}CUT\shyp OFF}}
+\newcommand*{\metauppercutoff}{\metavar{UP\shyp PER\hyp{}CUT\shyp OFF}}
+\newcommand*{\metalowerprojector}{\metavar{LOWER\hyp{}PRO\shyp JEC\shyp TOR}}
+\newcommand*{\metaupperprojector}{\metavar{UP\shyp PER\hyp{}PRO\shyp
+    JEC\shyp TOR}}
+
+
+
 \subsection[Expert Fusion Options]{\label{sec:expert-fusion-options}%
   \genidx[\rangebeginlocation]{expert fusion options}%
   \genidx{options!fusion for experts}%
@@ -74,27 +82,27 @@ enhanced :=
   Valid range: $\metavar{SIZE} \geq \val{val:minimum-contrast-window-size}$, default:
   \val{val:default-contrast-window-size}~pixels.
 
-  See also \sectionName~\ref{sec:fusion-options}, options
-  \flexipageref{\option{--contrast-weight}}{opt:contrast-weight}~and
-  \flexipageref{\option{--hard-mask}}{opt:hard-mask} below.
+  See also \sectionName~\fullref{sec:fusion-options}, options
+  \flexipageref{\option{--contrast-weight}}{opt:contrast-weight} and
+  \flexipageref{\option{--hard-mask}}{opt:hard-mask}.
 
 
   \label{opt:entropy-cutoff}%
   \optidx[\defininglocation]{--entropy-cutoff}%
   \genidx{entropy!cutoff}%
   \gensee{cutoff entropy}{entropy, cutoff}%
-\item[--entropy-cutoff=\metavar{LOWER-CUTOFF}\optional{:\metavar{UPPER-CUTOFF}}]\itemend
-  Define a cutoff function~$Y'$ for the normalized luminance~$Y$ by \metavar{LOWER-CUTOFF} and
-  \metavar{UPPER-CUTOFF}, which gets applied (only) before the local-entropy calculation.
-  \metavar{LOWER-CUTOFF} is the value below which pixels are mapped to pure black when
-  calculating the local entropy of the pixel's surroundings.  Optionally also define the
-  \metavar{UPPER-CUTOFF} value above which pixels are mapped to pure white.
+\item[--entropy-cutoff=\metalowercutoff\optional{:\metauppercutoff{}}]\itemend
+  Define a cutoff function~$Y'$ for the normalized luminance~$Y$ by \metalowercutoff{} and
+  \metauppercutoff, which gets applied (only) before the local-entropy calculation.
+  \metalowercutoff{} is the value below which pixels are mapped to pure black when calculating
+  the local entropy of the pixel's surroundings.  Optionally also define the \metauppercutoff{}
+  value above which pixels are mapped to pure white.
 
   \begin{equation}\label{equ:luminance-entropy-cutoff}
   Y' = \left\{
   \begin{array}{ll}
-    0 & \quad \mbox{for }Y \le \metavar{LOWER-CUTOFF}, \\
-    1 & \quad \mbox{for }Y \ge \metavar{UPPER-CUTOFF}\mbox{ and} \\
+    0 & \quad \mbox{for }Y \le \metalowercutoff, \\
+    1 & \quad \mbox{for }Y \ge \metauppercutoff\mbox{ and} \\
     Y & \quad \mbox{otherwise.}
   \end{array}
   \right.
@@ -108,16 +116,16 @@ enhanced :=
   calculation.  However, assigning \emph{constant} values to extreme shadows or highlights
   in general decreases their local entropy, thereby reducing the pixels' weights.
 
-  For color images \metavar{LOWER-CUTOFF} and \metavar{UPPER-CUTOFF} are applied separately and
+  For color images \metalowercutoff{} and \metauppercutoff{} are applied separately and
   independently to each channel.
 
   Append a \sample{\%}-sign to specify the cutoff relative to maximum pixel value in the source
-  image (for example 255 or~65535).  Negative \metavar{UPPER-CUTOFF} values indicate the maximum
-  minus the absolute \metavar{UPPER-CUTOFF} value; the same holds for negative percentages.
+  image (for example 255 or~65535).  Negative \metauppercutoff{} values indicate the maximum
+  minus the absolute \metauppercutoff{} value; the same holds for negative percentages.
 
-  Defaults: \val{val:default-entropy-lower-cutoff} for \metavar{LOWER-CUTOFF} and
-  \val{val:default-entropy-upper-cutoff} for \metavar{UPPER-CUTOFF}, that is, all pixels' values
-  are taken into account.
+  Defaults: \val{val:default-entropy-lower-cutoff} for \metalowercutoff{} and
+  \val{val:default-entropy-upper-cutoff} for \metauppercutoff, that is, all pixels' values are
+  taken into account.
 
   \begin{figure}
     \begin{maxipage}
@@ -127,16 +135,16 @@ enhanced :=
 
     \caption[Entropy cutoff function]{\label{fig:entropy-cutoff}%
       Modified lightness~$Y'$, \equationabbr~\ref{equ:luminance-entropy-cutoff}, for
-      $\metavar{LOWER-CUTOFF} = 5\%$ and $\metavar{UPPER-CUTOFF} = 90\%$, which are rather
+      $\metalowercutoff = 5\%$ and $\metauppercutoff = 90\%$, which are rather
       extreme values.}
   \end{figure}
 
   \begin{geeknote}
-    Note that a high \metavar{LOWER-CUTOFF} value lightens the resulting image, as dark and
-    presumably noisy pixels are averaged with \emph{equal} weights.  With
-    $\metavar{LOWER-CUTOFF} = 0$, the default, on the other hand, ``noise'' might be interpreted
-    as high entropy and the noisy pixels get a high weight, which in turn renders the resulting
-    image darker.  Analogously, a low \metavar{UPPER-CUTOFF} darkens the output image.
+    Note that a high \metalowercutoff{} value lightens the resulting image, as dark and
+    presumably noisy pixels are averaged with \emph{equal} weights.  With $\metalowercutoff =
+    0$, the default, on the other hand, ``noise'' might be interpreted as high entropy and the
+    noisy pixels get a high weight, which in turn renders the resulting image darker.
+    Analogously, a low \metauppercutoff{} darkens the output image.
   \end{geeknote}
 
   \label{opt:entropy-window-size}%
@@ -160,21 +168,21 @@ enhanced :=
   \optidx[\defininglocation]{--exposure-cutoff}%
   \genidx{exposure!cutoff}%
   \gensee{cutoff!exposure}{exposure, cutoff}%
-\item[\itempar{--exposure-cutoff=\metavar{LOWER-CUTOFF}\optional{:\feasiblebreak
+\item[\itempar{--exposure-cutoff=\metalowercutoff\optional{:\feasiblebreak
       \metavar{UPPER\hyp{}CUTOFF}\optional{:\feasiblebreak
-        \metavar{LOWER\hyp{}PROJECTOR}:\feasiblebreak
-        \metavar{UPPER\hyp{}PROJECTOR}}}}]\itemend
-  Define an exposure-cutoff function by the luminances \metavar{LOWER-CUTOFF} and
-  \metavar{UPPER-CUTOFF}.  Pixels below the lower or above the upper cutoff get a weight of
-  exactly zero irrespective of the active exposure-weight function.
+        \metalowerprojector:\feasiblebreak
+        \metaupperprojector}}}]\itemend
+  Define an exposure-cutoff function by the luminances \metalowercutoff{} and \metauppercutoff.
+  Pixels below the lower or above the upper cutoff get a weight of exactly zero irrespective of
+  the active exposure-weight function.
 
-  For color images the values of \metavar{LOWER-CUTOFF} and \metavar{UPPER-CUTOFF} refer to the
-  gray-scale projection as selected with \metavar{LOWER\hyp{}PROJECTOR} and
-  \metavar{UPPER\hyp{}PROJECTOR}.  This is similar to option~\option{--gray-projector}.
+  For color images the values of \metalowercutoff{} and \metauppercutoff{} refer to the
+  gray-scale projection as selected with \metalowerprojector{} and \metaupperprojector.  This is
+  similar to option~\option{--gray\hyp{}pro\shyp jec\shyp tor}.
 
   Append a \sample{\%}-sign to specify the cutoff relative to maximum pixel value in the source
-  image (for example 255 or~65535).  Negative \metavar{UPPER-CUTOFF} values indicate the maximum
-  minus the absolute \metavar{UPPER-CUTOFF} value; the same holds for negative percentages.
+  image (for example 255 or~65535).  Negative \metauppercutoff{} values indicate the maximum
+  minus the absolute \metauppercutoff{} value; the same holds for negative percentages.
 
   \begin{geeknote}
     The impact of this option is similar, but not identical to transforming \emph{all} input
@@ -215,25 +223,26 @@ enhanced :=
     flexibility because the thresholds can be chosen for each image individually.
   \end{geeknote}
 
-  The option allows to specify projection operators as in option~\option{--gray-projector} for
-  the \metavar{LOWER-CUTOFF} and \metavar{UPPER-CUTOFF} thresholds.
+  The option allows to specify projection operators as in
+  option~\option{--gray\hyp{}pro\shyp jec\shyp tor} for the
+  \metalowercutoff{} and \metauppercutoff{} thresholds.
 
   This option can be helpful if the user wants to exclude underexposed or overexposed pixels
   from the fusing process in \emph{all} of the input images.  The values of
-  \metavar{LOWER-CUTOFF} and \metavar{UPPER-CUTOFF} as well as the gray-scale projector
+  \metalowercutoff{} and \metauppercutoff{} as well as the gray-scale projector
   determine which pixels are considered ``underexposed'' or ``overexposed''.  As any change of
   the exposure-weight curve this option changes the brightness of the resulting image:
-  increasing \metavar{LOWER-CUTOFF} lightens the final image and lowering \metavar{UPPER-CUTOFF}
+  increasing \metalowercutoff{} lightens the final image and lowering \metauppercutoff{}
   darkens it.
 
-  Defaults: \val{val:default-exposure-lower-cutoff} for \metavar{LOWER-CUTOFF} and
-  \val{val:default-exposure-upper-cutoff} for \metavar{UPPER-CUTOFF}, that is, all pixels'
-  values are weighted according to the ``uncut'' exposure-weight curve.
+  Defaults: \val{val:default-exposure-lower-cutoff} for \metalowercutoff{} and
+  \val{val:default-exposure-upper-cutoff} for \metauppercutoff, that is, all pixels' values are
+  weighted according to the ``uncut'' exposure-weight curve.
 
   \figureName~\ref{fig:exposure-cutoff} shows an example.
 
-  The gray-scale projectors \metavar{LOWER-PROJECTOR} and \metavar{UPPER\hyp{}PROJECTOR} default
-  to \sample{\val{val:default-exposure-lower-cutoff-projector}} and
+  The gray-scale projectors \metalowerprojector{} and \metaupperprojector{} default to
+  \sample{\val{val:default-exposure-lower-cutoff-projector}} and
   \sample{\val{val:default-exposure-upper-cutoff-projector}}, which are usually the best choices
   for effective cutoff operations on the respective ends.
 
@@ -244,8 +253,8 @@ enhanced :=
     \end{maxipage}
 
     \caption[Exposure cutoff function]{\label{fig:exposure-cutoff}%
-      Exposure weight~$w_Y$ after an exposure-cutoff of $\metavar{LOWER-CUTOFF} = 5\%$ and
-      $\metavar{UPPER-CUTOFF} = 97\%$ was applied to a \propername{Gaussian} with the
+      Exposure weight~$w_Y$ after an exposure-cutoff of $\metalowercutoff = 5\%$ and
+      $\metauppercutoff = 97\%$ was applied to a \propername{Gaussian} with the
       $\metavar{optimum} = 0.5$ and $\metavar{width} = 0.2$.}
   \end{figure}
 

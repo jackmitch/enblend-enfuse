@@ -247,7 +247,7 @@ Even black-and-white images benefit from having attached appropriate profiles!
 In Case~\ref{enum:no-profile}.\ the applications blend grayscale images in the normalized
 luminance interval and color images inside the \acronym{sRGB}-cube.  To override the default
 \acronym{sRGB}-profile select the desired profile with
-option~\flexipageref{\option{--fallback-profile}}{opt:fallback-profile}.
+option~\flexipageref{\option{--fallback\hyp profile}}{opt:fallback-profile}.
 
 In Case~\ref{enum:same-profile}.\ the images first are by default transformed to
 \uref{\wikipediaciecam}{\acronym{CIELUV}} color space -- respecting the input color profile --
@@ -296,9 +296,10 @@ are the four available color spaces.
   approximates human vision, and is perceptually uniform.
 
   \App{} uses perceptual rendering intent and either the input profile's white-point or, if the
-  \acronym{ICC}-profile lacks the \code{cms\-Sig\-Media\-White\-Point\-Tag}, fall back to the
-  \acronym{D50} white-point (see,
-  e.g.\ \uref{\wikipediastandardilluminant}{Standard illuminant}).
+  \acronym{ICC}-profile lacks the \code{cms\shyp Sig\shyp
+    Media\shyp White\shyp Point\shyp Tag}, fall back to the
+  \acronym{D50} white-point (see, e.g.\ \uref{\wikipediastandardilluminant}{Standard
+    illuminant}).
 
   The conversions from and to \acronym{L*a*b*} are moderately fast to compute; \acronym{L*a*b*}
   mode is two to three times slower than working within the \acronym{RGB}-color cube.
@@ -386,12 +387,13 @@ for blending and fusing operations.
 
     \item
       Force blending with the full-resolution masks, using
-      \flexipageref{\sample{--fine-mask}}{opt:fine-mask}.
+      option~\flexipageref{\option{--fine\hyp mask}}{opt:fine-mask}.
 
     \item
-      Generate the initial seam with the simpler and more robust nearest-feature transform
-      (\acronym{NFT}) by employing option~\flexipageref{\option{--primary\hyp seam\hyp
-          generator=nearest\hyp feature\hyp transform}}{opt:primary-seam-generator}.  See also
+      Generate the initial seam with the simpler and more robust nearest\hyp feature transform
+      (\acronym{NFT}) by employing option~\flexipageref{\option{--pri\shyp ma\shyp
+          ry\hyp seam\hyp ge\shyp ne\shyp ra\shyp
+          tor=nearest-feature-transform}}{opt:primary-seam-generator}.  See also
       \chapterName~\fullref{sec:seam-generators}.
 
     \item
