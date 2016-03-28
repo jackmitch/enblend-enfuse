@@ -305,8 +305,8 @@ enhanced :=
     \\ --exposure-weight-function=\metavar{SHARED-OBJECT}:\feasiblebreak
     \metavar{SYMBOL}\optional{:\feasiblebreak
       \metavar{ARGUMENT}\optional{:\dots}}~\textrm{(\oldstylesecond~form)}}]\itemend
-  First form: override the default (\sample{\val{val:exposure-weight-function}}) exposure weight
-  function and use one of the weight-functions in
+  \oldstylefirst~form: override the default exposure weight function
+  (\code{\val{val:exposure-weight-function}}) and instead use one of the weight-functions in
   \tableName~\fullref{tab:exposure-weight-functions}.
 
   \restrictednote{Versions with dynamic-linking support only.}  See
@@ -314,9 +314,9 @@ enhanced :=
 
   \genidx{shared object}%
   \gensee{object!shared}{shared object}%
-  \noindent Second form: dynamically load \metavar{SHARED-OBJECT} and use \metavar{SYMBOL} as
-  user-defined exposure weight function.  Optionally pass the user-defined function
-  \metavar{ARGUMENT}s.
+  \noindent \oldstylesecond~form: dynamically load \metavar{SHARED-OBJECT} and use
+  \metavar{SYMBOL} as user-defined exposure weight function.  Optionally pass the user-defined
+  function \metavar{ARGUMENT}s.
 
   \genidx{dynamic library}%
   \gensee{library!dynamic}{dynamic library}%
