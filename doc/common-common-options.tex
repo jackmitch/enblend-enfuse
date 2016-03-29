@@ -85,27 +85,28 @@ are used most often.  However, in fact, \App{} and \OtherApp{} do have these opt
   \end{description}
 
 
-  \label{opt:gpu}%
-  \optidx[\defininglocation]{--gpu}%
-  \genidx{graphics processing unit}%
-  \gensee{GPU@\acronym{GPU}}{graphics processing unit}%
-  \genidx{central processing unit}%
-  \gensee{CPU@\acronym{CPU}}{central processing unit}%
-  \genidx{OpenCL@\acronym{OpenCL}}%
-\item[--gpu \restrictednote{\acronym{OpenCL}-enabled versions
-    only.}]\itemend
-  Employ one of the graphics processing units (\acronym{GPU}s) to perform computing instead of
-  the central processing units (\acronym{CPU}s) alone.  \App{} must have been compiled with
-  support for \acronym{OpenCL} access to the \acronym{GPU} for this feature.
-
-  Depending on the input images, the options passed to \App{}, and the relative performance of
-  the \acronym{CPU}s to the \acronym{GPU}s this option may or may not increase performance.
-
-  This option enables \acronym{GPU} processing on the selected \acronym{GPU}s.  To choose a
-  particular \acronym{GPU} or override \App's default choice use
-  option~\flexipageref{\option{--pre\shyp fer\hyp gpu}}{opt:prefer-gpu}.
-
-  Negate this option with \sample{--no-gpu}\optidx[\defininglocation]{--no-gpu}.
+%% -- Commented out for Stable Branch 4.2
+%%   \label{opt:gpu}%
+%%   \optidx[\defininglocation]{--gpu}%
+%%   \genidx{graphics processing unit}%
+%%   \gensee{GPU@\acronym{GPU}}{graphics processing unit}%
+%%   \genidx{central processing unit}%
+%%   \gensee{CPU@\acronym{CPU}}{central processing unit}%
+%%   \genidx{OpenCL@\acronym{OpenCL}}%
+%% \item[--gpu \restrictednote{\acronym{OpenCL}-enabled versions
+%%     only.}]\itemend
+%%   Employ one of the graphics processing units (\acronym{GPU}s) to perform computing instead of
+%%   the central processing units (\acronym{CPU}s) alone.  \App{} must have been compiled with
+%%   support for \acronym{OpenCL} access to the \acronym{GPU} for this feature.
+%%
+%%   Depending on the input images, the options passed to \App{}, and the relative performance of
+%%   the \acronym{CPU}s to the \acronym{GPU}s this option may or may not increase performance.
+%%
+%%   This option enables \acronym{GPU} processing on the selected \acronym{GPU}s.  To choose a
+%%   particular \acronym{GPU} or override \App's default choice use
+%%   option~\flexipageref{\option{--pre\shyp fer\hyp gpu}}{opt:prefer-gpu}.
+%%
+%%   Negate this option with \sample{--no-gpu}\optidx[\defininglocation]{--no-gpu}.
 
 
   \label{opt:levels}%

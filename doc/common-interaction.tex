@@ -161,33 +161,6 @@ may include more or less of the features displayed there.
         Extra feature: dynamic linking support: yes \\
         Extra feature: image cache: no \\
         Extra feature: OpenMP: no \\
-        Extra feature: OpenCL: yes \\
-        ~~- Platform \#1:~Advanced Micro Devices, Inc., \\
-        ~~~~~~~~~~~~~~~~~AMD Accelerated Parallel Processing, \\
-        ~~~~~~~~~~~~~~~~~OpenCL 1.2 AMD-APP (1526.3) \\
-        ~~~~* no GPU devices found on this platform \\
-        ~~- Platform \#2:~NVIDIA Corporation, \\
-        ~~~~~~~~~~~~~~~~~NVIDIA CUDA, \\
-        ~~~~~~~~~~~~~~~~~OpenCL 1.1 CUDA 6.5.51 \\
-        ~~~~* Device \#1:~max.~1024 work-items \\
-        ~~~~~~~~~~~~~~~~~1047872 KB global memory with 32 KB read/write cache \\
-        ~~~~~~~~~~~~~~~~~48 KB dedicated local memory \\
-        ~~~~~~~~~~~~~~~~~64 KB maximum constant memory \\
-        ~~~~~~~~~~~~~~~~~Extensions: \\
-        ~~~~~~~~~~~~~~~~~~~~~cl\_khr\_byte\_addressable\_store \\
-        ~~~~~~~~~~~~~~~~~~~~~cl\_khr\_fp64 \\
-        ~~~~~~~~~~~~~~~~~~~~~cl\_khr\_gl\_sharing \\
-        ~~~~~~~~~~~~~~~~~~~~~cl\_khr\_global\_int32\_base\_atomics \\
-        ~~~~~~~~~~~~~~~~~~~~~cl\_khr\_global\_int32\_extended\_atomics \\
-        ~~~~~~~~~~~~~~~~~~~~~cl\_khr\_icd \\
-        ~~~~~~~~~~~~~~~~~~~~~cl\_khr\_local\_int32\_base\_atomics \\
-        ~~~~~~~~~~~~~~~~~~~~~cl\_khr\_local\_int32\_extended\_atomics \\
-        ~~~~~~~~~~~~~~~~~~~~~cl\_nv\_compiler\_options \\
-        ~~~~~~~~~~~~~~~~~~~~~cl\_nv\_copy\_opts \\
-        ~~~~~~~~~~~~~~~~~~~~~cl\_nv\_device\_attribute\_query \\
-        ~~~~~~~~~~~~~~~~~~~~~cl\_nv\_pragma\_unroll \\
-        ~~Search path (expanding ENBLEND\_OPENCL\_PATH and appending built-in path) \\
-        ~~~~/usr/local/share/enblend/kernels:/usr/share/enblend/kernels \\
         ~ \\
         Copyright (C) 2004-2009 Andrew Mihal. \\
         Copyright (C) 2009-2015 Christoph Spiel. \\
@@ -244,14 +217,15 @@ behaves strangely.
       number of threads''.
     \end{qandaanswer}
 
-  \item
-    ``My \appcmd{} has \acronym{OpenCL} enabled.  Does it need separate \acronym{OpenCL} source
-    files?''
-    \begin{qandaanswer}
-      Under extra feature \acronym{OpenCL} look for ``Search path''.  If there is none, all
-      sources have been included in the binary, otherwise the \acronym{OpenCL} source files
-      should be put somewhere on the \acronym{OpenCL} search path.
-    \end{qandaanswer}
+  %% -- Commented out for Stable Branch 4.2
+  %% \item
+  %%   ``My \appcmd{} has \acronym{OpenCL} enabled.  Does it need separate \acronym{OpenCL} source
+  %%   files?''
+  %%   \begin{qandaanswer}
+  %%     Under extra feature \acronym{OpenCL} look for ``Search path''.  If there is none, all
+  %%     sources have been included in the binary, otherwise the \acronym{OpenCL} source files
+  %%     should be put somewhere on the \acronym{OpenCL} search path.
+  %%   \end{qandaanswer}
 \end{qandalist}
 
 
@@ -437,11 +411,6 @@ important compiler extensions like, for example, \acronym{OpenMP}.
     ~~implementing Cilk version 2.0 \\
     ~~~~without support of "\_Cilk\_for" keyword \\
     ~ \\
-    OpenCL APIs \\
-    ~~1.0 \\
-    ~~1.1 \\
-    ~~1.2  \\
-    ~ \\
     Libraries \\
     ~~GSL:~~~~~~~~1.15 \\
     ~~Little CMS:~2.7.0 \\
@@ -589,27 +558,28 @@ linked with \appcmd.
   \envvar{OMP\_NUM\_THREADS} (see below) does for \acronym{OpenMP}.  It can be helpful for load
   balancing.
 
-  \genidx{environment variable!ENBLEND\_OPENCL\_PATH@\envvar{ENBLEND\_OPENCL\_PATH}}%
-  \gensee{ENBLEND\_OPENCL\_PATH@\envvar{ENBLEND\_OPENCL\_PATH}}%
-         {environment variable, \envvar{ENBLEND\_OPENCL\_PATH}}%
-  \genidx{OpenCL@\acronym{OpenCL}}%
-\item[\envvar{ENBLEND\_OPENCL\_PATH}\xitemspace (direct)\xitemspace
-  \restrictednote{\acronym{OpenCL}-enabled versions only.}]\itemend
-  Search path for \uref{\khronosorgopencl}{\acronym{OpenCL}} (\filename{.cl}) source files.
-  \appcmd{} will refuse to run if required \acronym{OpenCL}~source files are missing, but can be
-  convinced to start by resigning \acronym{OpenCL} with \sample{--no-gpu}.  If the compiled-in
-  features (see \sectionName~\fullref{sec:compiled-in-features}) do not show an \acronym{OpenCL}
-  search path, \appcmd{} came with internalized \acronym{OpenCL} sources and neither needs nor
-  uses \envvar{ENBLEND\_OPENCL\_PATH}.
-
-  \ifenfuse
-    \restrictednote{\application{Enfuse} only.} \command{enfuse} uses the environment variable
-    \envvar{ENBLEND\_OPENCL\_PATH} as search path for User-Defined \acronym{OpenCL} Exposure
-    Weighting Functions.  See \sectionName~\fullref{sec:user-defined-opencl-functions}.
-  \fi
-
-  Note that the environment variable is called \envvar{ENBLEND\_OPENCL\_PATH} for \emph{both}
-  applications, even for \command{enfuse}!
+%% -- Commented out for Stable Branch 4.2
+%%   \genidx{environment variable!ENBLEND\_OPENCL\_PATH@\envvar{ENBLEND\_OPENCL\_PATH}}%
+%%   \gensee{ENBLEND\_OPENCL\_PATH@\envvar{ENBLEND\_OPENCL\_PATH}}%
+%%          {environment variable, \envvar{ENBLEND\_OPENCL\_PATH}}%
+%%   \genidx{OpenCL@\acronym{OpenCL}}%
+%% \item[\envvar{ENBLEND\_OPENCL\_PATH}\xitemspace (direct)\xitemspace
+%%   \restrictednote{\acronym{OpenCL}-enabled versions only.}]\itemend
+%%   Search path for \uref{\khronosorgopencl}{\acronym{OpenCL}} (\filename{.cl}) source files.
+%%   \appcmd{} will refuse to run if required \acronym{OpenCL}~source files are missing, but can be
+%%   convinced to start by resigning \acronym{OpenCL} with \sample{--no-gpu}.  If the compiled-in
+%%   features (see \sectionName~\fullref{sec:compiled-in-features}) do not show an \acronym{OpenCL}
+%%   search path, \appcmd{} came with internalized \acronym{OpenCL} sources and neither needs nor
+%%   uses \envvar{ENBLEND\_OPENCL\_PATH}.
+%%
+%%   \ifenfuse
+%%     \restrictednote{\application{Enfuse} only.} \command{enfuse} uses the environment variable
+%%     \envvar{ENBLEND\_OPENCL\_PATH} as search path for User-Defined \acronym{OpenCL} Exposure
+%%     Weighting Functions.  See \sectionName~\fullref{sec:user-defined-opencl-functions}.
+%%   \fi
+%%
+%%   Note that the environment variable is called \envvar{ENBLEND\_OPENCL\_PATH} for \emph{both}
+%%   applications, even for \command{enfuse}!
 
   \genidx{environment variable!OMP\_DYNAMIC@\envvar{OMP\_DYNAMIC}}%
   \gensee{OMP\_DYNAMIC@\envvar{OMP\_DYNAMIC}}{environment variable, \envvar{OMP\_DYNAMIC}}%
