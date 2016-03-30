@@ -1,6 +1,16 @@
-* Version 4.2  "Compressor Road"
+* Version 4.3
 
 Unreleased.  Current line of development.
+
+** Improvements
+
+- All deprecated options and features of version 4.2 have been
+  removed.
+
+
+* Version 4.2  "Compressor Road"
+
+Released on March 29, 2016.
 
 ** Improvements
 

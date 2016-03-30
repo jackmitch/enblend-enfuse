@@ -321,9 +321,6 @@ printUsage(const bool error = true)
         "                         those without and also for all floating-point images;\n" <<
         "                         other available blend color spaces are \"CIELAB\" and\n" <<
         "                         \"CIECAM\"\n" <<
-        "  -c, --ciecam           use CIECAM02 to blend colors; disable with \"--no-ciecam\";\n" <<
-        "                         note that this option will be withdrawn in favor of\n" <<
-        "                         \"--blend-colorspace\"\n" <<
         "  -d, --depth=DEPTH      set the number of bits per channel of the output\n" <<
         "                         image, where DEPTH is \"8\", \"16\", \"32\", \"r32\", or \"r64\"\n" <<
         "  -f WIDTHxHEIGHT[+xXOFFSET+yYOFFSET]\n" <<
@@ -496,7 +493,7 @@ enum AllPossibleOptions {
     VersionOption, PreAssembleOption /* -a */, NoPreAssembleOption, HelpOption, LevelsOption,
     OutputOption, VerboseOption, WrapAroundOption /* -w */,
     CheckpointOption /* -x */, CompressionOption, LZWCompressionOption,
-    BlendColorspaceOption, CIECAM02Option, NoCIECAM02Option, FallbackProfileOption,
+    BlendColorspaceOption, FallbackProfileOption,
     DepthOption, AssociatedAlphaOption /* -g */,
     GPUOption, NoGPUOption, PreferredGPUOption,
     SizeAndPositionOption /* -f */,
@@ -790,8 +787,6 @@ process_options(int argc, char** argv)
         OptimizerWeightsId,
         LevelsId,
         BlendColorspaceId,
-        CiecamId,
-        NoCiecamId,
         FallbackProfileId,
         LayerSelectorId,
         MainAlgoId,
@@ -837,8 +832,6 @@ process_options(int argc, char** argv)
         {"levels", required_argument, 0, LevelsId},
         {"blend-colorspace", required_argument, 0, BlendColorspaceId},
         {"blend-color-space", required_argument, 0, BlendColorspaceId}, // dash form: not documented, not deprecated
-        {"ciecam", no_argument, 0, CiecamId},
-        {"no-ciecam", no_argument, 0, NoCiecamId},
         {"fallback-profile", required_argument, 0, FallbackProfileId},
         {"layer-selector", required_argument, 0, LayerSelectorId},
         {"primary-seam-generator", required_argument, 0, MainAlgoId},
@@ -1424,23 +1417,6 @@ process_options(int argc, char** argv)
             optionSet.insert(BlendColorspaceOption);
             break;
 
-        case 'c': BOOST_FALLTHROUGH;
-        case CiecamId:
-            std::cerr <<
-                command << ": info: option \"--ciecam\" will be withdrawn in the next release\n" <<
-                command << ": note: prefer option \"--blend-colorspace\" to \"--ciecam\"" << std::endl;
-            BlendColorspace = CIECAM;
-            optionSet.insert(CIECAM02Option);
-            break;
-
-        case NoCiecamId:
-            std::cerr <<
-                command << ": info: option \"--no-ciecam\" will be withdrawn in the next release\n" <<
-                command << ": note: prefer option \"--blend-colorspace\" to \"--no-ciecam\"" << std::endl;
-            BlendColorspace = IdentitySpace;
-            optionSet.insert(NoCIECAM02Option);
-            break;
-
         case FallbackProfileId:
             if (enblend::can_open_file(optarg)) {
                 FallbackProfile = cmsOpenProfileFromFile(optarg, "r");
@@ -1539,13 +1515,6 @@ process_options(int argc, char** argv)
                 failed = true;
             }
             optionSet.insert(LevelsOption);
-            break;
-
-        case 's':
-            // Deprecated sequential blending flag.
-            OneAtATime = true;
-            std::cerr << command << ": warning: flag \"-s\" is deprecated." << std::endl;
-            optionSet.insert(SequentialBlendingOption);
             break;
 
         case 'x':

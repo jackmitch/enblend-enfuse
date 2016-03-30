@@ -317,9 +317,6 @@ printUsage(const bool error = true)
         "                         those without and also for all floating-point images;\n" <<
         "                         other available blend color spaces are \"CIELAB\" and\n" <<
         "                         \"CIECAM\"\n" <<
-        "  -c, --ciecam           use CIECAM02 to blend colors; disable with \"--no-ciecam\";\n" <<
-        "                         note that this option will be withdrawn in favor of\n" <<
-        "                         \"--blend-colorspace\"\n" <<
         "  -d, --depth=DEPTH      set the number of bits per channel of the output\n" <<
         "                         image, where DEPTH is \"8\", \"16\", \"32\", \"r32\", or \"r64\"\n" <<
         "  -f WIDTHxHEIGHT[+xXOFFSET+yYOFFSET]\n" <<
@@ -532,7 +529,7 @@ void sigint_handler(int sig)
 enum AllPossibleOptions {
     VersionOption, HelpOption, LevelsOption, OutputOption, VerboseOption,
     WrapAroundOption /* -w */, CompressionOption, LZWCompressionOption,
-    BlendColorspaceOption, CIECAM02Option, NoCIECAM02Option, FallbackProfileOption,
+    BlendColorspaceOption, FallbackProfileOption,
     DepthOption, AssociatedAlphaOption /* -g */,
     GPUOption, NoGPUOption, PreferredGPUOption,
     SizeAndPositionOption /* -f */,
@@ -920,8 +917,6 @@ process_options(int argc, char** argv)
         WrapAroundId,
         LevelsId,
         BlendColorspaceId,
-        CiecamId,
-        NoCiecamId,
         FallbackProfileId,
         ExposureCutoffId,
         LoadMasksId,
@@ -969,8 +964,6 @@ process_options(int argc, char** argv)
         {"blend-colorspace", required_argument, 0, BlendColorspaceId},
         {"blend-color-space", required_argument, 0, BlendColorspaceId}, // dash form: not documented, not deprecated
         {"levels", required_argument, 0, LevelsId},
-        {"ciecam", no_argument, 0, CiecamId},
-        {"no-ciecam", no_argument, 0, NoCiecamId},
         {"fallback-profile", required_argument, 0, FallbackProfileId},
         {"exposure-cutoff", required_argument, 0, ExposureCutoffId},
         {"load-mask", optional_argument, 0, LoadMasksId}, // singular form: not documented, not deprecated
@@ -1663,23 +1656,6 @@ process_options(int argc, char** argv)
                 failed = true;
             }
             optionSet.insert(BlendColorspaceOption);
-            break;
-
-        case 'c': BOOST_FALLTHROUGH;
-        case CiecamId:
-            std::cerr <<
-                command << ": info: option \"--ciecam\" will be withdrawn in the next release\n" <<
-                command << ": note: prefer option \"--blend-colorspace\" to \"--ciecam\"" << std::endl;
-            BlendColorspace = CIECAM;
-            optionSet.insert(CIECAM02Option);
-            break;
-
-        case NoCiecamId:
-            std::cerr <<
-                command << ": info: option \"--no-ciecam\" will be withdrawn in the next release\n" <<
-                command << ": note: prefer option \"--blend-colorspace\" to \"--no-ciecam\"" << std::endl;
-            BlendColorspace = IdentitySpace;
-            optionSet.insert(NoCIECAM02Option);
             break;
 
         case FallbackProfileId:
