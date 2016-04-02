@@ -8,6 +8,12 @@ Unreleased.  Current line of development.
   removed.
 
 
+** Developer Stuff
+
+- Configuration switches `--enable-image-cache' and its opposite were
+  downgraded to nops.
+
+
 * Version 4.2  "Compressor Road"
 
 Released on March 29, 2016.

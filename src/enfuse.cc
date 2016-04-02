@@ -465,10 +465,10 @@ printUsage(const bool error = true)
         "\n" <<
         "Environment:\n" <<
 #endif
-#ifdef CACHE_IMAGES
-        "  TMPDIR                 The TMPDIR environment variable points to the directory,\n" <<
-        "                         where to store ImageCache files.  If unset Enfuse uses \"/tmp\".\n" <<
-#endif
+// #ifdef CACHE_IMAGES
+//         "  TMPDIR                 The TMPDIR environment variable points to the directory,\n" <<
+//         "                         where to store ImageCache files.  If unset Enfuse uses \"/tmp\".\n" <<
+// #endif
 #ifdef OPENMP
         "  OMP_NUM_THREADS        The OMP_NUM_THREADS environment variable sets the number\n" <<
         "                         of threads to use in OpenMP parallel regions.  If unset\n" <<
