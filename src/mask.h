@@ -1139,20 +1139,19 @@ createMask(const ImageType* const white,
 
     search_for_isolated_points(blackAlpha);
 
-#ifdef DEBUG_NEAREST_FEATURE_TRANSFORM
-    {
-        typedef std::pair<const char*, const MaskType*> ImagePair;
+    if (parameter::as_boolean("dump-nft-images", false)) {
+        typedef std::pair<const char*, const MaskType*> image_pair_t;
 
-        const std::array<ImagePair, 3> nft {
+        const std::array<image_pair_t, 3> nft {
             std::make_pair("blackmask", blackAlpha),
             std::make_pair("whitemask", whiteAlpha),
             std::make_pair("nft-output", mainOutputImage)
         };
 
         for (const auto& x : nft) {
-            const std::string nftMaskTemplate(command + "-" + x.first + "-%n.tif");
-            const std::string nftMaskFilename =
-                enblend::expandFilenameTemplate(nftMaskTemplate,
+            const std::string nft_mask_template(command + "-" + x.first + "-%n.tif");
+            const std::string nft_mask_filename =
+                enblend::expandFilenameTemplate(nft_mask_template,
                                                 numberOfImages,
                                                 *inputFileNameIterator,
                                                 OutputFileName,
@@ -1160,14 +1159,14 @@ createMask(const ImageType* const white,
             if (Verbose >= VERBOSE_NFT_MESSAGES) {
                 std::cerr << command <<
                     ": info: saving nearest-feature-transform image \"" <<
-                    nftMaskFilename << "\"" << std::endl;
+                    nft_mask_filename << "\"" << std::endl;
             }
-            vigra::ImageExportInfo nftMaskInfo(nftMaskFilename.c_str());
-            nftMaskInfo.setCompression(MASK_COMPRESSION);
-            vigra::exportImage(srcImageRange(*x.second), nftMaskInfo);
+
+            vigra::ImageExportInfo nft_mask_info(nft_mask_filename.c_str());
+            nft_mask_info.setCompression(MASK_COMPRESSION);
+            vigra::exportImage(srcImageRange(*x.second), nft_mask_info);
         }
     }
-#endif
 
     // mem usage before: CoarseMask: 2/8 * uBB * MaskType
     //                   !CoarseMask: 2 * uBB * MaskType
