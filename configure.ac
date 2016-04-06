@@ -505,23 +505,6 @@ else
     enable_debug=no
 fi
 
-AC_MSG_CHECKING(whether to enable image cache)
-image_cache_default="no"
-AC_ARG_ENABLE(image_cache,
-              AS_HELP_STRING([--enable-image-cache],
-                             [allow for processing of large images @<:@default=no@:>@]),
-              [enable_image_cache=$enableval],
-              [enable_image_cache=$image_cache_default])
-if test "$enable_image_cache" = yes; then
-    AC_DEFINE(CACHE_IMAGES, 1,
-              [Define if you want to compile Enblend and Enfuse with image cache])
-    AC_MSG_RESULT(yes)
-    enable_image_cache=yes
-else
-    AC_MSG_RESULT(no)
-    enable_image_cache=no
-fi
-
 AC_MSG_CHECKING(whether to compile with OpenMP)
 openmp_default="no"
 AC_ARG_ENABLE(openmp,
@@ -539,11 +522,6 @@ if test -z "$OPENMP_CXXFLAGS"; then
     AC_MSG_RESULT(no)
     enable_openmp=no
 else
-    if test "$enable_image_cache" = yes; then
-        AC_MSG_WARN([[image cache and OpenMP support are mutually exclusive]])
-        AC_MSG_WARN([[only configure like this if you want to develop a reentrant image cache]])
-        warnings=`echo -e "$warnings\n WARNING: Image cache and OpenMP are both enabled!  You are a developer, aren't you?"`
-    fi
     enable_openmp=yes
 fi
 
@@ -593,7 +571,6 @@ AC_MSG_RESULT([
    enable malloc debugging:        ${enable_dmalloc}
    enable dynamic loading          ${enable_dynload} ${dynload_implementation}
    OpenEXR image format            ${have_exr}
-   use image cache:                ${enable_image_cache}
    use OpenMP:                     ${enable_openmp}
    use OpenCL:                     ${enable_opencl} (search path: $opencl_path)
    use TCMalloc:                   ${use_tcmalloc}
