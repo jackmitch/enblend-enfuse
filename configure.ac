@@ -316,15 +316,9 @@ fi
 
 can_build_doc=yes
 
-AC_PATH_PROGS(LATEX, [latex elatex lambda],
-              [AC_MSG_WARN(missing LaTeX translator)
-               can_build_doc=no
-               missing_for_doc="$missing_for_doc latex"])
-AC_PATH_PROG(PDFLATEX, pdflatex,
-             [AC_MSG_WARN([missing PDFLaTeX translator -- no direct translation of LaTeX to PDF available])
-              missing_for_doc="$missing_for_doc pdflatex"])
+AC_PATH_PROGS(LATEX, [latex elatex lambda])
 
-if test "$latex" != 'no'
+if test -n "$LATEX"
 then
   AC_LATEX_CLASS(report,report,[],
                  [AC_MSG_WARN(missing document class report.cls)
@@ -351,6 +345,10 @@ dnl  included first.
                                [AC_MSG_WARN(missing LaTeX package package_name)
                                 can_build_doc=no
                                 missing_for_doc="$missing_for_doc package_name.sty"])])
+else
+  AC_MSG_WARN(missing LaTeX translator)
+  can_build_doc=no
+  missing_for_doc="$missing_for_doc latex"
 fi
 
 if test "$PERL" != false; then
@@ -378,6 +376,13 @@ if test "$PERL" != false; then
                        [AC_MSG_WARN(missing Perl module Readonly)
                         can_build_doc=no
                         missing_for_doc="$missing_for_doc Readonly"])
+fi
+
+
+AC_PATH_PROG(PDFLATEX, pdflatex)
+if test -z "$PDFLATEX"; then
+     AC_MSG_WARN([missing PDFLaTeX translator -- no direct translation of LaTeX to PDF available])
+     missing_for_doc="$missing_for_doc pdflatex"
 fi
 
 
