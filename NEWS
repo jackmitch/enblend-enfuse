@@ -1,4 +1,17 @@
-* Version 4.2
+* Version 4.2.1
+
+Currently unreleased.
+
+** Developer Stuff
+
+- Autoconf: configuration switches `--enable-image-cache' and its
+  opposite were downgraded to nops.
+
+- CMake: Fix setting environment variable `TEXINPUTS' for LaTeX
+  documentation generation.
+
+
+* Version 4.2  "Compressor Road"
 
 Released March 29, 2016.
 
@@ -494,7 +507,6 @@ Released on December 13, 2009.
 
 - Documentation generation is not as reliable and smooth as it ought
   to be.  The culprit is Automake; see PR/486.
-
 
 
 * Version 3.2
