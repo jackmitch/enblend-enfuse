@@ -70,32 +70,6 @@ namespace introspection
             }
 #endif // ENFUSE_SOURCE
 
-// #ifdef CACHE_IMAGES
-//             std::cout << "Extra feature: image cache: yes\n";
-//             {
-// #ifdef WIN32
-//                 char lpPathBuffer[MAX_PATH];
-//                 const DWORD dwRetVal = GetTempPath(MAX_PATH, lpPathBuffer);
-//                 if (dwRetVal <= MAX_PATH && dwRetVal != 0)
-//                 {
-//                     std::cout << "  - cache file located in \"" << lpPathBuffer << "\"\n";
-//                 }
-// #else
-//                 const char* tmpdir = getenv("TMPDIR");
-//                 std::cout << "  - environment variable TMPDIR ";
-//                 if (tmpdir == nullptr)
-//                 {
-//                     std::cout << "not set, cache file in default directory \"/tmp\"\n";
-//                 } else
-//                 {
-//                     std::cout << "set, cache file located in \"" << tmpdir << "\"\n";
-//                 }
-// #endif
-//             }
-// #else
-            std::cout << "Extra feature: image cache: no\n";
-// #endif
-
 #ifdef OPENMP
             const bool have_dynamic = have_openmp_dynamic();
             std::cout <<

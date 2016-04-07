@@ -5,7 +5,7 @@ Currently unreleased.
 ** Developer Stuff
 
 - Autoconf: configuration switches `--enable-image-cache' and its
-  opposite were downgraded to nops.
+  opposite were removed.
 
 - CMake: Fix setting environment variable `TEXINPUTS' for LaTeX
   documentation generation.

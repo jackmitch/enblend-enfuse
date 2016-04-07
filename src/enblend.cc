@@ -426,16 +426,11 @@ printUsage(const bool error = true)
         "\n" <<
         "Enblend accepts arguments to any option in uppercase as\n" <<
         "well as in lowercase letters.\n" <<
-#if defined(CACHE_IMAGES) || \
-    defined(OPENMP) || \
+#if defined(OPENMP) || \
     (defined(OPENCL) && defined(PREFER_SEPARATE_OPENCL_SOURCE))
         "\n" <<
         "Environment:\n" <<
 #endif
-// #ifdef CACHE_IMAGES
-//         "  TMPDIR                 The TMPDIR environment variable points to the directory,\n" <<
-//         "                         where to store ImageCache files.  If unset Enblend uses \"/tmp\".\n" <<
-// #endif
 #ifdef OPENMP
         "  OMP_NUM_THREADS        The OMP_NUM_THREADS environment variable sets the number\n" <<
         "                         of threads to use in OpenMP parallel regions.  If unset\n" <<
@@ -470,9 +465,6 @@ void cleanup_output(void)
 }
 
 
-/** Make sure all cached file images get destroyed, and hence the
- *  temporary files deleted, if we are killed.
- */
 void sigint_handler(int sig)
 {
     std::cerr << std::endl << command << ": interrupted" << std::endl;
