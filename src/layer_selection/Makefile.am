@@ -12,3 +12,5 @@ liblayersel_a_SOURCES = info.h info.cc \
 liblayersel_a_CXXFLAGS = $(AM_CXXFLAGS) \
                          -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 \
                          -I$(top_srcdir)/include -I$(top_srcdir)/src -I$(top_srcdir)/src/layer_selection
+
+EXTRA_DIST = CMakeLists.txt

@@ -23,3 +23,5 @@ libdynamic_loader_a_CXXFLAGS = \
         $(AM_CXXFLAGS) \
         -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 \
         -I$(top_srcdir)/include -I$(top_srcdir)/src -I$(top_srcdir)/src/dynamic_loader
+
+EXTRA_DIST = CMakeLists.txt
