@@ -567,4 +567,5 @@ EXTRA_DIST = \
         uml-dot.m4 \
         endoc.ist floatstyle-ruledbot.sty  exemplar.hva \
         cleantex config2tex docstrings updated-on \
+        updateDate.cmake createdvi.cmake.in version.cmake.in CMakeLists.txt \
     )
