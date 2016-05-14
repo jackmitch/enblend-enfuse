@@ -157,17 +157,18 @@ AC_ARG_ENABLE([partially-static-linking],
               [partially_static_linking=no])
 
 if test "$partially_static_linking_support" = yes && test "$partially_static_linking" = yes; then
-  AC_CHECK_LIB(gslcblas, cblas_dgemm,
-               [STATIC_LIBS="-lgslcblas ${STATIC_LIBS}";
-                AC_DEFINE(HAVE_LIBGSLCBLAS, 1, [Define if you have the gslcblas library])])
-  AC_CHECK_LIB(gsl, gsl_blas_dgemm,
-               [STATIC_LIBS="-lgsl ${STATIC_LIBS}";
-                AC_DEFINE(HAVE_LIBGSL, 1, [Define if you have the gsl library])],
-               [],
-               [-lgslcblas])
-  AC_CHECK_LIB(lcms2, cmsCreateTransform,
-               [STATIC_LIBS="-llcms2 ${STATIC_LIBS}";
-                AC_DEFINE(HAVE_LIBLCMS2, 1, [Define if you have the lcms2 library])])
+  dnl https://www.gnu.org/software/gsl/manual/html_node/Linking-with-an-alternative-BLAS-library.html
+  AC_CHECK_LIB(atlas, ATL_cputime, [], [])
+  AC_CHECK_LIB(cblas, cblas_dgemm, [have_cblas=true], [have_cblas=false], [-latlas])
+  if $have_cblas; then
+    STATIC_LIBS="-lcblas -latlas ${STATIC_LIBS}"
+    AC_CHECK_LIB(gsl, gsl_blas_dgemm, [STATIC_LIBS="-lgsl ${STATIC_LIBS}"], [], [-lcblas -latlas])
+  else
+    AC_CHECK_LIB(gslcblas, cblas_dgemm, [STATIC_LIBS="-lgslcblas ${STATIC_LIBS}"])
+    AC_CHECK_LIB(gsl, gsl_blas_dgemm, [STATIC_LIBS="-lgsl ${STATIC_LIBS}"], [], [-lgslcblas])
+  fi
+
+  AC_CHECK_LIB(lcms2, cmsCreateTransform, [STATIC_LIBS="-llcms2 ${STATIC_LIBS}"])
   AC_SUBST(STATIC_LIBS, ["-Wl,-Bstatic ${STATIC_LIBS} -Wl,-Bdynamic"])
 else
   AC_CHECK_LIB(gslcblas, cblas_dgemm)

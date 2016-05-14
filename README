@@ -136,6 +136,9 @@ LittleCMS2.  The performance gain is some five percent at the cost of
 only slightly larger binaries.  The configuration option may also be
 interesting if the target system should not require GSL libraries.
 
+If partial static linking is on, configure(1) looks for "libatlas.a"
+and "libcblas.a" to replace "libgslcblas.a" and use an optimized BLAS.
+
 
 ** --enable-openmp=yes/NO
    -DENABLE_OPENMP=ON/off    (CMake)
