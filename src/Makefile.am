@@ -28,7 +28,8 @@ enblend_SOURCES = fillpolygon.hxx functoraccessor.hxx rect2d.hxx stride.hxx \
                   minimizer.h muopt.h
 enblend_LDFLAGS = $(AM_LDFLAGS)
 enblend_LDADD = layer_selection/liblayersel.a \
-                $(GSL_LIBS) @EXTRA_LIBS@
+                $(GSL_LIBS) $(STATIC_LIBS) \
+                @EXTRA_LIBS@
 enblend_CXXFLAGS = $(AM_CXXFLAGS) $(GSL_CFLAGS) \
                    -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 \
                    -I${top_srcdir}/src/layer_selection
@@ -52,8 +53,10 @@ enfuse_SOURCES = functoraccessor.hxx rect2d.hxx stride.hxx \
                  timer.h timer.cc \
                  minimizer.h muopt.h
 enfuse_LDFLAGS = $(AM_LDFLAGS)
-enfuse_LDADD = layer_selection/liblayersel.a \
-               $(GSL_LIBS) @EXTRA_LIBS@
+enfuse_LDADD = dynamic_loader/libdynamic_loader.a \
+	       layer_selection/liblayersel.a \
+               $(GSL_LIBS) $(STATIC_LIBS) \
+               @EXTRA_LIBS@
 enfuse_CXXFLAGS = $(AM_CXXFLAGS) $(GSL_CFLAGS) \
                   -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 \
                   -I${top_srcdir}/src/layer_selection
