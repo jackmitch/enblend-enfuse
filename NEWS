@@ -14,6 +14,15 @@ Unreleased.  Current line of development.
   downgraded to nops.
 
 
+** Package Maintainer Stuff
+
+- Boost header <boost/optional.hpp> is not a mandatory header file
+  anymore.  If the C++ standard library already supports C++17
+  <optional> it will be preferred by configure(1).  A working
+  standalone implementation of <optional> can be found at
+          https://github.com/akrzemi1/Optional
+
+
 * Version 4.2  "Compressor Road"
 
 Released on March 29, 2016.

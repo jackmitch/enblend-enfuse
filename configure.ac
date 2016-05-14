@@ -214,7 +214,9 @@ AC_HEADER_STDC
 
 AC_CHECK_HEADERS([fenv.h limits.h stdlib.h string.h unistd.h])
 
-AC_CHECK_HEADER([sys/times.h],
+AC_CHECK_HEADERS([optional optional.hpp boost/optional.hpp], break)
+
+AC_CHECK_HEADER(sys/times.h,
                 [AC_DEFINE([HAVE_SYS_TIMES_H], [1], [Define if <sys/times.h> exists.])])
 AC_CHECK_HEADER(tiffio.h, [],
                 AC_MSG_ERROR([libtiff-devel header files are required to compile Enblend.]))
@@ -230,9 +232,6 @@ AC_CHECK_HEADER(vigra/basicimage.hxx, [],
 
 AX_BOOST_BASE([1.55], [],
               AC_MSG_ERROR([Boost version 1.55 or later is required to compile Enblend.]))
-
-AC_CHECK_HEADER(boost/optional.hpp, [],
-                AC_MSG_ERROR([Boost "optional" header file is required to compile Enblend.]))
 
 AC_CHECK_HEADER(gsl/gsl_errno.h, [],
                 AC_MSG_ERROR([GNU Scientific Library (GSL) header file "gsl_errno" is required to compile Enblend.]))

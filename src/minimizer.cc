@@ -18,6 +18,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <cassert>
+#include <limits>
+
 #include <gsl/gsl_errno.h>
 
 #include "minimizer.h"
@@ -26,7 +29,7 @@
 Minimizer::Minimizer(size_t a_dimension) :
     dimension_(a_dimension),
     maximum_iteration_(ITERATIONS_PER_DIMENSION * a_dimension), iteration_(0U),
-    f_goal_(boost::none), absolute_error_(sqrt(std::numeric_limits<double>::epsilon()))
+    f_goal_(std::nullopt), absolute_error_(sqrt(std::numeric_limits<double>::epsilon()))
 {}
 
 
@@ -64,7 +67,7 @@ Minimizer::set_maximum_number_of_iterations(unsigned n)
 Minimizer*
 Minimizer::unset_maximum_number_of_iterations()
 {
-    maximum_iteration_ = boost::none;
+    maximum_iteration_ = std::nullopt;
     return this;
 }
 
@@ -80,7 +83,7 @@ Minimizer::set_goal(double a_goal)
 Minimizer*
 Minimizer::unset_goal()
 {
-    f_goal_ = boost::none;
+    f_goal_ = std::nullopt;
     return this;
 }
 
@@ -103,7 +106,7 @@ Minimizer::set_absolute_error(double an_absolute_error)
 Minimizer*
 Minimizer::unset_absolute_error()
 {
-    absolute_error_ = boost::none;
+    absolute_error_ = std::nullopt;
     return this;
 }
 
@@ -218,7 +221,7 @@ Minimizer1D::set_relative_error(double a_relative_error)
 Minimizer1D*
 Minimizer1D::unset_relative_error()
 {
-    relative_error_ = boost::none;
+    relative_error_ = std::nullopt;
     return this;
 }
 

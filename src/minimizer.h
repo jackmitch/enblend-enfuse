@@ -30,11 +30,11 @@
 #include <stdexcept>
 #include <vector>
 
-#include <boost/optional.hpp>
-
 #include <gsl/gsl_min.h>
 #include <gsl/gsl_multimin.h>
 #include <gsl/gsl_vector.h>
+
+#include "optional_transitional.hpp"
 
 
 class Minimizer
@@ -79,10 +79,10 @@ protected:
 
 private:
     size_t dimension_;
-    boost::optional<unsigned> maximum_iteration_;
+    std::optional<unsigned> maximum_iteration_;
     unsigned iteration_;
-    boost::optional<double> f_goal_;
-    boost::optional<double> absolute_error_;
+    std::optional<double> f_goal_;
+    std::optional<double> absolute_error_;
 };
 
 
@@ -126,7 +126,7 @@ private:
     double x_lower_;
     double x_upper_;
 
-    boost::optional<double> relative_error_;
+    std::optional<double> relative_error_;
 };
 
 
