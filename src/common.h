@@ -227,6 +227,25 @@ starts_with(const std::string& s, const std::string& p)
 }
 
 
+inline std::vector<std::string>
+split_string(const std::string& a_string, char a_delimiter, bool keep_empty_tokens)
+{
+    std::stringstream s(a_string);
+    std::vector<std::string> tokens;
+    std::string t;
+
+    while (std::getline(s, t, a_delimiter))
+    {
+        if (keep_empty_tokens || !t.empty())
+        {
+            tokens.push_back(t);
+        }
+    }
+
+    return tokens;
+}
+
+
 /** Answer the string representation of the boolean b. */
 std::string
 stringOfBool(bool b)
