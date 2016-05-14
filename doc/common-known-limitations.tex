@@ -52,12 +52,32 @@ some of the known ones.
     with nearly 1\hyp dimensional overlap regions, something that wreaks havoc on them.
   \end{geeknote}
 
-  \optidx{--wrap}
+  \optidx{--wrap}%
 \item
   Option~\sample{--wrap=both} performs blending in $\symmgroup{E}(1) \times \symmgroup{E}(1)$,
   which is only \emph{locally} isomorphic to $\symmgroup{S}(2)$.  This will cause artifacts
   that do not appear in $\symmgroup{S}(2)$.  \App{} cannot blend within $\symmgroup{S}(2)$.
 \fi%enblend
+
+\genidx{artifacts!color}%
+\gensee{color artifacts}{artifacts, color}%
+\optidx{--blend-colorspace}%
+\item
+  High-contrast scenes stored with non-linear color profiles (or no profile at all) tend to
+  produce color artifacts in the deep shadows.  Typically artifacts are isolated, highly
+  saturated pixels.  Because of the different usage styles this problem occurs more often with
+  \application{Enfuse} than with \application{Enblend}.
+
+  Two simple workarounds are known:
+  \begin{enumerate}
+  \item
+    Choose a different blend-colorspace; see
+    option~\flexipageref{\option{--blend-colorspace}}{opt:blend-colorspace}.
+
+  \item
+    Use linear (i.e.\ $\mathrm{gamma} = 1$) color profiles in the input images.  Also see
+    \chapterName~\fullref{sec:color-spaces} on ``Color Spaces And Color Profiles''.
+  \end{enumerate}
 \end{itemize}
 
 \genidx[\rangeendlocation]{known limitations}

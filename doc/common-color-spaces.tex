@@ -283,7 +283,9 @@ are the four available color spaces.
 
   This is the fastest color space to do computations within, i.e.\ it consumes by far the least
   computing power, because no transform to or from any of the perceptually uniform color spaces
-  is done.
+  is done.  Moreover, this blend-colorspace exhibits no color artifacts even in high contrast
+  scenes, which is good when fusing.  However, it may come up with out-of-whack blended colors,
+  which is bad when blending.
 
   \genidx{colorspace!\acronym{L*a*b*}}%
   \gensee{L*a*b*@\acronym{L*a*b*} colorspace}{colorspace, \acronym{L*a*b*}}%
@@ -302,7 +304,10 @@ are the four available color spaces.
     illuminant}).
 
   The conversions from and to \acronym{L*a*b*} are moderately fast to compute; \acronym{L*a*b*}
-  mode is two to three times slower than working within the \acronym{RGB}-color cube.
+  mode is two to three times slower than working within the \acronym{RGB}-color cube.  It
+  operates the \acronym{LittleCMS} color-space conversion engine in
+  \uref{\littlecmscomunboundedcmm}{unbounded} mode which rarely causes color artifacts to show
+  up in the shadows in extreme contrast images.
 
   \genidx{colorspace!\acronym{CIEL*u*v*}}%
   \gensee{CIEL*u*v*@\acronym{CIEL*u*v*} colorspace}{colorspace, \acronym{CIEL*u*v*}}%
@@ -316,7 +321,9 @@ are the four available color spaces.
   The applications use the same rendering intent and white-point as with \acronym{L*a*b*}.
 
   The conversions from and to \acronym{L*u*v*} are almost as fast to compute as
-  \acronym{L*a*b*}.
+  \acronym{L*a*b*}.  It operates the \acronym{LittleCMS} color-space conversion engine in
+  \uref{\littlecmscomunboundedcmm}{unbounded} mode which sometimes causes color artifacts to
+  show up in the shadows in strong contrast images.
 
   \genidx{colorspace!\acronym{CIECAM02}}%
   \gensee{CIECAM02@\acronym{CIECAM02} colorspace}{colorspace, \acronym{CIECAM02}}%
@@ -347,7 +354,9 @@ are the four available color spaces.
   Computationally, \acronym{CIECAM02} is the most expensive blend color space.  If an
   appreciable number of pixels need additional refinement steps the speed of the transformation
   further drops.  Expect \acronym{CIECAM02} mode to be 8--800 times slower than blending within
-  the \acronym{RGB}-color cube.
+  the \acronym{RGB}-color cube.  It operates the \acronym{LittleCMS} color-space conversion
+  engine in \uref{\littlecmscomunboundedcmm}{unbounded} mode, however it tries very hard to
+  recover the visually best-matching color for each pixel thus gone rogue.
 \end{description}
 
 \noindent Surprisingly often blending ``inside the \acronym{RGB}-cube'' works, although
@@ -399,14 +408,34 @@ for blending and fusing operations.
     \item
       Disable the seam-line optimizer with \flexipageref{\sample{--no-optimize}}{opt:optimize}.
     \end{itemize}
-\fi
+\fi% enblend
 
 \ifenfuse
   \item
     \restrictednote{\application{Enfuse} only.} No color space can fix blown highlights when
     fusing by exposure-weight; use
     \flexipageref{\sample{--exposure-cutoff}}{opt:exposure-cutoff} for this purpose and check
-    whether saturation weight is zero.  \fi
+    whether saturation weight is zero.
+\fi% enfuse
+
+  \item
+    Prefer linear (i.e.\ $\mathrm{gamma} = 1$) color profiles in the input images, when the
+    contrast of the scene is high.  To avoid banding it is advisable to use at that least
+    16~bits per color channel with linear color profiles.
+
+    %% \prgidx{tificc \textrm{(LittleCMS)}}%
+    %% Given the \command{tificc} tool in the \flexipageref{\acronym{LittleCMS}}{app:littlecms}
+    %% project a suitable transformation is as simple as
+    %% \begin{terminal}
+    %%   for x in image-[0-9].tif \\
+    %%   do \\
+    %%   ~~~~tificc \bslash \\
+    %%   ~~~~~~~~-a -b -e -oprophoto-linear.icc -t0 -w16 \bslash \\
+    %%   ~~~~~~~~\$x linear-\$x \\
+    %%   done
+    %% \end{terminal}
+    %% where we have assumed that \filename{prophoto-linear.icc} holds a linear
+    %% \acronym{ProPhotoRGB} \acronym{ICC}-Profile.
 \end{itemize}
 
 \genidx[\rangeendlocation]{colorspace}
