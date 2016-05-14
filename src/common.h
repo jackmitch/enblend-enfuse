@@ -903,6 +903,16 @@ profileChannels(cmsHPROFILE profile)
     assert(number_of_channels == 1U || number_of_channels == 3U);
     return number_of_channels;
 }
+
+
+inline bool
+has_known_image_extension(const std::string an_image_filename)
+{
+    const std::string actual_extension {an_image_filename.substr(an_image_filename.rfind(".") + 1U)};
+    std::vector<std::string> known_extensions {split_string(vigra::impexListExtensions(), ' ', false)};
+    return std::find(known_extensions.begin(), known_extensions.end(), actual_extension) != known_extensions.end();
+}
+
 } // namespace enblend
 
 

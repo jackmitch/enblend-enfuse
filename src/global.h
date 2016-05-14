@@ -76,6 +76,9 @@
 //< default-output-filename a.tif
 #define DEFAULT_OUTPUT_FILENAME "a.tif"
 
+//< default-fallback-output-file-type png
+#define DEFAULT_FALLBACK_OUTPUT_FILE_TYPE "pnm"
+
 
 namespace enblend
 {

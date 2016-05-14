@@ -2104,6 +2104,20 @@ int main(int argc, char** argv)
     // Create the Info for the output file.
     vigra::ImageExportInfo outputImageInfo(OutputFileName.c_str());
 
+    if (!enblend::has_known_image_extension(OutputFileName)) {
+        std::string fallback_output_file_type {parameter::as_string("fallback-output-file-type",
+                                                                    DEFAULT_FALLBACK_OUTPUT_FILE_TYPE)};
+        if (OutputFileName == "-") {
+            outputImageInfo.setFileName("/dev/stdout");
+        } else {
+            std::cerr <<
+                command << ": warning: unknown filetype of output file \"" << OutputFileName << "\"\n" <<
+                command << ": note: will fallback to type \"" << fallback_output_file_type << "\"\n";
+        }
+        enblend::to_upper(fallback_output_file_type);
+        outputImageInfo.setFileType(fallback_output_file_type.c_str());
+    }
+
     if (!StopAfterMaskGeneration) {
         OutputIsValid = false;
 
