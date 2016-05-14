@@ -7,6 +7,19 @@ Unreleased.  Current line of development.
 - All deprecated options and features of version 4.2 have been
   removed.
 
+- Both Enblend and Enfuse can now send their output to files without a
+  filename extension, which included devices, like e.g. "/dev/stdout".
+  The output format is PNM (Portable aNyMap).  The same holds for the
+  output mask file.  The common abbreviation `-' for `/dev/stdout' is
+  understood.
+
+
+** New Commandline Options
+
+- To circumnavigate the lack of alpha-channel support of some common
+  image formats, add option `--output-mask', to let the user define a
+  mask filename for the output.
+
 
 ** Developer Stuff
 
@@ -19,8 +32,10 @@ Unreleased.  Current line of development.
 - Boost header <boost/optional.hpp> is not a mandatory header file
   anymore.  If the C++ standard library already supports C++17
   <optional> it will be preferred by configure(1).  A working
-  standalone implementation of <optional> can be found at
+  standalone implementation of a C++11-compatiblle <optional> can be
+  found at
           https://github.com/akrzemi1/Optional
+  where only "optional.hpp" is needed.
 
 
 * Version 4.2  "Compressor Road"

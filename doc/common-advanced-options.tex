@@ -235,6 +235,43 @@ image.
   though the image is really unassociated alpha.
 
 
+  \label{opt:output-mask}%
+  \optidx[\defininglocation]{--output-mask}%
+  \genidx{mask!output}%
+  \gensee{output mask}{mask, output}%
+\item[--output-mask\optional{=\metavar{FILE}}]\itemend
+  Write the mask of the output to \metavar{FILE}.  The output mask always is a single-channel,
+  1~bit deep image, just as the alpha channel to be represented.  If the option
+  argument~\metavar{FILE} is omitted, \App{} writes the resulting mask to
+  \filename{\val{val:default-output-mask-filename}}.
+
+  The option can become important if the output-file format does not support an alpha channel
+  and nevertheless the final mask is desired after \appisdoing.
+
+  The output file itself always remains unaffected of this option.  In particular it gets its
+  alpha channel, i.e.\ its mask, whenever the output-file format supports one.  To mimick
+  option~\option{--output-mask} with such formats, use for example
+
+  \begin{literal}
+    convert \val*{val:default-output-filename} -alpha extract \val*{val:default-output-mask-filename}
+  \end{literal}
+
+  For \metavar{FILE}s with an unknown extension or without an extension, the type of
+  \metavar{FILE} defaults to \code{\val{val:default-fallback-output-mask-file-type}}.
+
+  Examples:
+
+  \begin{literal}
+    \# PPM only supports RGB, not RGBA; write \val*{val:default-output-mask-filename} \\
+    \app{} --output-mask --output=a.ppm ?.tif \\
+    \# Request separate mask as TIFF file \\
+    \app{} --output-mask=mask.tif image-??.tif
+  \end{literal}
+
+  See also option~\flexipageref{\option{--output}}{opt:output}, which controls the name of the
+  output file and \sectionName~\fullref{sec:helpful-libraries} for the \acronym{NetPBM}~library.
+
+
   \label{opt:wrap}%
   \optidx[\defininglocation]{--wrap}%
   \shoptidx{-w}{--wrap}%

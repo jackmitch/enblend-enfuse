@@ -69,7 +69,7 @@ namespace parameter
     //         std::string s = parameter::as_string("foobar");
     //         int i = parameter::as_integer("foobar");
     //         unsigned u = parameter::as_unsigned("foobar");
-    //         double x = parameter::as_floating_point("foobar");
+    //         double x = parameter::as_double("foobar");
     //         bool b = parameter::as_boolean("foobar");
     //
     // (3) Substitute parameter value if it exists; otherwise go with
@@ -77,7 +77,7 @@ namespace parameter
     //         std::string s = parameter::as_string("foobar", "baz");
     //         int i = parameter::as_integer("foobar", 123);
     //         unsigned u = parameter::as_unsigned("foobar", 42U);
-    //         double x = parameter::as_floating_point("foobar", 0.577215665);
+    //         double x = parameter::as_double("foobar", 0.577215665);
     //         bool b = parameter::as_boolean("foobar", true);
     //
     // (4) React on parameter with a non-local change of control flow

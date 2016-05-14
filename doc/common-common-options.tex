@@ -169,6 +169,38 @@ are used most often.  However, in fact, \App{} and \OtherApp{} do have these opt
   Place \appdid{} output image in \metavar{FILE}.  If \sample{--output} is omitted, \App{}
   writes the resulting image to \filename{\val{val:default-output-filename}}.
 
+  For \metavar{FILE}s with an unknown extension or without one, the type of \metavar{FILE}
+  defaults to \code{\val{val:default-fallback-output-file-type}}.  This allows for the output
+  image to be redirected or piped.
+
+  \begin{geeknote}
+    We refrain from utilizing the \acronym{TIFF} as fallback output file type, because some of
+    the libraries which implement \acronym{TIFF} ``seek'' the output image file.  Technically,
+    this means they call fseek(3) or related functions, which would preclude, for example,
+    \filename{/dev/stdout} to be used as \metavar{FILE}.
+
+    The \uref{\hciiwrvigra}{\acronym{VIGRA}} implementation of
+    \val{val:default-fallback-output-file-type} does not seek.  Moreover, it is completely
+    implemented inside of \acronym{VIGRA}, without referring to another library.  The format
+    supports 8, 16, and 32~bits per channel, gray-scale and color images.  The lack of alpha
+    channels can easily be compensated by adding
+    option~\flexipageref{\option{--output-mask}}{opt:output-mask} to the \appcmd{}~command line.
+  \end{geeknote}
+
+  Examples:
+  \begin{literal}
+    \# redirect \\
+    \app{} -o~- [0-9].tif > a.\val*{val:default-fallback-output-file-type} \\
+    \# pipe \\
+    \app{} --output=/dev/stdout image-??.tif | \bslash \\
+    ~~~~convert \val*{val:default-fallback-output-file-type}:-
+    -bordercolor~teal -border~10x10
+    \val*{val:default-output-filename}
+  \end{literal}
+
+  See also option~\flexipageref{\option{--output-mask}}{opt:output-mask}, which controls the
+  generation of a separate output-mask file.
+
 
   \label{opt:verbose}%
   \optidx[\defininglocation]{--verbose}%

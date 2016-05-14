@@ -82,6 +82,7 @@ extern "C" int optind;
 #include "exposure_weight.h"
 #include "global.h"
 #include "layer_selection.h"
+#include "optional_transitional.hpp"
 #include "parameter.h"
 #include "selector.h"
 #include "self_test.h"
@@ -96,6 +97,7 @@ const std::string command("enfuse");
 
 // Global values from command line parameters.
 std::string OutputFileName(DEFAULT_OUTPUT_FILENAME);
+std::optional<std::string> OutputMaskFileName;
 int Verbose = 1;                //< default-verbosity-level 1
 int ExactLevels = 0;            // 0 means: automatically calculate maximum
 bool OneAtATime = true;
@@ -207,6 +209,7 @@ void dump_global_variables(const char* file, unsigned line,
         "+ " << file << ":" << line << ": state of global variables\n" <<
         "+ Verbose = " << Verbose << ", option \"--verbose\"\n" <<
         "+ OutputFileName = <" << OutputFileName << ">\n" <<
+        "+ OutputMaskFileName = <" << OutputMaskFileName.value_or("<not defined>") << ">\n" <<
         "+ ExactLevels = " << ExactLevels << "\n" <<
         "+ UseGPU = " << UseGPU << "\n" <<
         "+ OneAtATime = " << enblend::stringOfBool(OneAtATime) << ", option \"-a\"\n" <<
@@ -325,6 +328,8 @@ printUsage(const bool error = true)
         "                         TIFF images, such as those produced by Nona\n" <<
         "  -g                     associated-alpha hack for Gimp (before version 2)\n" <<
         "                         and Cinepaint\n" <<
+        "  --output-mask[=FILE]   write output mask to FILE if the output format does not\n" <<
+        "                         support alpha-channels; default: \"" << DEFAULT_OUTPUT_MASK_FILENAME << "\"\n" <<
         "  -w, --wrap[=MODE]      wrap around image boundary, where MODE is \"none\",\n" <<
         "                         \"horizontal\", \"vertical\", or \"both\"; default: " <<
         enblend::stringOfWraparound(WrapAround) << ";\n" <<
@@ -519,7 +524,7 @@ void sigint_handler(int sig)
 
 
 enum AllPossibleOptions {
-    VersionOption, HelpOption, LevelsOption, OutputOption, VerboseOption,
+    VersionOption, HelpOption, LevelsOption, OutputOption, OutputMaskOption, VerboseOption,
     WrapAroundOption /* -w */, CompressionOption, LZWCompressionOption,
     BlendColorspaceOption, FallbackProfileOption,
     DepthOption, AssociatedAlphaOption /* -g */,
@@ -905,6 +910,7 @@ process_options(int argc, char** argv)
         VersionId,
         DepthId,
         OutputId,
+        OutputMaskId,
         SaveMasksId,
         WrapAroundId,
         LevelsId,
@@ -950,6 +956,7 @@ process_options(int argc, char** argv)
         {"version", no_argument, 0, VersionId},
         {"depth", required_argument, 0, DepthId},
         {"output", required_argument, 0, OutputId},
+        {"output-mask", optional_argument, 0, OutputMaskId},
         {"save-mask", optional_argument, 0, SaveMasksId}, // singular form: not documented, not deprecated
         {"save-masks", optional_argument, 0, SaveMasksId},
         {"wrap", optional_argument, 0, WrapAroundId},
@@ -1419,6 +1426,11 @@ process_options(int argc, char** argv)
                 failed = true;
             }
             optionSet.insert(OutputOption);
+            break;
+
+        case OutputMaskId:
+            OutputMaskFileName = std::string(optarg ? optarg : DEFAULT_OUTPUT_MASK_FILENAME);
+            optionSet.insert(OutputMaskOption);
             break;
 
         case LoadMasksId:

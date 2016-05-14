@@ -76,8 +76,14 @@
 //< default-output-filename a.tif
 #define DEFAULT_OUTPUT_FILENAME "a.tif"
 
-//< default-fallback-output-file-type png
+//< default-fallback-output-file-type pnm
 #define DEFAULT_FALLBACK_OUTPUT_FILE_TYPE "pnm"
+
+//< default-output-mask-filename a.mask.tif
+#define DEFAULT_OUTPUT_MASK_FILENAME "a.mask.tif"
+
+//< default-fallback-output-mask-file-type pbm
+#define DEFAULT_FALLBACK_OUTPUT_MASK_FILE_TYPE "pbm"
 
 
 namespace enblend

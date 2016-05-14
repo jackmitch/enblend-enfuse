@@ -66,17 +66,60 @@ exportImagePreferablyWithAlpha(const ImageType* image,
                                const AlphaAccessor& mask_accessor,
                                const vigra::ImageExportInfo& outputImageInfo)
 {
-    try {
+    try
+    {
         vigra::exportImageAlpha(srcImageRange(*image),
                                 srcIter(mask->upperLeft(), mask_accessor),
                                 outputImageInfo);
-    } catch (std::exception& e) {
-        std::cerr << command << ": warning: must fall back to export image without alpha channel" << std::endl;
-#ifdef DEBUG
-        std::cerr << "+ exportImagePreferablyWithAlpha: exception description follows..." << e.what();
-#endif
-        exportImage(srcImageRange(*image), outputImageInfo);
+        // if (optionSet.count(OutputMaskOption))
+        // {
+        //     std::cerr << command <<
+        //         ": warning: option \"--output-mask\" given, but output image type supports alpha channel\n" <<
+        //         ": info: write image with alpha channel and no separate mask file\n";
+        // }
     }
+    catch (std::exception& e)
+    {
+        std::cerr << command <<
+            ": warning: must fall back to export image without alpha channel" << std::endl;
+#ifdef DEBUG
+        {
+            std::cerr << "+ exportImagePreferablyWithAlpha: exception description follows...\n";
+            const std::vector<std::string> lines {enblend::split_string(e.what(), '\n', true)};
+            for (auto line : lines)
+            {
+                std::cerr << "+ exportImagePreferablyWithAlpha: " << line << "\n";
+            }
+        }
+#endif
+        vigra::exportImage(srcImageRange(*image), outputImageInfo);
+    }
+
+    if (OutputMaskFileName)
+    {
+        const std::string mask_filename(OutputMaskFileName.value());
+        vigra::ImageExportInfo mask_info(mask_filename.c_str());
+
+        if (!enblend::has_known_image_extension(mask_filename)) {
+            std::string fallback_file_type {parameter::as_string("fallback-output-mask-file-type",
+                                                                 DEFAULT_FALLBACK_OUTPUT_MASK_FILE_TYPE)};
+            if (mask_filename == "-")
+            {
+                mask_info.setFileName("/dev/stdout");
+            }
+            else
+            {
+                std::cerr <<
+                    command << ": warning: unknown filetype of mask output file \"" << mask_filename << "\"\n" <<
+                    command << ": note: will fall back to type \"" << fallback_file_type << "\"\n";
+            }
+            enblend::to_upper(fallback_file_type);
+            mask_info.setFileType(fallback_file_type.c_str());
+        }
+
+        vigra::exportImage(srcImageRange(*mask), mask_info);
+    }
+
     OutputIsValid = true;
 }
 
