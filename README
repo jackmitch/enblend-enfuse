@@ -128,6 +128,15 @@ needed.  This feature slightly decreases the load-time of the
 binaries.
 
 
+** --enable-partially-static-linking=NO/yes
+
+Link against static libraries if they are performance critical for
+Enblend or Enfuse.  Currently, these are the GSL libraries and
+LittleCMS2.  The performance gain is some five percent at the cost of
+only slightly larger binaries.  The configuration option may also be
+interesting if the target system should not require GSL libraries.
+
+
 ** --enable-openmp=yes/NO
    -DENABLE_OPENMP=ON/off    (CMake)
 

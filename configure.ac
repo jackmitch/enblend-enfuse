@@ -79,12 +79,8 @@ AS_IF([test "$with_tcmalloc" = check -o "$with_tcmalloc" = yes],
        fi])
 
 AC_CHECK_LIB([m], [sqrt])
-AC_CHECK_LIB([gslcblas], [cblas_dgemm])
-AC_CHECK_LIB([gsl], [gsl_blas_dgemm])
 
-AC_CHECK_LIB(z, gzopen,
-             [],
-             AC_MSG_NOTICE([Compiling without libz.]), [])
+AC_CHECK_LIB(z, gzopen, [], AC_MSG_NOTICE([Compiling without libz.]), [])
 AC_CHECK_LIB(jpeg, jpeg_finish_compress,
              [LIBS="-ljpeg ${LIBS}"; AC_DEFINE(HasJPEG, 1, [Define if you have the jpeg library])],
              AC_MSG_NOTICE([Compiling without support for jpeg files.]), [])
@@ -94,9 +90,6 @@ AC_CHECK_LIB(png, png_init_io,
 AC_CHECK_LIB(tiff, TIFFOpen,
              [LIBS="-ltiff ${LIBS}"; AC_DEFINE(HasTIFF, 1, [Define if you have the tiff library])],
              AC_MSG_ERROR([libtiff is required to compile Enblend.]), [])
-AC_CHECK_LIB(lcms2, cmsCreateTransform,
-             [],
-             AC_MSG_ERROR([liblcms2 is required to compile Enblend.]), [])
 
 AC_MSG_CHECKING([if OpenEXR is wanted])
 AC_ARG_WITH([openexr],
@@ -108,7 +101,6 @@ AS_IF([test "$with_openexr" = no],
       [AC_MSG_NOTICE([disabling OpenEXR])
        have_exr=no],
       [if test "$with_openexr" = yes || test "$with_openexr" = check; then
-          AC_MSG_RESULT(yes)
           PKG_CHECK_MODULES(OPENEXR, OpenEXR >= 1.0,
                             [AC_DEFINE(HasEXR, 1, [Define if you have EXR library])
                              have_exr=yes],
@@ -118,7 +110,6 @@ AS_IF([test "$with_openexr" = no],
           CFLAGS="${OPENEXR_CFLAGS} $CFLAGS"
           CXXFLAGS="${OPENEXR_CFLAGS} $CXXFLAGS"
        else
-          AC_MSG_RESULT(no)
           have_exr=no
        fi])
 
@@ -144,6 +135,47 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <vigra/imageinfo.hxx>
                AC_MSG_RESULT(yes),
                [AC_MSG_RESULT(no)
                 AC_MSG_ERROR([Vigra was found, but it was not recent enough.])])
+
+
+AC_MSG_CHECKING([for support of partially static linking])
+original_LIBS="${LIBS}"
+LIBS="-Wl,-Bstatic -lm -Wl,-Bdynamic ${LIBS}"
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <math.h>]],
+                                [[sin(0.5)]])],
+               [AC_MSG_RESULT(yes);
+                partially_static_linking_support=yes],
+               [AC_MSG_RESULT(no);
+                partially_static_linking_support=no])
+LIBS="${original_LIBS}"
+
+STATIC_LIBS=""
+partially_static_linking=no
+AC_ARG_ENABLE([partially-static-linking],
+              AC_HELP_STRING([--enable-partially-static-linking],
+                             [static link of performance critical libraries @<:@default=no@:>@]),
+              [partially_static_linking=$enableval],
+              [partially_static_linking=no])
+
+if test "$partially_static_linking_support" = yes && test "$partially_static_linking" = yes; then
+  AC_CHECK_LIB(gslcblas, cblas_dgemm,
+               [STATIC_LIBS="-lgslcblas ${STATIC_LIBS}";
+                AC_DEFINE(HAVE_LIBGSLCBLAS, 1, [Define if you have the gslcblas library])])
+  AC_CHECK_LIB(gsl, gsl_blas_dgemm,
+               [STATIC_LIBS="-lgsl ${STATIC_LIBS}";
+                AC_DEFINE(HAVE_LIBGSL, 1, [Define if you have the gsl library])],
+               [],
+               [-lgslcblas])
+  AC_CHECK_LIB(lcms2, cmsCreateTransform,
+               [STATIC_LIBS="-llcms2 ${STATIC_LIBS}";
+                AC_DEFINE(HAVE_LIBLCMS2, 1, [Define if you have the lcms2 library])])
+  AC_SUBST(STATIC_LIBS, ["-Wl,-Bstatic ${STATIC_LIBS} -Wl,-Bdynamic"])
+else
+  AC_CHECK_LIB(gslcblas, cblas_dgemm)
+  AC_CHECK_LIB(gsl, gsl_blas_dgemm)
+  AC_CHECK_LIB(lcms2, cmsCreateTransform)
+  AC_SUBST(STATIC_LIBS)
+fi
+
 
 # Memory allocation debug support
 AC_MSG_CHECKING([if malloc debugging is wanted])
@@ -561,6 +593,7 @@ AC_MSG_RESULT([
    CXXFLAGS:                       ${CXXFLAGS:-<none required>}
    LDFLAGS:                        ${LDFLAGS:-<none required>}
    LIBS:                           ${LIBS:-<none required>}
+   STATIC_LIBS:                    ${STATIC_LIBS:-<none defined>}
    EXTRA_LIBS (optional):          ${EXTRA_LIBS:-<none selected>}
 
  can build all documentation:      ${can_build_doc}${no_doc_reason}

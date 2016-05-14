@@ -26,6 +26,11 @@ Unreleased.  Current line of development.
 - Configuration switches `--enable-image-cache' and its opposite were
   downgraded to nops.
 
+- The new configuration option "--enable-partially-static-linking"
+  controls whether all libraries are linked in their shared versions
+  (default) or some performance critical libraries are linked in with
+  the static versions.
+
 
 ** Package Maintainer Stuff
 
