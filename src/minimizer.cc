@@ -20,6 +20,7 @@
 
 #include <cassert>
 #include <limits>
+#include <algorithm>  // std::max
 
 #include <gsl/gsl_errno.h>
 
