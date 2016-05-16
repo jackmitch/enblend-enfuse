@@ -86,8 +86,17 @@ ${CMAKE_FUNCTION_EXISTS}
 #define BOOST_FALLTHROUGH ((void) 0)
 #endif
 
-/* Define to if <filesystem> is available */
+/* Define to 1 if <filesystem> is available */
 #cmakedefine HAVE_STD_FILESYSTEM 1
+
+/* Define to 1 if <optional> is available */
+#cmakedefine HAVE_OPTIONAL 1
+
+/* Define to 1 if <optional.hpp> is available */
+#cmakedefine HAVE_OPTIONAL_HPP 1
+
+/* Define to 1 if <boost/optional.hpp> should be used */
+#cmakedefine HAVE_BOOST_OPTIONAL_HPP 1
 
 /* Version number of package */
 #define VERSION "${ENBLEND_VERSION_ONLY}"

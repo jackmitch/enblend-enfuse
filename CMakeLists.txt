@@ -204,26 +204,34 @@ include_directories(${TIFF_INCLUDE_DIR} ${LCMS2_INCLUDE_DIR})
 
 # Platform specifics required libraries
 IF(WIN32)
-  SET(Boost_USE_STATIC_LIBS ON)
   # path for getopt library
   INCLUDE_DIRECTORIES(${TOP_SRC_DIR}/src/win32helpers)
 ENDIF(WIN32)
 
-# Boost headers are required, but filesystem is optional
-if(WIN32)
-  IF( NOT Boost_root_suffix )
-    SET( Boost_root_suffix _1_51_0 CACHE STRING "suffix of boost root dir." FORCE )
-  ENDIF( NOT Boost_root_suffix )
-  SET(Boost_USE_STATIC_LIBS ON)
-  if (NOT BOOST_ROOT AND NOT $ENV{BOOST_ROOT} STREQUAL "")
-    set(BOOST_ROOT $ENV{BOOST_ROOT})
-  else(NOT BOOST_ROOT AND NOT $ENV{BOOST_ROOT} STREQUAL "")
-    set(BOOST_ROOT ${SOURCE_BASE_DIR}/boost${Boost_root_suffix})
-  endif(NOT BOOST_ROOT AND NOT $ENV{BOOST_ROOT} STREQUAL "")
-endif()
-
-# Boost headers are required
-FIND_PACKAGE(Boost 1.55 REQUIRED)
+# search for optional header
+FIND_PACKAGE(Optional)
+IF(OPTIONAL_FOUND)
+  MESSAGE(STATUS "Optional header found")
+  SET(HAVE_OPTIONAL_HPP 1)
+  INCLUDE_DIRECTORIES(${OPTIONAL_INCLUDE_DIR})
+ELSE()
+  MESSAGE(STATUS "No optional headers found, fall back to boost")
+  # no optional headers, search for boost
+  if(WIN32)
+    SET(Boost_USE_STATIC_LIBS ON)
+    IF( NOT Boost_root_suffix )
+      SET( Boost_root_suffix _1_51_0 CACHE STRING "suffix of boost root dir." FORCE )
+    ENDIF( NOT Boost_root_suffix )
+    SET(Boost_USE_STATIC_LIBS ON)
+    if (NOT BOOST_ROOT AND NOT $ENV{BOOST_ROOT} STREQUAL "")
+      set(BOOST_ROOT $ENV{BOOST_ROOT})
+    else(NOT BOOST_ROOT AND NOT $ENV{BOOST_ROOT} STREQUAL "")
+      set(BOOST_ROOT ${SOURCE_BASE_DIR}/boost${Boost_root_suffix})
+    endif(NOT BOOST_ROOT AND NOT $ENV{BOOST_ROOT} STREQUAL "")
+  endif()
+  FIND_PACKAGE(Boost 1.55 REQUIRED)
+  SET(HAVE_BOOST_OPTIONAL_HPP 1)
+ENDIF()
 
 #check some header and functions
 include(ConfigureChecks.cmake)

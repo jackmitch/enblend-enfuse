@@ -71,6 +71,7 @@ set(ENBLEND_SOURCES
     timer.h timer.cc
     minimizer.h minimizer.cc
     muopt.h
+    optional_transitional.hpp
 )
 set(ENFUSE_SOURCES 
     functoraccessor.hxx rect2d.hxx stride.hxx
@@ -95,6 +96,7 @@ set(ENFUSE_SOURCES
     timer.h timer.cc
     minimizer.h minimizer.cc
     muopt.h
+    optional_transitional.hpp
 )
 
 set(additional_libs)
