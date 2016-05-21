@@ -63,31 +63,30 @@ that was missing.
 
 To enable someone to investigate the bug, you should include all these things:
 
-\begin{itemize}
-\item
-  The exact version and configuration of \App.  You can get the data by running \app{} with the
-  options \option{--version} and~\option{--verbose} together.  See also
+\begin{description}\renewcommand{\makelabel}[1]{\textbf{#1}}
+\item[Exact Version:] The exact version and configuration of \App.  You can get the data by
+  running \app{} with the options \option{--version} and~\option{--verbose} together.  See also
   \sectionName~\fullref{sec:finding-out-details} on how to find out the exact configuration of
   your binary.
 
-\item
-  A complete set of input images that will reproduce the bug.  Strive for a minimal set of
-  \emph{small} images, where images up to 1500\classictimes 1000~pixels qualify as small.
+\item[Complete and Minimal Set of Images:] A complete yet minimal set of input images that will
+  reproduce the bug.  The less images the set contains the faster we can run our tests.  The
+  optimum is a set of just two input images.
 
-\item
-  The type of machine you are using, and the operating system name and its version number.
+\item[Small Images:] Strive for small images, where images up to 1500\classictimes 1000~pixels
+  qualify as small.
 
-\item
-  A complete list of any modifications you have made to the source.  Be precise about these
-  changes.  Show a delta generated with \command{diff} for them.
+\item[Environment:] The type of machine you are using, and the operating system name and its
+  version number.
 
-\item
-  Details of any other deviations from the standard procedure for installing \App{} and
-  \OtherApp{}.
+\item[Prior Modifications:] A complete list of any modifications you have made to the source.
+  Be precise about these changes.  Show a \command{diff}-generated delta for them.
 
-\item
-  The \emph{exact command line} you use to call \App{} or \OtherApp{}, which then triggers the
-  bug.
+\item[Odd Workflow:] Details of any other deviations from the standard procedure for installing
+  \App{} and \OtherApp{}.
+
+\item[Exact Command Line:] The exact command line you use to call \App{} or \OtherApp{}, which
+  then triggers the bug.
 
   Examples:
 
@@ -116,13 +115,13 @@ To enable someone to investigate the bug, you should include all these things:
   \uref{\huginsourceforgenet}{Hugin} or \uref{\imagefuser}{ImageFuser} by \propername{Harry van
     der Wolf}, copy\&paste or write down the command line that launches \App{} or \OtherApp{}.
 
-\item
-  A description of what behavior you observe that you believe is incorrect.  For example, ``The
-  application gets a fatal signal,'' or, ``The output image contains black holes.''
+\item[Bug Description:] A description of what behavior you observe that you believe is
+  incorrect.  For example, ``The application gets a fatal signal,'' or, ``The output image
+  contains black holes.''
 
   Of course, if the bug is that the application gets a fatal signal, then one cannot miss it.
   But if the bug is incorrect output, we might not notice unless it is glaringly wrong.
-\end{itemize}
+\end{description}
 
 
 \section[Sending Patches]{\label{sec:sending-patches}%
@@ -157,7 +156,7 @@ still be useful, but using it will take extra work.
 
 \item
   Use the version control system to make your diffs.  Prefer the
-  \uref{\wikipediadiffunifiedformat}{unified diff} format: \code{hg diff --unified 4}.
+  \uref{\wikipediadiffunifiedformat}{unified diff} format: \code{hg diff --git --unified=8}.
 
 \item
   You can increase the probability that your patch gets applied by basing it on a recent
