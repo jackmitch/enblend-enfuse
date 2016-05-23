@@ -836,7 +836,7 @@ class OptimizableLuminanceSpace
 {
 public:
     OptimizableLuminanceSpace() :
-        shadow_rgb_threshold(std::max(0.0, parameter::as_double("lum-shadow-rgb-threshold", 0.0))),
+        shadow_rgb_threshold(parameter::as_double("lum-shadow-rgb-threshold", 0.0)),
         maximum_bracket_tries(parameter::as_unsigned("lum-bracket-maximum-tries", 500U)),
         suspicious_delta_e(parameter::as_double("lum-suspicious-delta-e", 1.0)),
         optimizer_error(parameter::as_double("lum-optimizer-error", 0.5 / 256.0)),
@@ -888,7 +888,7 @@ public:
     {
 #ifdef LOG_COLORSPACE_OPTIMIZATION
 #ifdef OPENMP
-#pragma omp atomic update
+#pragma omp atomic
 #endif
         ++polish_tally;
 #endif // LOG_COLORSPACE_OPTIMIZATION
@@ -919,7 +919,7 @@ public:
             {
 #ifdef LOG_COLORSPACE_OPTIMIZATION
 #ifdef OPENMP
-#pragma omp atomic update
+#pragma omp atomic
 #endif
                 ++polish_false_positive_tally;
 #endif // LOG_COLORSPACE_OPTIMIZATION
