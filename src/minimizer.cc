@@ -195,7 +195,8 @@ Minimizer1D::set_bracket(const gsl_function& a_function, double x_minimum, doubl
 
     if (status == GSL_EINVAL)
     {
-        throw minimum_not_bracketed("Minimizer1D::set_bracket: minimum not bracketed");
+        throw minimum_not_bracketed("Minimizer1D::set_bracket: minimum not bracketed",
+                                    x_minimum, x_lower, x_upper);
     }
     else if (status != GSL_SUCCESS)
     {

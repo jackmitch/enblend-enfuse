@@ -71,7 +71,22 @@ public:
 
     struct minimum_not_bracketed : public std::runtime_error
     {
-        minimum_not_bracketed(const std::string& a_message) : std::runtime_error(a_message) {}
+        double minimum;
+        double lower;
+        double upper;
+
+        explicit minimum_not_bracketed(const std::string& a_message) :
+            std::runtime_error(a_message),
+            minimum(0.0), lower(0.0), upper(0.0)
+        {}
+
+        minimum_not_bracketed(const std::string& a_message, double x_minimum, double x_lower, double x_upper) :
+            std::runtime_error(a_message + " [(" +
+                               std::to_string(x_lower) + " | " +
+                               std::to_string(x_minimum) + " | " +
+                               std::to_string(x_upper) + ")]"),
+            minimum(x_minimum), lower(x_lower), upper(x_upper)
+        {}
     };
 
 protected:

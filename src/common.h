@@ -141,7 +141,7 @@ typedef enum
 // to XYZ space (and for CIECAM then on to JCh).  The following two
 // #defines control the color transformation from and to XYZ space.
 #define RENDERING_INTENT_FOR_BLENDING INTENT_PERCEPTUAL
-#define TRANSFORMATION_FLAGS_FOR_BLENDING cmsFLAGS_NOCACHE
+#define TRANSFORMATION_FLAGS_FOR_BLENDING (cmsFLAGS_NOCACHE | cmsFLAGS_HIGHRESPRECALC)
 
 
 #define IMAGETYPE vigra::BasicImage

@@ -42,10 +42,23 @@
 #include "parameter.h"
 
 
+// ANTICIPATED CHANGE: Remove this define after Lab/Luv optimization
+// has gotten enough testing.
+#define LOG_COLORSPACE_OPTIMIZATION
+
+
 #define XYZ_SCALE 100.0
 
 
-namespace enblend {
+#ifdef LOG_COLORSPACE_CONVERSION_DETAIL
+#ifndef LOG_COLORSPACE_CONVERSION
+#define LOG_COLORSPACE_CONVERSION
+#endif
+#endif // LOG_COLORSPACE_CONVERSION_DETAIL
+
+
+namespace enblend
+{
 
 static inline double
 wrap_cyclically(double x, double modulus)
@@ -68,6 +81,13 @@ limit(double x, double lower_limit, double upper_limit)
     }
 
     return std::min(std::max(lower_limit, x), upper_limit);
+}
+
+
+static inline double
+calculate_delta_e(const cmsCIELab* lab1, const cmsCIELab* lab2)
+{
+    return cmsCMCdeltaE(lab1, lab2, 2.0, 1.0);
 }
 
 
@@ -106,15 +126,15 @@ public:
     ConvertScalarToPyramidFunctor() :
         pyramid_scale(double(1U << PyramidFractionBits))
     {
-#ifdef DEBUG_COLORSPACE_STATISTICS
+#ifdef LOG_COLORSPACE_CONVERSION
 #ifdef OPENMP
 #pragma omp critical
 #endif
         std::cout <<
             "+ ConvertScalarToPyramidFunctor::ConvertScalarToPyramidFunctor: " <<
             (SrcIsIntegral().value ? "integral" : "floating-point") << " source  =>  " <<
-            (PyramidIsIntegral().value? "integral" : "floating-point") << " pyramid\n";
-#endif
+            (PyramidIsIntegral().value? "integral" : "floating-point") << " pyramid" << std::endl;
+#endif // LOG_COLORSPACE_CONVERSION
     }
 
     PyramidPixelType operator()(const SrcPixelType& v) const
@@ -452,15 +472,15 @@ public:
         static_assert(PyramidIntegerBits >= PYRAMID_HEADROOM_BITS,
                       "not enough PyramidIntegerBits to calculate `pyramid_scale' from shift");
 
-#ifdef DEBUG_COLORSPACE_STATISTICS
+#ifdef LOG_COLORSPACE_CONVERSION
 #ifdef OPENMP
 #pragma omp critical
 #endif
         std::cout <<
             "+ PyramidScale::PyramidScale: PyramidIntegerBits = " << PyramidIntegerBits <<
             ", PyramidFractionBits = " << PyramidFractionBits << "  =>  pyramid-scale = " << pyramid_scale <<
-            "\n";
-#endif // DEBUG_COLORSPACE_STATISTICS
+            std::endl;
+#endif // LOG_COLORSPACE_CONVERSION
     }
 
     double scale_lightness_for_pyramid(double a_lightness) const
@@ -468,7 +488,7 @@ public:
         const double scaled_lightness = pyramid_scale * a_lightness / static_cast<double>(MAXIMUM_LIGHTNESS);
         const double result = std::round(scaled_lightness);
 
-#ifdef DEBUG_COLORSPACE_STATISTICS
+#ifdef LOG_COLORSPACE_CONVERSION_DETAIL
         // Note: For we rescale color channels with respect to
         // `color_limit' and color channels as well as luminance ends
         // up in the same pyramid, we can check for overflow with the
@@ -480,9 +500,9 @@ public:
 #endif
             std::cout <<
                 "+ PyramidScale::scale_lightness_for_pyramid: out-of-range L = " <<
-                a_lightness << ", scaled = " << scaled_lightness << ", rounded = " << result << "\n";
+                a_lightness << ", scaled = " << scaled_lightness << ", rounded = " << result << std::endl;
         }
-#endif // DEBUG_COLORSPACE_STATISTICS
+#endif // LOG_COLORSPACE_CONVERSION_DETAIL
 
         assert(result >= 0.0);
         return result;
@@ -494,7 +514,7 @@ public:
             pyramid_scale * (color_limit + a_color_difference) / (2.0 * color_limit);
         const double result = std::round(scaled_color_difference);
 
-#ifdef DEBUG_COLORSPACE_STATISTICS
+#ifdef LOG_COLORSPACE_CONVERSION_DETAIL
         if (std::abs(result) > color_limit)
         {
 #ifdef OPENMP
@@ -503,9 +523,9 @@ public:
             std::cout <<
                 "+ PyramidScale::scale_color_difference_for_pyramid: out-of-range a,b|u,v = " <<
                 a_color_difference << ", scaled = " << scaled_color_difference << ", rounded = " << result <<
-                "\n";
+                std::endl;
         }
-#endif // DEBUG_COLORSPACE_STATISTICS
+#endif // LOG_COLORSPACE_CONVERSION_DETAIL
 
         assert(result >= -color_limit);
         return result;
@@ -527,7 +547,7 @@ private:
 };
 
 
-#ifdef DEBUG_COLORSPACE_STATISTICS
+#ifdef LOG_COLORSPACE_CONVERSION
 class TriplePeakHold
 {
     enum {n = 3};
@@ -591,7 +611,7 @@ private:
     std::array<std::string, n> labels_;
     std::array<std::pair<double, double>, n> peaks_;
 };
-#endif // DEBUG_COLORSPACE_STATISTICS
+#endif // LOG_COLORSPACE_CONVERSION
 
 
 //
@@ -613,25 +633,25 @@ public:
     ConvertVectorToLabPyramidFunctor() :
         converter(),
         rgb_source_scale(1.0 / SrcTraits::toRealPromote(SrcTraits::max()))
-#ifdef DEBUG_COLORSPACE_STATISTICS
+#ifdef LOG_COLORSPACE_CONVERSION
         , range("L", "a", "b")
-#endif // DEBUG_COLORSPACE_STATISTICS
+#endif // LOG_COLORSPACE_CONVERSION
     {
-#ifdef DEBUG_COLORSPACE_STATISTICS
+#ifdef LOG_COLORSPACE_CONVERSION
 #ifdef OPENMP
 #pragma omp critical
 #endif
         std::cout <<
-            "+ ConvertVectorToLabPyramidFunctor::ConvertVectorToLabPyramidFunctor source range [" <<
+            "+ ConvertVectorToLabPyramidFunctor::ConvertVectorToLabPyramidFunctor: source range [" <<
             static_cast<double>(SrcTraits::min()) << ", " <<
             static_cast<double>(SrcTraits::max()) << "]\n" <<
             "+ ConvertVectorToLabPyramidFunctor::ConvertVectorToLabPyramidFunctor: pyramid range [" <<
             static_cast<double>(vigra::NumericTraits<PyramidComponentType>::min()) << ", " <<
-            static_cast<double>(vigra::NumericTraits<PyramidComponentType>::max()) << "]\n";
-#endif // DEBUG_COLORSPACE_STATISTICS
+            static_cast<double>(vigra::NumericTraits<PyramidComponentType>::max()) << "]" << std::endl;
+#endif // LOG_COLORSPACE_CONVERSION
     }
 
-#ifdef DEBUG_COLORSPACE_STATISTICS
+#ifdef LOG_COLORSPACE_CONVERSION
     ~ConvertVectorToLabPyramidFunctor()
     {
 #ifdef OPENMP
@@ -641,7 +661,7 @@ public:
             range.as_string("+ ConvertVectorToLabPyramidFunctor::~ConvertVectorToLabPyramidFunctor: ") <<
             std::endl;
     }
-#endif // DEBUG_COLORSPACE_STATISTICS
+#endif // LOG_COLORSPACE_CONVERSION
 
     PyramidVectorType operator()(const SrcVectorType& v) const
     {
@@ -653,9 +673,9 @@ public:
         cmsCIELab lab;
 
         cmsDoTransform(InputToLabTransform, rgb, &lab, 1U);
-#ifdef DEBUG_COLORSPACE_STATISTICS
+#ifdef LOG_COLORSPACE_CONVERSION
         range.update(lab.L, lab.a, lab.b);
-#endif // DEBUG_COLORSPACE_STATISTICS
+#endif // LOG_COLORSPACE_CONVERSION
 
         return PyramidVectorType(converter(Scale::scale_lightness_for_pyramid(lab.L)),
                                  converter(Scale::scale_color_difference_for_pyramid(lab.a)),
@@ -665,9 +685,9 @@ public:
 protected:
     ConvertFunctorType converter;
     const double rgb_source_scale;
-#ifdef DEBUG_COLORSPACE_STATISTICS
+#ifdef LOG_COLORSPACE_CONVERSION
     mutable TriplePeakHold range;
-#endif // DEBUG_COLORSPACE_STATISTICS
+#endif // LOG_COLORSPACE_CONVERSION
 };
 
 
@@ -675,9 +695,360 @@ protected:
 // Fixed point converter that uses ICC profile transformation and L*a*b* color space
 //
 
+
+// cylindrical representation: CIELCh
+// see: https://en.wikipedia.org/wiki/Lab_color_space#Cylindrical_representation:_CIELCh_or_CIEHLC
+
+inline static double
+chroma_of_cartesian_lab(const cmsCIELab& lab)
+{
+    return std::hypot(lab.a, lab.b);
+}
+
+
+inline static double
+hue_of_cartesian_lab(const cmsCIELab& lab)
+{
+    return std::atan2(lab.b, lab.a);
+}
+
+
+namespace detail
+{
+    static inline double
+    uniform_random(unsigned* seed)
+    {
+        return static_cast<double>(enblend::rand_r(seed)) / static_cast<double>(RAND_MAX);
+    }
+
+
+    static inline bool
+    bracket_minimum(const gsl_function& cost,
+                    double& x_initial, double x_lower, double x_upper,
+                    unsigned maximum_tries)
+    {
+        const double y_minimum_bound =
+            std::min(cost.function(x_lower, cost.params), cost.function(x_upper, cost.params));
+        double y_initial = cost.function(x_initial, cost.params);
+
+        if (y_initial < y_minimum_bound)
+        {
+            return true;
+        }
+
+        unsigned i = 0U;
+        const double lower = std::max(0.001, 1.001 * x_lower);
+        const double upper = 0.999 * x_upper;
+        unsigned seed = 1000003U; // fixed seed for reproducibility
+
+        while (y_initial >= y_minimum_bound && i < maximum_tries)
+        {
+            x_initial = uniform_random(&seed) * (upper - lower) + lower;
+            y_initial = cost.function(x_initial, cost.params);
+            ++i;
+        }
+
+        return i < maximum_tries;
+    }
+
+
+    template <typename forward_iterator>
+    static inline void
+    limit_sequence(forward_iterator first, forward_iterator last, double lower_limit, double upper_limit)
+    {
+        while (first != last)
+        {
+            *first = limit(*first, lower_limit, upper_limit);
+            ++first;
+        }
+    }
+
+
+    static inline int
+    alternating_power_spacing(int i, int n,
+                              double a, double b, double c,
+                              double p)
+    {
+        const bool is_even_n = n % 2 == 0;
+        const double left_unit_stride = 1.0 / static_cast<double>(n - (is_even_n ? 1 : 2));
+        const double right_unit_stride = 1.0 / static_cast<double>(n - (is_even_n ? 2 : 1));
+        const double left_width = c - a;
+        const double right_width = b - c;
+
+        const double x = static_cast<double>(i);
+        double y = c;
+
+        if (i % 2 == 1)         // 1, 3, 5, ...
+        {
+            y -= left_width * std::pow(x * left_unit_stride, 1.0 / p);
+        }
+        else                    // 0, 2, 4, 6, ...
+        {
+            y += right_width * std::pow(x * right_unit_stride, p);
+        }
+
+        return y;
+    }
+} // namespace detail
+
+
+namespace lab_detail
+{
+    struct extra_minimizer_parameter
+    {
+        explicit extra_minimizer_parameter(const cmsCIELab& an_lab_value) :
+            lab(an_lab_value),
+            hue_cos(std::cos(hue_of_cartesian_lab(an_lab_value))),
+            hue_sin(std::sin(hue_of_cartesian_lab(an_lab_value)))
+        {}
+
+        cmsCIELab lab;
+        double hue_cos;
+        double hue_sin;
+    };
+
+
+    inline static double
+    delta_e_cost(const cmsCIELab* lab, const extra_minimizer_parameter* parameter)
+    {
+        double rgb[3];
+        cmsDoTransform(LabToInputTransform, lab, rgb, 1);
+
+        cmsCIELab backwards_lab;
+        cmsDoTransform(InputToLabTransform, rgb, &backwards_lab, 1);
+
+        return calculate_delta_e(&parameter->lab, &backwards_lab);
+    }
+
+
+    double
+    delta_e_min_cost(double chroma, void* data)
+    {
+        const extra_minimizer_parameter* parameter {static_cast<const extra_minimizer_parameter*>(data)};
+        const cmsCIELab lab {parameter->lab.L, chroma * parameter->hue_cos, chroma * parameter->hue_sin};
+
+        return delta_e_cost(&lab, parameter);
+    }
+} // namespace lab_detail
+
+
+class OptimizableLuminanceSpace
+{
+public:
+    OptimizableLuminanceSpace() :
+        shadow_rgb_threshold(std::max(0.0, parameter::as_double("lum-shadow-rgb-threshold", 0.0))),
+        maximum_bracket_tries(parameter::as_unsigned("lum-bracket-maximum-tries", 500U)),
+        suspicious_delta_e(parameter::as_double("lum-suspicious-delta-e", 1.0)),
+        optimizer_error(parameter::as_double("lum-optimizer-error", 0.5 / 256.0)),
+        optimizer_goal(parameter::as_double("lum-optimizer-deltae-goal", 0.5)),
+        maximum_iterations(parameter::as_unsigned("lum-maximum-iterations", 50U)),
+        max_chroma_factor(parameter::as_double("lum-max-chroma-factor", 20.0))
+#ifdef LOG_COLORSPACE_OPTIMIZATION
+        , polish_tally(0U), polish_false_positive_tally(0U),
+        total_delta_e(0.0), total_iterations(0U)
+#endif // LOG_COLORSPACE_OPTIMIZATION
+    {}
+
+    virtual ~OptimizableLuminanceSpace()
+    {
+#ifdef LOG_COLORSPACE_OPTIMIZATION
+        if (polish_tally)
+        {
+#ifdef OPENMP
+#pragma omp critical
+#endif
+            std::cout <<
+                "+ OptimizableLuminanceSpace: polish_rgb() called " << polish_tally << " times with " <<
+                100.0 * static_cast<double>(polish_false_positive_tally) / static_cast<double>(polish_tally) <<
+                "% false positives\n" <<
+                "+ OptimizableLuminanceSpace: polish_rgb() total residual deltaE " << total_delta_e << " (" <<
+                (polish_tally == polish_false_positive_tally ?
+                 total_delta_e :
+                 total_delta_e / static_cast<double>(polish_tally - polish_false_positive_tally)) <<
+                " average) after " << total_iterations << " iterations\n" << std::endl;
+        }
+        else
+        {
+#ifdef OPENMP
+#pragma omp critical
+#endif
+            std::cout << "+ OptimizableLuminanceSpace: polish_rgb() not called\n" << std::endl;
+        }
+#endif // LOG_COLORSPACE_OPTIMIZATION
+    }
+
+    bool is_below_threshold(const double* rgb) const
+    {
+        return (rgb[0] <= shadow_rgb_threshold ||
+                rgb[1] <= shadow_rgb_threshold ||
+                rgb[2] <= shadow_rgb_threshold);
+    }
+
+    void polish_rgb(const cmsCIELab* lab, double* rgb) const
+    {
+#ifdef LOG_COLORSPACE_OPTIMIZATION
+#ifdef OPENMP
+#pragma omp atomic update
+#endif
+        ++polish_tally;
+#endif // LOG_COLORSPACE_OPTIMIZATION
+
+        if (EXPECT_RESULT(std::isnan(lab->a) || std::isnan(lab->b), false))
+        {
+            if (parameter::as_boolean("mark-freaky-color-conversions", false))
+            {
+                // magenta
+                rgb[0] = 1.0;
+                rgb[1] = 0.0;
+                rgb[2] = 1.0;
+            }
+            else
+            {
+                const cmsCIELab sane_lab {lab->L, 0.0, 0.0};
+                cmsDoTransform(LabToInputTransform, &sane_lab, rgb, 1);
+            }
+            return;
+        }
+
+        {
+            cmsCIELab backwards_lab;
+            cmsDoTransform(InputToLabTransform, rgb, &backwards_lab, 1);
+            const double delta_e {calculate_delta_e(lab, &backwards_lab)};
+
+            if (EXPECT_RESULT(delta_e < suspicious_delta_e, true))
+            {
+#ifdef LOG_COLORSPACE_OPTIMIZATION
+#ifdef OPENMP
+#pragma omp atomic update
+#endif
+                ++polish_false_positive_tally;
+#endif // LOG_COLORSPACE_OPTIMIZATION
+                return;
+            }
+
+#ifdef LOG_COLORSPACE_OPTIMIZATION
+#ifdef OPENMP
+#pragma omp critical
+#endif
+            std::cout << "+ polish_rgb: triggering deltaE = " << delta_e << std::endl;
+#endif // LOG_COLORSPACE_OPTIMIZATION
+        }
+
+        const double initial_chroma {chroma_of_cartesian_lab(*lab)};
+
+        lab_detail::extra_minimizer_parameter extra(*lab);
+        gsl_function cost = {lab_detail::delta_e_min_cost, &extra};
+        double initial_chroma0 = initial_chroma;
+        const double max_chroma = max_chroma_factor * initial_chroma;
+        cmsCIELab final_lab;
+
+#ifdef LOG_COLORSPACE_OPTIMIZATION
+#ifdef OPENMP
+#pragma omp critical
+#endif
+        std::cout <<
+            "+ polish_rgb: initial Lab = (" <<
+            lab->L << ", " << lab->a  << ", " << lab->b << "), RGB = (" <<
+            rgb[0] << ", " << rgb[1] << ", " << rgb[2] << ")\n" <<
+            "              initial chroma = " << initial_chroma <<
+            ", initial deltaE = " << lab_detail::delta_e_cost(lab, &extra) << std::endl;
+#endif // LOG_COLORSPACE_OPTIMIZATION
+
+        if (detail::bracket_minimum(cost, initial_chroma0, 0.0, max_chroma, maximum_bracket_tries))
+        {
+            BrentMinimizer1D optimizer(cost, initial_chroma0, 0.0, max_chroma);
+
+            optimizer.set_absolute_error(optimizer_error)->
+                set_goal(optimizer_goal)->
+                set_maximum_number_of_iterations(maximum_iterations);
+            optimizer.run();
+#ifdef LOG_COLORSPACE_OPTIMIZATION
+#ifdef OPENMP
+#pragma omp atomic
+#endif
+            total_delta_e += optimizer.f_minimum();
+#ifdef OPENMP
+#pragma omp atomic
+#endif
+            total_iterations += optimizer.number_of_iterations();
+#endif // LOG_COLORSPACE_OPTIMIZATION
+
+            const double initial_hue {hue_of_cartesian_lab(*lab)};
+            final_lab.L = lab->L;
+            final_lab.a = optimizer.x_minimum() * std::cos(initial_hue);
+            final_lab.b = optimizer.x_minimum() * std::sin(initial_hue);
+
+            cmsDoTransform(LabToInputTransform, &final_lab, rgb, 1);
+
+#ifdef LOG_COLORSPACE_OPTIMIZATION
+#ifdef OPENMP
+#pragma omp critical
+#endif
+            std::cout <<
+                "+ polish_rgb: final Lab = (" <<
+                final_lab.L << ", " << final_lab.a  << ", " << final_lab.b << "), RGB = (" <<
+                rgb[0] << ", " << rgb[1] << ", " << rgb[2] << ")\n" <<
+                "              final chroma = " << optimizer.x_minimum() <<
+                ", final deltaE = " << optimizer.f_minimum() <<
+                " after " << optimizer.number_of_iterations() << " iterations\n" << std::endl;
+#endif // LOG_COLORSPACE_OPTIMIZATION
+        }
+        else
+        {
+            // ANTICIPATED CHANGE: It could be worthwhile to study
+            // what we gain if we fire up a 2d optimizer that
+            // simultaneously minimizes luminance (`L') and chroma.
+
+            final_lab.L = lab->L;
+            final_lab.a = 0.0;
+            final_lab.b = 0.0;
+
+            cmsDoTransform(LabToInputTransform, &final_lab, rgb, 1);
+
+#ifdef LOG_COLORSPACE_OPTIMIZATION
+#ifdef OPENMP
+#pragma omp critical
+#endif
+            std::cout << "+ polish_rgb: failed to bracket minimum\n" <<
+                "              final Lab = (" <<
+                final_lab.L << ", " << final_lab.a  << ", " << final_lab.b << "), RGB = (" <<
+                rgb[0] << ", " << rgb[1] << ", " << rgb[2] << ")\n" <<
+                "              final chroma = " << initial_chroma0 <<
+                ", final deltaE = " << calculate_delta_e(lab, &final_lab) << "\n" << std::endl;
+#endif // LOG_COLORSPACE_OPTIMIZATION
+
+            if (parameter::as_boolean("mark-freaky-color-conversions", false))
+            {
+                // yellow
+                rgb[0] = 1.0;
+                rgb[1] = 1.0;
+                rgb[2] = 0.0;
+            }
+        }
+    }
+
+private:
+    const double shadow_rgb_threshold;
+    const unsigned maximum_bracket_tries;
+    const double suspicious_delta_e;
+    const double optimizer_error;
+    const double optimizer_goal;
+    const unsigned maximum_iterations;
+    const double max_chroma_factor;
+
+#ifdef LOG_COLORSPACE_OPTIMIZATION
+    mutable unsigned polish_tally;
+    mutable unsigned polish_false_positive_tally;
+    mutable double total_delta_e;
+    mutable unsigned total_iterations;
+#endif // LOG_COLORSPACE_OPTIMIZATION
+};  // class OptimizableLuminanceSpace
+
+
 template <typename DestVectorType, typename PyramidVectorType, int PyramidIntegerBits, int PyramidFractionBits>
 class ConvertLabPyramidToVectorFunctor :
-    private PyramidScale<PyramidIntegerBits, PyramidFractionBits>
+    private PyramidScale<PyramidIntegerBits, PyramidFractionBits>,
+    private OptimizableLuminanceSpace
 {
     typedef PyramidScale<PyramidIntegerBits, PyramidFractionBits> Scale;
     typedef typename DestVectorType::value_type DestComponentType;
@@ -690,11 +1061,11 @@ public:
     ConvertLabPyramidToVectorFunctor() :
         converter(),
         rgb_dest_scale(DestTraits::toRealPromote(DestTraits::max()))
-#ifdef DEBUG_COLORSPACE_STATISTICS
+#ifdef LOG_COLORSPACE_CONVERSION
         , range("L", "a", "b")
-#endif // DEBUG_COLORSPACE_STATISTICS
+#endif // LOG_COLORSPACE_CONVERSION
     {
-#ifdef DEBUG_COLORSPACE_STATISTICS
+#ifdef LOG_COLORSPACE_CONVERSION
 #ifdef OPENMP
 #pragma omp critical
 #endif
@@ -704,11 +1075,11 @@ public:
             static_cast<double>(DestTraits::max()) << "]\n" <<
             "+ ConvertLabPyramidToVectorFunctor::ConvertLabPyramidToVectorFunctor: pyramid range [" <<
             static_cast<double>(vigra::NumericTraits<PyramidComponentType>::min()) << ", " <<
-            static_cast<double>(vigra::NumericTraits<PyramidComponentType>::max()) << "]\n";
-#endif // DEBUG_COLORSPACE_STATISTICS
+            static_cast<double>(vigra::NumericTraits<PyramidComponentType>::max()) << "]" << std::endl;
+#endif // LOG_COLORSPACE_CONVERSION
     }
 
-#ifdef DEBUG_COLORSPACE_STATISTICS
+#ifdef LOG_COLORSPACE_CONVERSION
     ~ConvertLabPyramidToVectorFunctor()
     {
 #ifdef OPENMP
@@ -718,7 +1089,7 @@ public:
             range.as_string("+ ConvertLabPyramidToVectorFunctor::~ConvertLabPyramidToVectorFunctor: ") <<
             std::endl;
     }
-#endif // DEBUG_COLORSPACE_STATISTICS
+#endif // LOG_COLORSPACE_CONVERSION
 
     DestVectorType operator()(const PyramidVectorType& v) const
     {
@@ -729,10 +1100,17 @@ public:
         };
         double rgb[3];
 
-#ifdef DEBUG_COLORSPACE_STATISTICS
+#ifdef LOG_COLORSPACE_CONVERSION
         range.update(lab.L, lab.a, lab.b);
-#endif // DEBUG_COLORSPACE_STATISTICS
+#endif // LOG_COLORSPACE_CONVERSION
+
+        assert(lab.L >= 0.0);
         cmsDoTransform(LabToInputTransform, &lab, rgb, 1U);
+
+        if (EXPECT_RESULT(is_below_threshold(rgb), false))
+        {
+            polish_rgb(&lab, rgb);
+        }
 
         return DestVectorType(DestTraits::fromRealPromote(rgb_dest_scale * rgb[0]),
                               DestTraits::fromRealPromote(rgb_dest_scale * rgb[1]),
@@ -742,9 +1120,9 @@ public:
 protected:
     ConvertFunctorType converter;
     const double rgb_dest_scale;
-#ifdef DEBUG_COLORSPACE_STATISTICS
+#ifdef LOG_COLORSPACE_CONVERSION
     mutable TriplePeakHold range;
-#endif // DEBUG_COLORSPACE_STATISTICS
+#endif // LOG_COLORSPACE_CONVERSION
 };
 
 
@@ -768,25 +1146,25 @@ public:
     ConvertVectorToLuvPyramidFunctor() :
         converter(),
         rgb_source_scale(1.0 / SrcTraits::toRealPromote(SrcTraits::max()))
-#ifdef DEBUG_COLORSPACE_STATISTICS
+#ifdef LOG_COLORSPACE_CONVERSION
         , range("L", "u", "v")
-#endif // DEBUG_COLORSPACE_STATISTICS
+#endif // LOG_COLORSPACE_CONVERSION
     {
-#ifdef DEBUG_COLORSPACE_STATISTICS
+#ifdef LOG_COLORSPACE_CONVERSION
 #ifdef OPENMP
 #pragma omp critical
 #endif
         std::cout <<
-            "+ ConvertVectorToLuvPyramidFunctor::ConvertVectorToLuvPyramidFunctor source range [" <<
+            "+ ConvertVectorToLuvPyramidFunctor::ConvertVectorToLuvPyramidFunctor: source range [" <<
             static_cast<double>(SrcTraits::min()) << ", " <<
             static_cast<double>(SrcTraits::max()) << "]\n" <<
             "+ ConvertVectorToLuvPyramidFunctor::ConvertVectorToLuvPyramidFunctor: pyramid range [" <<
             static_cast<double>(vigra::NumericTraits<PyramidComponentType>::min()) << ", " <<
-            static_cast<double>(vigra::NumericTraits<PyramidComponentType>::max()) << "]\n";
-#endif // DEBUG_COLORSPACE_STATISTICS
+            static_cast<double>(vigra::NumericTraits<PyramidComponentType>::max()) << "]" << std::endl;
+#endif // LOG_COLORSPACE_CONVERSION
     }
 
-#ifdef DEBUG_COLORSPACE_STATISTICS
+#ifdef LOG_COLORSPACE_CONVERSION
     ~ConvertVectorToLuvPyramidFunctor()
     {
 #ifdef OPENMP
@@ -796,7 +1174,7 @@ public:
             range.as_string("+ ConvertVectorToLuvPyramidFunctor::~ConvertVectorToLuvPyramidFunctor: ") <<
             std::endl;
     }
-#endif // DEBUG_COLORSPACE_STATISTICS
+#endif // LOG_COLORSPACE_CONVERSION
 
     PyramidVectorType operator()(const SrcVectorType& v) const
     {
@@ -809,9 +1187,9 @@ public:
 
         cmsDoTransform(InputToXYZTransform, rgb, &xyz[0], 1U);
         const XYZ2LuvFunctor::result_type luv {xyz2luv(xyz)};
-#ifdef DEBUG_COLORSPACE_STATISTICS
+#ifdef LOG_COLORSPACE_CONVERSION
         range.update(luv[0], luv[1], luv[2]);
-#endif // DEBUG_COLORSPACE_STATISTICS
+#endif // LOG_COLORSPACE_CONVERSION
 
         return PyramidVectorType(converter(Scale::scale_lightness_for_pyramid(luv[0])),
                                  converter(Scale::scale_color_difference_for_pyramid(luv[1])),
@@ -822,9 +1200,9 @@ protected:
     XYZ2LuvFunctor xyz2luv;
     ConvertFunctorType converter;
     const double rgb_source_scale;
-#ifdef DEBUG_COLORSPACE_STATISTICS
+#ifdef LOG_COLORSPACE_CONVERSION
     mutable TriplePeakHold range;
-#endif // DEBUG_COLORSPACE_STATISTICS
+#endif // LOG_COLORSPACE_CONVERSION
 };
 
 
@@ -834,7 +1212,8 @@ protected:
 
 template <typename DestVectorType, typename PyramidVectorType, int PyramidIntegerBits, int PyramidFractionBits>
 class ConvertLuvPyramidToVectorFunctor :
-    private PyramidScale<PyramidIntegerBits, PyramidFractionBits>
+    private PyramidScale<PyramidIntegerBits, PyramidFractionBits>,
+    private OptimizableLuminanceSpace
 {
     typedef PyramidScale<PyramidIntegerBits, PyramidFractionBits> Scale;
     typedef typename DestVectorType::value_type DestComponentType;
@@ -843,16 +1222,17 @@ class ConvertLuvPyramidToVectorFunctor :
     typedef ConvertPyramidToScalarFunctor<DestComponentType, PyramidComponentType,
                                           PyramidIntegerBits, PyramidFractionBits> ConvertFunctorType;
     typedef vigra::Luv2XYZFunctor<double> Luv2XYZFunctor;
+    typedef vigra::XYZ2LabFunctor<double> XYZ2LabFunctor;
 
 public:
     ConvertLuvPyramidToVectorFunctor() :
         converter(),
         rgb_dest_scale(DestTraits::toRealPromote(DestTraits::max()))
-#ifdef DEBUG_COLORSPACE_STATISTICS
+#ifdef LOG_COLORSPACE_CONVERSION
         , range("L", "u", "v")
-#endif // DEBUG_COLORSPACE_STATISTICS
+#endif // LOG_COLORSPACE_CONVERSION
     {
-#ifdef DEBUG_COLORSPACE_STATISTICS
+#ifdef LOG_COLORSPACE_CONVERSION
 #ifdef OPENMP
 #pragma omp critical
 #endif
@@ -862,11 +1242,11 @@ public:
             static_cast<double>(DestTraits::max()) << "]\n" <<
             "+ ConvertLuvPyramidToVectorFunctor::ConvertLuvPyramidToVectorFunctor: pyramid range [" <<
             static_cast<double>(vigra::NumericTraits<PyramidComponentType>::min()) << ", " <<
-            static_cast<double>(vigra::NumericTraits<PyramidComponentType>::max()) << "]\n";
-#endif // DEBUG_COLORSPACE_STATISTICS
+            static_cast<double>(vigra::NumericTraits<PyramidComponentType>::max()) << "]" << std::endl;
+#endif // LOG_COLORSPACE_CONVERSION
     }
 
-#ifdef DEBUG_COLORSPACE_STATISTICS
+#ifdef LOG_COLORSPACE_CONVERSION
     ~ConvertLuvPyramidToVectorFunctor()
     {
 #ifdef OPENMP
@@ -876,7 +1256,7 @@ public:
             range.as_string("+ ConvertLuvPyramidToVectorFunctor::~ConvertLuvPyramidToVectorFunctor: ") <<
             std::endl;
     }
-#endif // DEBUG_COLORSPACE_STATISTICS
+#endif // LOG_COLORSPACE_CONVERSION
 
     DestVectorType operator()(const PyramidVectorType& v) const
     {
@@ -885,13 +1265,27 @@ public:
             Scale::scale_color_difference_of_pyramid(converter(v.green())),
             Scale::scale_color_difference_of_pyramid(converter(v.blue()))
         };
-#ifdef DEBUG_COLORSPACE_STATISTICS
+#ifdef LOG_COLORSPACE_CONVERSION
         range.update(luv[0], luv[1], luv[2]);
-#endif // DEBUG_COLORSPACE_STATISTICS
+#endif // LOG_COLORSPACE_CONVERSION
+
+        assert(!std::isnan(luv[0]) && luv[0] >= 0.0);
         const Luv2XYZFunctor::result_type xyz {luv2xyz(luv)};
         double rgb[3];
 
         cmsDoTransform(XYZToInputTransform, &xyz[0], rgb, 1U);
+
+        if (EXPECT_RESULT(is_below_threshold(rgb), false))
+        {
+            // Optimization Possibility: If XYZ2LabFunctor is instantiated with `double':
+            //     union {
+            //         XYZ2LabFunctor::result_type lab_array;
+            //         cmsCIELab lab_struct;
+            //     };
+            const XYZ2LabFunctor::result_type lab_vector {xyz2lab(xyz)};
+            const cmsCIELab lab {lab_vector[0], lab_vector[1], lab_vector[2]};
+            polish_rgb(&lab, rgb);
+        }
 
         return DestVectorType(DestTraits::fromRealPromote(rgb_dest_scale * rgb[0]),
                               DestTraits::fromRealPromote(rgb_dest_scale * rgb[1]),
@@ -900,11 +1294,12 @@ public:
 
 protected:
     Luv2XYZFunctor luv2xyz;
+    XYZ2LabFunctor xyz2lab;
     ConvertFunctorType converter;
     const double rgb_dest_scale;
-#ifdef DEBUG_COLORSPACE_STATISTICS
+#ifdef LOG_COLORSPACE_CONVERSION
     mutable TriplePeakHold range;
-#endif // DEBUG_COLORSPACE_STATISTICS
+#endif // LOG_COLORSPACE_CONVERSION
 };
 
 
@@ -925,15 +1320,15 @@ public:
         static_assert(PyramidIntegerBits >= 8,
                       "not enough PyramidIntegerBits to get `pyramid_scale' from shift");
 
-#ifdef DEBUG_COLORSPACE_STATISTICS
+#ifdef LOG_COLORSPACE_CONVERSION
 #ifdef OPENMP
 #pragma omp critical
 #endif
         std::cout <<
             "+ PyramidScaleJCh::PyramidScaleJCh: PyramidIntegerBits = " << PyramidIntegerBits <<
             ", PyramidFractionBits = " << PyramidFractionBits << "  =>  pyramid-scale = " << pyramid_scale <<
-            "\n";
-#endif // DEBUG_COLORSPACE_STATISTICS
+            std::endl;
+#endif // LOG_COLORSPACE_CONVERSION
     }
 
     double scale_lightness_for_pyramid(double a_lightness) const
@@ -1041,82 +1436,6 @@ protected:
 
 namespace ciecam_detail
 {
-    template <typename forward_iterator>
-    static inline void
-    limit_sequence(forward_iterator first, forward_iterator last, double lower_limit, double upper_limit)
-    {
-        while (first != last)
-        {
-            *first = limit(*first, lower_limit, upper_limit);
-            ++first;
-        }
-    }
-
-
-    static inline double
-    uniform_random(unsigned* seed)
-    {
-        return static_cast<double>(enblend::rand_r(seed)) / static_cast<double>(RAND_MAX);
-    }
-
-
-    static inline bool
-    bracket_minimum(const gsl_function& cost,
-                    double& x_initial, double x_lower, double x_upper,
-                    unsigned maximum_tries)
-    {
-        const double y_minimum_bound =
-            std::min(cost.function(x_lower, cost.params), cost.function(x_upper, cost.params));
-        double y_initial = cost.function(x_initial, cost.params);
-
-        if (y_initial < y_minimum_bound)
-        {
-            return true;
-        }
-
-        unsigned i = 0U;
-        const double lower = std::max(0.001, 1.001 * x_lower);
-        const double upper = 0.999 * x_upper;
-        unsigned seed = 1000003U; // fixed seed for reproducibility
-
-        while (y_initial >= y_minimum_bound && i < maximum_tries)
-        {
-            x_initial = uniform_random(&seed) * (upper - lower) + lower;
-            y_initial = cost.function(x_initial, cost.params);
-            ++i;
-        }
-
-        return i < maximum_tries;
-    }
-
-
-    static inline int
-    alternating_power_spacing(int i, int n,
-                              double a, double b, double c,
-                              double p)
-    {
-        const bool is_even_n = n % 2 == 0;
-        const double left_unit_stride = 1.0 / static_cast<double>(n - (is_even_n ? 1 : 2));
-        const double right_unit_stride = 1.0 / static_cast<double>(n - (is_even_n ? 2 : 1));
-        const double left_width = c - a;
-        const double right_width = b - c;
-
-        const double x = static_cast<double>(i);
-        double y = c;
-
-        if (i % 2 == 1)         // 1, 3, 5, ...
-        {
-            y -= left_width * std::pow(x * left_unit_stride, 1.0 / p);
-        }
-        else                    // 0, 2, 4, 6, ...
-        {
-            y += right_width * std::pow(x * right_unit_stride, p);
-        }
-
-        return y;
-    }
-
-
     struct extra_minimizer_parameter
     {
         explicit extra_minimizer_parameter(const cmsJCh& out_of_box_jch) : jch(out_of_box_jch)
@@ -1139,7 +1458,7 @@ namespace ciecam_detail
 
         cmsDoTransform(InputToLabTransform, rgb, &lab_of_rgb, 1);
 
-        return cmsCMCdeltaE(lab, &lab_of_rgb, 2.0, 1.0);
+        return calculate_delta_e(lab, &lab_of_rgb);
     }
 
 
@@ -1231,40 +1550,40 @@ public:
         rgb_dest_scale(DestTraits::toRealPromote(DestTraits::max())),
 
         // Parameters for highlight optimizer only
-        highlight_lightness_guess_1d_factor(limit(parameter::as_double("highlight-recovery-lightness-guess-factor", 0.975),
+        highlight_lightness_guess_1d_factor(limit(parameter::as_double("ciecam-highlight-recovery-lightness-guess-factor", 0.975),
                                                   0.25, 4.0)),
-        highlight_lightness_guess_1d_offset(parameter::as_double("highlight-recovery-lightness-guess-offset", 0.0)),
+        highlight_lightness_guess_1d_offset(parameter::as_double("ciecam-highlight-recovery-lightness-guess-offset", 0.0)),
 
-        maximum_highlight_iterations(limit(parameter::as_unsigned("highlight-recovery-maximum-iterations", 100U),
+        maximum_highlight_iterations(limit(parameter::as_unsigned("ciecam-highlight-recovery-maximum-iterations", 100U),
                                            10U, 1000U)),
-        maximum_highlight_bracket_tries(limit(parameter::as_unsigned("highlight-recovery-bracket-maximum-tries", 1000U),
+        maximum_highlight_bracket_tries(limit(parameter::as_unsigned("ciecam-highlight-recovery-bracket-maximum-tries", 1000U),
                                               10U, 1000000U)),
-        highlight_simplex_lightness_step_length(limit(parameter::as_double("highlight-recovery-lightness-step-length", 12.5),
+        highlight_simplex_lightness_step_length(limit(parameter::as_double("ciecam-highlight-recovery-lightness-step-length", 12.5),
                                                       1.0 / 65536.0, 100.0)),
-        highlight_simplex_chroma_step_length(limit(parameter::as_double("highlight-recovery-chroma-step-length", 6.25),
+        highlight_simplex_chroma_step_length(limit(parameter::as_double("ciecam-highlight-recovery-chroma-step-length", 6.25),
                                                    1.0 / 65536.0, 120.0)),
-        highlight_iterations_per_leg(limit(parameter::as_unsigned("highlight-recovery-iterations-per-leg", 50U),
+        highlight_iterations_per_leg(limit(parameter::as_unsigned("ciecam-highlight-recovery-iterations-per-leg", 50U),
                                            5U, 500U)),
-        maximum_highlight_leg(limit(parameter::as_unsigned("highlight-recovery-maximum-legs", 10U), 1U, 100U)),
-        shadow_disguised_as_highlight_j(limit(parameter::as_double("shadow-disguised-as-highlight-lightness", 1.0),
+        maximum_highlight_leg(limit(parameter::as_unsigned("ciecam-highlight-recovery-maximum-legs", 10U), 1U, 100U)),
+        shadow_disguised_as_highlight_j(limit(parameter::as_double("ciecam-shadow-disguised-as-highlight-lightness", 1.0),
                                               0.0001, 10.0)),
 
         // Parameters for shadow optimizer only
-        shadow_lightness_lightness_guess_factor(parameter::as_double("shadow-recovery-lightness-lightness-guess-factor", 1.24)),
-        shadow_lightness_chroma_guess_factor(parameter::as_double("shadow-recovery-lightness-chroma-guess-factor", -0.136)),
-        shadow_lightness_guess_offset(parameter::as_double("shadow-recovery-lightness-guess-offset", 0.0)),
-        shadow_chroma_lightness_guess_factor(parameter::as_double("shadow-recovery-chroma-lightness-guess-factor", -0.604)),
-        shadow_chroma_chroma_guess_factor(parameter::as_double("shadow-recovery-chroma-chroma-guess-factor", 1.33)),
-        shadow_chroma_guess_offset(parameter::as_double("shadow-recovery-chroma-guess-offset", 0.0)),
+        shadow_lightness_lightness_guess_factor(parameter::as_double("ciecam-shadow-recovery-lightness-lightness-guess-factor", 1.24)),
+        shadow_lightness_chroma_guess_factor(parameter::as_double("ciecam-shadow-recovery-lightness-chroma-guess-factor", -0.136)),
+        shadow_lightness_guess_offset(parameter::as_double("ciecam-shadow-recovery-lightness-guess-offset", 0.0)),
+        shadow_chroma_lightness_guess_factor(parameter::as_double("ciecam-shadow-recovery-chroma-lightness-guess-factor", -0.604)),
+        shadow_chroma_chroma_guess_factor(parameter::as_double("ciecam-shadow-recovery-chroma-chroma-guess-factor", 1.33)),
+        shadow_chroma_guess_offset(parameter::as_double("ciecam-shadow-recovery-chroma-guess-offset", 0.0)),
 
-        shadow_simplex_lightness_step_length(limit(parameter::as_double("shadow-recovery-lightness-step-length", 0.625),
+        shadow_simplex_lightness_step_length(limit(parameter::as_double("ciecam-shadow-recovery-lightness-step-length", 0.625),
                                                    1.0 / 65536.0, 100.0)),
-        shadow_simplex_chroma_step_length(limit(parameter::as_double("shadow-recovery-chroma-step-length", 1.25),
+        shadow_simplex_chroma_step_length(limit(parameter::as_double("ciecam-shadow-recovery-chroma-step-length", 1.25),
                                                 1.0 / 65536.0, 120.0)),
-        shadow_iterations_per_leg(limit(parameter::as_unsigned("shadow-recovery-iterations-per-leg", 40U),
+        shadow_iterations_per_leg(limit(parameter::as_unsigned("ciecam-shadow-recovery-iterations-per-leg", 40U),
                                         4U, 400U)),
-        maximum_shadow_leg(limit(parameter::as_unsigned("shadow-recovery-maximum-legs", 5U), 1U, 50U)),
-        maximum_multistart_tries(limit(parameter::as_unsigned("shadow-recovery-maximum_tries", 20U), 1U, 500U)),
+        maximum_shadow_leg(limit(parameter::as_unsigned("ciecam-shadow-recovery-maximum-legs", 5U), 1U, 50U)),
+        maximum_multistart_tries(limit(parameter::as_unsigned("ciecam-shadow-recovery-maximum-tries", 20U), 1U, 500U)),
 
         // Parameters for both optimizers
         // Desired error limits: LoFi: 0.5/2^8, HiFi: 0.5/2^16, Super-HiFi: 0.5/2^24
@@ -1308,9 +1627,9 @@ public:
     }
 
     double optimize_1d(cmsJCh initial_jch,
-                              double initial_lightness,
-                              unsigned maximum_iterations,
-                              cmsJCh& final_jch) const
+                       double initial_lightness,
+                       unsigned maximum_iterations,
+                       cmsJCh& final_jch) const
     {
         ciecam_detail::extra_minimizer_parameter extra(initial_jch);
         gsl_function cost = {ciecam_detail::delta_e_min_cost, &extra};
@@ -1326,7 +1645,7 @@ public:
 
         final_jch.J = optimizer.x_minimum();
 
-#ifdef DEBUG_OPTIMIZE_1D_STATISTICS
+#ifdef LOG_COLORSPACE_OPTIMIZATION
 #ifdef OPENMP
 #pragma omp critical
 #endif
@@ -1337,7 +1656,7 @@ public:
                 "+ optimize_1d: delta-E = " << optimizer.f_minimum() << "\n";
             ciecam_detail::show_jch_rgb("+ optimize_1d: final", &final_jch);
         }
-#endif
+#endif // LOG_COLORSPACE_OPTIMIZATION
 
         return optimizer.f_minimum();
     }
@@ -1396,9 +1715,9 @@ public:
             cmsJCh jch;
             const double opt_deltae =
                 optimize_2d(*initial_jch,
-                            ciecam_detail::alternating_power_spacing(n, maximum_multistart_tries,
-                                                                     0.0, Scale::MAXIMUM_LIGHTNESS, guessed_j,
-                                                                     2.0),
+                            detail::alternating_power_spacing(n, maximum_multistart_tries,
+                                                              0.0, Scale::MAXIMUM_LIGHTNESS, guessed_j,
+                                                              2.0),
                             guessed_c,
                             shadow_simplex_lightness_step_length, shadow_simplex_chroma_step_length,
                             maximum_shadow_leg, shadow_iterations_per_leg,
@@ -1420,7 +1739,7 @@ public:
 
         jch_to_rgb(&best_jch, rgb);
 
-#ifdef DEBUG_SHADOW_HIGHLIGHT_STATISTICS
+#ifdef LOG_COLORSPACE_OPTIMIZATION
         if (best_deltae > optimizer_goal)
         {
 #ifdef OPENMP
@@ -1433,7 +1752,7 @@ public:
             ciecam_detail::show_jch_rgb("+ multistart_optimize_2d: initial", initial_jch);
             ciecam_detail::show_jch_rgb("+ multistart_optimize_2d: final", &best_jch);
         }
-#endif
+#endif // LOG_COLORSPACE_OPTIMIZATION
     }
 
     void flexible_optimize_1d_2d(const cmsJCh* jch, double* rgb) const
@@ -1445,15 +1764,15 @@ public:
         double delta_e_1d = 0.0;
         double delta_e_2d __attribute__((unused)) = 0.0;
 
-        if (EXPECT_RESULT(ciecam_detail::bracket_minimum(cost, guessed_j,
-                                                         0.0, std::max(static_cast<double>(Scale::MAXIMUM_LIGHTNESS), jch->J),
-                                                         maximum_highlight_bracket_tries),
+        if (EXPECT_RESULT(detail::bracket_minimum(cost, guessed_j,
+                                                  0.0, std::max(static_cast<double>(Scale::MAXIMUM_LIGHTNESS), jch->J),
+                                                  maximum_highlight_bracket_tries),
                           true))
         {
             delta_e_1d = optimize_1d(*jch, guessed_j, maximum_highlight_iterations, opt_jch);
             if (delta_e_1d > optimizer_goal)
             {
-#ifdef DEBUG_HIGHLIGHT_FALLBACK_STATISTICS
+#ifdef LOG_COLORSPACE_OPTIMIZATION
 #ifdef OPENMP
 #pragma omp critical
 #endif
@@ -1462,7 +1781,8 @@ public:
                     jch->J << ", {C = " << jch->C << ", h = " << jch->h << "}\n" <<
                     "+          1d opt J = " << opt_jch.J << " and 1d delta-E = " << delta_e_1d <<
                     std::endl;
-#endif
+#endif // LOG_COLORSPACE_OPTIMIZATION
+
                 delta_e_2d =
                     optimize_2d(opt_jch,
                                 highlight_lightness_guess_2d(opt_jch), highlight_chroma_guess_2d(opt_jch),
@@ -1483,7 +1803,7 @@ public:
 
         jch_to_rgb(&opt_jch, rgb);
 
-#ifdef DEBUG_SHADOW_HIGHLIGHT_STATISTICS
+#ifdef LOG_COLORSPACE_OPTIMIZATION
         if (delta_e_1d > optimizer_goal && delta_e_2d > optimizer_goal)
         {
 #ifdef OPENMP
@@ -1499,7 +1819,7 @@ public:
                 ciecam_detail::show_jch_rgb("+ flexible_optimize_1d_2d: final", &opt_jch);
             }
         }
-#endif
+#endif // LOG_COLORSPACE_OPTIMIZATION
     }
 
     DestVectorType operator()(const PyramidVectorType& v) const
@@ -1513,10 +1833,13 @@ public:
             Scale::scale_hue_of_pyramid(ch_x, ch_y)
         };
 
-        if (jch.J <= 0.0)
+        if (EXPECT_RESULT(jch.J <= 0.0, false))
         {
             // Lasciate ogne speranza, voi ch'intrate.
-            return DestVectorType(0, 0, 0);
+            return
+                parameter::as_boolean("mark-freaky-color-conversions", false) ?
+                DestVectorType(DestTraits::max(), DestTraits::max(), 0) : // yellow
+                DestVectorType(0, 0, 0);
         }
 
         double rgb[3];
@@ -1579,7 +1902,7 @@ public:
             }
         }
 
-#ifdef DEBUG_STUBBORN_SHADOW_HIGHLIGHT
+#ifdef LOG_COLORSPACE_OPTIMIZATION
         if (rgb[0] > 1.0 || rgb[1] > 1.0 || rgb[2] > 1.0)
         {
 #ifdef OPENMP
@@ -1588,6 +1911,13 @@ public:
             {
                 std::cout << "\n";
                 ciecam_detail::show_jch_rgb("+ stubborn highlight:", &jch);
+            }
+            if (parameter::as_boolean("mark-freaky-color-conversions", false))
+            {
+                // navy blue
+                rgb[0] = 0.0;
+                rgb[1] = 0.0;
+                rgb[2] = 0.5;
             }
         }
 
@@ -1600,10 +1930,17 @@ public:
                 std::cout << "\n";
                 ciecam_detail::show_jch_rgb("+ stubborn shadow:", &jch);
             }
+            if (parameter::as_boolean("mark-freaky-color-conversions", false))
+            {
+                // yellow
+                rgb[0] = 1.0;
+                rgb[1] = 1.0;
+                rgb[2] = 0.0;
+            }
         }
-#endif
+#endif // LOG_COLORSPACE_OPTIMIZATION
 
-        ciecam_detail::limit_sequence(rgb, rgb + 3U, 0.0, 1.0);
+        detail::limit_sequence(rgb, rgb + 3U, 0.0, 1.0);
 
         return DestVectorType(DestTraits::fromRealPromote(rgb_dest_scale * rgb[0]),
                               DestTraits::fromRealPromote(rgb_dest_scale * rgb[1]),

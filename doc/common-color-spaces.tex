@@ -269,9 +269,10 @@ the \acronym{RGB} cube by default.  The next section describes their treatment i
   Blending Color Spaces}
 
 \App{} and \OtherApp{} offer to work inside the \acronym{RGB}-cube~\eqnref{equ:rgb-cube} or in
-several perceptually uniform color spaces.  To override the default select a particular blending
-color space with option~\flexipageref{\option{--blend-colorspace}}{opt:blend-colorspace}.  Here
-are the four available color spaces.
+several perceptually (more or less) uniform color spaces.  To override the default select a
+particular blending color space with
+option~\flexipageref{\option{--blend-colorspace}}{opt:blend-colorspace}.  There are the four
+available color spaces.
 
 \begin{description}
   \genidx{color cube!\acronym{RGB}}%
@@ -297,17 +298,17 @@ are the four available color spaces.
   all perceivable colors.  It is completely independent of any device characteristics,
   approximates human vision, and is perceptually uniform.
 
-  \App{} uses perceptual rendering intent and either the input profile's white-point or, if the
-  \acronym{ICC}-profile lacks the \code{cms\shyp Sig\shyp
-    Media\shyp White\shyp Point\shyp Tag}, fall back to the
-  \acronym{D50} white-point (see, e.g.\ \uref{\wikipediastandardilluminant}{Standard
-    illuminant}).
+  \App{} uses perceptual rendering intent throughout and either the input profile's white-point
+  or, if the \acronym{ICC}-profile lacks the \code{cms\shyp Sig\shyp Media\shyp White\shyp
+    Point\shyp Tag}, falls back to the \acronym{D50} white-point (see,
+  e.g.\ \uref{\wikipediastandardilluminant}{Standard illuminant}).
 
   The conversions from and to \acronym{L*a*b*} are moderately fast to compute; \acronym{L*a*b*}
   mode is two to three times slower than working within the \acronym{RGB}-color cube.  It
   operates the \acronym{LittleCMS} color-space conversion engine in
   \uref{\littlecmscomunboundedcmm}{unbounded} mode which rarely causes color artifacts to show
-  up in the shadows in extreme contrast images.
+  up in the shadows in extreme contrast images.  Prefer linear gamma encoded images to avoid
+  this kind of artifacts.
 
   \genidx{colorspace!\acronym{CIEL*u*v*}}%
   \gensee{CIEL*u*v*@\acronym{CIEL*u*v*} colorspace}{colorspace, \acronym{CIEL*u*v*}}%
@@ -323,7 +324,8 @@ are the four available color spaces.
   The conversions from and to \acronym{L*u*v*} are almost as fast to compute as
   \acronym{L*a*b*}.  It operates the \acronym{LittleCMS} color-space conversion engine in
   \uref{\littlecmscomunboundedcmm}{unbounded} mode which sometimes causes color artifacts to
-  show up in the shadows in strong contrast images.
+  show up in the shadows in strong contrast images.  Prefer linear gamma encoded images to avoid
+  this kind of artifacts.
 
   \genidx{colorspace!\acronym{CIECAM02}}%
   \gensee{CIECAM02@\acronym{CIECAM02} colorspace}{colorspace, \acronym{CIECAM02}}%
