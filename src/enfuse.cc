@@ -893,8 +893,8 @@ process_options(int argc, char** argv)
         WeightExposureId,
         WeightContrastId,
         WeightSaturationId,
-        ExposureOptimumId, ObsoleteExposureOptimumId,
-        ExposureWidthId, ObsoleteExposureWidthId,
+        ExposureOptimumId,
+        ExposureWidthId,
         ExposureWeightFunctionId,
         MinCurvatureId,
         EdgeScaleId,
@@ -937,9 +937,7 @@ process_options(int argc, char** argv)
         {"exposure-weight", required_argument, 0, WeightExposureId},
         {"contrast-weight", required_argument, 0, WeightContrastId},
         {"saturation-weight", required_argument, 0, WeightSaturationId},
-        {"exposure-mu", required_argument, 0, ObsoleteExposureOptimumId},
         {"exposure-optimum", required_argument, 0, ExposureOptimumId},
-        {"exposure-sigma", required_argument, 0, ObsoleteExposureWidthId},
         {"exposure-width", required_argument, 0, ExposureWidthId},
         {"exposure-weight-function", required_argument, 0, ExposureWeightFunctionId},
         {"contrast-min-curvature", required_argument, 0, MinCurvatureId},
@@ -1496,9 +1494,6 @@ process_options(int argc, char** argv)
             optionSet.insert(SaturationWeightOption);
             break;
 
-        case ObsoleteExposureOptimumId:
-            std::cerr << command << ": info: option \"--exposure-mu\" is obsolete, prefer \"--exposure-optimum\"" << std::endl;
-            BOOST_FALLTHROUGH;
         case ExposureOptimumId:
             if (optarg != nullptr && *optarg != 0) {
                 ExposureOptimum =
@@ -1516,10 +1511,6 @@ process_options(int argc, char** argv)
             optionSet.insert(ExposureOptimumOption);
             break;
 
-
-        case ObsoleteExposureWidthId:
-            std::cerr << command << ": info: option \"--exposure-sigma\" is obsolete, prefer \"--exposure-width\"" << std::endl;
-            BOOST_FALLTHROUGH;
         case ExposureWidthId:
             if (optarg != nullptr && *optarg != 0) {
                 ExposureWidth =
