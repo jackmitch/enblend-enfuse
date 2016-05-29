@@ -194,15 +194,15 @@ check_cxx_source_compiles(
     #include <string>
     #include <type_traits>
     #include <utility>
-    
+
     int main()
     {
       std::string s(\"foo\");
       const std::string& const_s = std::as_const(s);
       return 0;
     }
-  "  
-  
+  "
+
   HAVE_AS_CONST
 )
 
@@ -210,28 +210,15 @@ check_cxx_source_compiles(
   "
     #include <filesystem>
     #include <string>
-    
+
     int main()
     {
       std::tr2::sys::path filepath;
       std::string s=filepath.filename().string();
-      return 0;    
+      return 0;
     };
   "
   HAVE_STD_FILESYSTEM
 )
 
 SET(CMAKE_REQUIRED_FLAGS "${SAFE_CMAKE_REQUIRED_FLAGS}")
-  
-# workaround for older boost versions (<1.55)
-set(CMAKE_REQUIRED_INCLUDES ${Boost_INCLUDE_DIR})
-check_cxx_source_compiles(
-  "
-    #include <boost/config/suffix.hpp>
-    #ifndef BOOST_FALLTHROUGH
-      #error \"BOOST_FALLTHROUGH not defined\"
-    #endif
-    int main(){return(0);}
-    "
-    HAVE_BOOST_FALLTHROUGH
-)

@@ -1049,13 +1049,15 @@ process_options(int argc, char** argv)
             optionSet.insert(SoftMaskOption);
             break;
 
-        case 'h': BOOST_FALLTHROUGH;
+        case 'h':
+            [[fallthrough]];
         case HelpId:
             print_only_task = USAGE_ONLY;
             optionSet.insert(HelpOption);
             break;
 
-        case 'V': BOOST_FALLTHROUGH;
+        case 'V':
+            [[fallthrough]];
         case VersionId:
             print_only_task = VERSION_ONLY;
             optionSet.insert(VersionOption);
@@ -1086,7 +1088,8 @@ process_options(int argc, char** argv)
             optionSet.insert(ShowGPUInfoOption);
             break;
 
-        case 'w': BOOST_FALLTHROUGH;
+        case 'w':
+            [[fallthrough]];
         case WrapAroundId:
             if (optarg != nullptr && *optarg != 0) {
                 WrapAround = enblend::wraparoundOfString(optarg);
@@ -1399,7 +1402,8 @@ process_options(int argc, char** argv)
             optionSet.insert(GrayProjectorOption);
             break;
 
-        case 'd': BOOST_FALLTHROUGH;
+        case 'd':
+            [[fallthrough]];
         case DepthId:
             if (optarg != nullptr && *optarg != 0) {
                 OutputPixelType = enblend::outputPixelTypeOfString(optarg);
@@ -1410,7 +1414,8 @@ process_options(int argc, char** argv)
             optionSet.insert(DepthOption);
             break;
 
-        case 'o': BOOST_FALLTHROUGH;
+        case 'o':
+            [[fallthrough]];
         case OutputId:
             if (contains(optionSet, OutputOption)) {
                 std::cerr << command
@@ -1574,7 +1579,8 @@ process_options(int argc, char** argv)
             optionSet.insert(EntropyWeightOption);
             break;
 
-        case 'v': BOOST_FALLTHROUGH;
+        case 'v':
+            [[fallthrough]];
         case VerboseId:
             if (optarg != nullptr && *optarg != 0) {
                 Verbose =
@@ -1694,7 +1700,8 @@ process_options(int argc, char** argv)
             optionSet.insert(AssociatedAlphaOption);
             break;
 
-        case 'l': BOOST_FALLTHROUGH;
+        case 'l':
+            [[fallthrough]];
         case LevelsId:
             if (optarg != nullptr && *optarg != 0) {
                 std::string levels(optarg);

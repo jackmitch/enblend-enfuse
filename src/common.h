@@ -755,7 +755,7 @@ expandFilenameTemplate(const std::string& aTemplate,
                     case 'n':
                         ++aNumber;
                         ++aNumberOfImages;
-                        BOOST_FALLTHROUGH;
+                        [[fallthrough]];
                     case 'i':
                     {
                         std::ostringstream oss;

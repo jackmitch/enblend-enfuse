@@ -80,12 +80,6 @@ ${CMAKE_FUNCTION_EXISTS}
 /* Define to 1 if std::as_const (C++ 17) is available */
 #cmakedefine HAVE_AS_CONST
 
-/* workaround for older boost versions <1.55 */
-#cmakedefine HAVE_BOOST_FALLTHROUGH 1
-#ifndef HAVE_BOOST_FALLTHROUGH
-#define BOOST_FALLTHROUGH ((void) 0)
-#endif
-
 /* Define to 1 if <filesystem> is available */
 #cmakedefine HAVE_STD_FILESYSTEM 1
 
