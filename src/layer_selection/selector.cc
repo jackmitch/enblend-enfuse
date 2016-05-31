@@ -24,7 +24,7 @@
 #include <iostream>             // WHILE DEBUGGING
 #include <memory>               // std::unique_ptr
 
-#include <boost/tokenizer.hpp>
+#include <regex>
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -33,7 +33,7 @@
 #include "selector.h"
 
 
-#define NUMERIC_OPTION_DELIMITERS ";:/" // FIXME: Already defined on "common.h".
+#define NUMERIC_NUMERIC_OPTION_DELIMITERS_REGEX "[;:/]" // FIXME: Already defined on "common.h".
 extern const std::string command;
 
 
@@ -425,12 +425,6 @@ namespace selector
         return result;
     }
 
-
-    // http://www.boost.org/doc/libs/1_58_0/libs/tokenizer/
-    typedef boost::char_separator<char> separator_t;
-    typedef boost::tokenizer<separator_t> tokenizer_t;
-
-
     inline static
     bool
     is_whitespace_or_empty(const std::string& a_string)
@@ -502,21 +496,22 @@ namespace selector
 
     LayerSpecification::LayerSpecification(const std::string& a_layer_specification)
     {
-        static const separator_t separator(NUMERIC_OPTION_DELIMITERS, "");
-        tokenizer_t tokenizer(a_layer_specification, separator);
+        static const std::regex separator(NUMERIC_NUMERIC_OPTION_DELIMITERS_REGEX);
+        std::sregex_token_iterator token(a_layer_specification.begin(), a_layer_specification.end(), separator, -1);
+        std::sregex_token_iterator tokenEnd;
         int token_number = 1;
 
-        for (tokenizer_t::iterator token = tokenizer.begin(); token != tokenizer.end(); ++token)
+        for (; token != tokenEnd; ++token)
         {
-            const std::string::size_type range_separator_position = token->find(range_separator);
+            const std::string::size_type range_separator_position = token->str().find(range_separator);
             std::pair<std::string::const_iterator, std::string::const_iterator> prefix_count =
-                std::mismatch(token->begin(), token->end(), reverse_keyword.begin(),
+                std::mismatch(token->str().begin(), token->str().end(), reverse_keyword.begin(),
                               [](std::string::value_type v1, std::string::value_type v2)
                               {return tolower(v1) == tolower(v2);});
 
             if (range_separator_position == std::string::npos)
             {
-                if (prefix_count.first > token->begin())
+                if (prefix_count.first > token->str().begin())
                 {
                     std::cerr <<
                         command << ": layer index, #" << token_number <<
@@ -525,7 +520,7 @@ namespace selector
                     exit(1);
                 }
 
-                SingletonIndex* possible_index(parse_singleton(*token));
+                SingletonIndex* possible_index(parse_singleton(token->str()));
                 if (possible_index == nullptr)
                 {
                     std::cerr <<
@@ -540,12 +535,12 @@ namespace selector
             }
             else
             {
-                const size_t prefix_length = prefix_count.first - token->begin();
-                const bool forward_range = prefix_count.first == token->begin();
+                const size_t prefix_length = prefix_count.first - token->str().begin();
+                const bool forward_range = prefix_count.first == token->str().begin();
 #ifdef DEBUG_FILESPEC
                 std::cout <<
                     "+ LayerSpecification::LayerSpecification(const std::string&): " <<
-                    " token = <" << *token << ">, reverse_keyword = <" << reverse_keyword << ">\n" <<
+                    " token = <" << token->str() << ">, reverse_keyword = <" << reverse_keyword << ">\n" <<
                     "+ LayerSpecification::LayerSpecification(const std::string&): " <<
                     "prefix_length = " << prefix_length <<
                     ", 1st = <" << token->substr(prefix_length, range_separator_position - prefix_length) <<
@@ -553,10 +548,10 @@ namespace selector
 #endif
 
                 std::unique_ptr<SingletonIndex>
-                    first_index(parse_singleton(token->substr(prefix_length,
+                    first_index(parse_singleton(token->str().substr(prefix_length,
                                                               range_separator_position - prefix_length)));
                 std::unique_ptr<SingletonIndex>
-                    second_index(parse_singleton(token->substr(range_separator_position +
+                    second_index(parse_singleton(token->str().substr(range_separator_position +
                                                                range_separator.length())));
 
                 if (first_index.get() == nullptr)

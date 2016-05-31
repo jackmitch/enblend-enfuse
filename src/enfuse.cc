@@ -68,7 +68,7 @@ extern "C" int optind;
 #include <io.h>
 #endif
 
-#include <boost/tokenizer.hpp>
+#include <regex>
 
 #include <gsl/gsl_version.h>    // GSL_VERSION
 
@@ -771,19 +771,18 @@ fill_mask_templates(const char* an_option_argument,
                     const std::string& an_option_name)
 {
     if (an_option_argument != nullptr && *an_option_argument != 0) {
-        boost::char_separator<char> separator(PATH_OPTION_DELIMITERS, "", boost::keep_empty_tokens);
-        const std::string arg(an_option_argument);
-        boost::tokenizer<boost::char_separator<char> > tokenizer(arg, separator);
-        boost::tokenizer<boost::char_separator<char> >::iterator token = tokenizer.begin();
+        const std::regex delimiterRegex(PATH_OPTION_DELIMITERS_REGEX);
+        const std::sregex_token_iterator endOfSequence;
+        std::sregex_token_iterator token(an_option_name.begin(), an_option_name.end(), delimiterRegex, -1);
 
-        a_soft_mask_template = *token;
+        a_soft_mask_template = token->str();
         ++token;
-        if (token != tokenizer.end()) {
-            a_hard_mask_template = *token;
+        if (token != endOfSequence) {
+            a_hard_mask_template = token->str();
         }
 
         ++token;
-        if (token != tokenizer.end()) {
+        if (token != endOfSequence) {
             std::cerr << command
                       << ": warning: ignoring trailing garbage in \"" << an_option_name << "\"" << std::endl;
         }
@@ -1129,80 +1128,78 @@ process_options(int argc, char** argv)
         }
 
         case EdgeScaleId: {
-            char* tail;
-            boost::char_separator<char> separator(NUMERIC_OPTION_DELIMITERS, "", boost::keep_empty_tokens);
+            std::string::size_type tail;
+            const std::regex delimiterRegex(NUMERIC_OPTION_DELIMITERS_REGEX);
             const std::string arg(optarg);
-            boost::tokenizer<boost::char_separator<char> > tokenizer(arg, separator);
-            boost::tokenizer<boost::char_separator<char> >::iterator token = tokenizer.begin();
+            const std::sregex_token_iterator endOfSequence;
+            std::sregex_token_iterator token(arg.begin(), arg.end(), delimiterRegex, -1);
 
-            if (token == tokenizer.end()) {
+            if (token == endOfSequence) {
                 std::cerr << command << ": no scale given to \"--contrast-edge-scale\".  "
                           << "scale is required." << std::endl;
                 failed = true;
             } else {
-                errno = 0;
-                FilterConfig.edgeScale = strtod(token->c_str(), &tail);
-                if (errno == 0) {
-                    if (*tail != 0) {
-                        std::cerr << command << ": could not decode \"" << tail
+                try {
+                    FilterConfig.edgeScale = std::stod(token->str(), &tail);
+                    if (tail != token->str().length()) {
+                        std::cerr << command << ": could not decode \"" << token->str().substr(tail)
                                   << "\" in edge scale specification \""
-                                  << *token << "\" for edge scale." << std::endl;
+                                  << token->str() << "\" for edge scale." << std::endl;
                         failed = true;
                     }
-                } else {
+                } catch (std::invalid_argument) {
                     std::cerr << command << ": illegal numeric format \""
-                              << *token << "\" for edge scale: "
-                              << enblend::errorMessage(errno) << std::endl;
-                    failed = true;
-                }
-		++token;
-            }
-
-            if (token != tokenizer.end()) {
-                errno = 0;
-                FilterConfig.lceScale = strtod(token->c_str(), &tail);
-                if (errno == 0) {
-                    if (strcmp(tail, "%") == 0) {
-                        FilterConfig.lceScale *= FilterConfig.edgeScale / 100.0;
-                    } else if (*tail != 0) {
-                        std::cerr << command << ": could not decode \"" << tail
-                                  << "\" in specification \"" << *token
-                                  << "\" for LCE-scale." << std::endl;
-                        failed = true;
-                    }
-                } else {
-                    std::cerr << command << ": illegal numeric format \""
-                              << *token << "\" for LCE-Scale: "
-                              << enblend::errorMessage(errno) << std::endl;
+                              << token->str() << "\" for edge scale" << std::endl;
                     failed = true;
                 }
                 ++token;
             }
 
-            if (token != tokenizer.end()) {
-                errno = 0;
-                FilterConfig.lceFactor = strtod(token->c_str(), &tail);
-                if (errno == 0) {
-                    if (strcmp(tail, "%") == 0) {
-                        FilterConfig.lceFactor /= 100.0;
-                    } else if (*tail != 0) {
-                        std::cerr << command << ": could not decode \"" << tail
-                                  << "\" in specification \"" << *token
-                                  << "\" for LCE-factor." << std::endl;
-                        failed = true;
+            if (token != endOfSequence) {
+                try {
+                    FilterConfig.lceScale = std::stod(token->str(), &tail);
+                    if (tail < token->str().length()) {
+                        if (token->str().substr(tail, 1) == "%") {
+                            FilterConfig.lceScale *= FilterConfig.edgeScale / 100.0;
+                        } else {
+                            std::cerr << command << ": could not decode \"" << token->str().substr(tail)
+                                << "\" in specification \"" << token->str()
+                                << "\" for LCE-scale." << std::endl;
+                            failed = true;
+                        }
                     }
-                } else {
+                } catch (std::invalid_argument) {
                     std::cerr << command << ": illegal numeric format \""
-                              << *token << "\" for LCE-factor: "
-                              << enblend::errorMessage(errno) << std::endl;
+                              << token->str() << "\" for LCE-Scale" << std::endl;
                     failed = true;
                 }
                 ++token;
             }
 
-            if (token != tokenizer.end()) {
+            if (token != endOfSequence) {
+                try {
+                    FilterConfig.lceFactor = std::stod(token->str(), &tail);
+                    if (tail < token->str().length()) {
+                        if(token->str().substr(tail,1) == "%") {
+                            FilterConfig.lceFactor /= 100.0;
+                        } else  {
+                            std::cerr << command << ": could not decode \"" << token->str().substr(tail)
+                                      << "\" in specification \"" << token->str()
+                                      << "\" for LCE-factor." << std::endl;
+                            failed = true;
+                        }
+                    }
+                } catch (std::invalid_argument) {
+                    std::cerr << command << ": illegal numeric format \""
+                              << token->str() << "\" for LCE-factor" << std::endl;
+                    failed = true;
+                }
+                ++token;
+            }
+
+            if (token != endOfSequence) {
                 std::cerr << command << ": warning: ignoring trailing garbage \""
-                          << *token << "\" in argument to \"--contrast-edge-scale\"" << std::endl;
+                          << token->str() << "\" in argument to \"--contrast-edge-scale\"" << std::endl;
             }
 
             optionSet.insert(EdgeScaleOption);
@@ -1210,62 +1207,58 @@ process_options(int argc, char** argv)
         }
 
         case EntropyCutoffId: {
-            char* tail;
-            boost::char_separator<char> separator(NUMERIC_OPTION_DELIMITERS, "", boost::keep_empty_tokens);
+            std::string::size_type tail;
+            const std::regex delimiterRegex(NUMERIC_OPTION_DELIMITERS_REGEX);
             const std::string arg(optarg);
-            boost::tokenizer<boost::char_separator<char> > tokenizer(arg, separator);
-            boost::tokenizer<boost::char_separator<char> >::iterator token = tokenizer.begin();
+            const std::sregex_token_iterator endOfSequence;
+            std::sregex_token_iterator token(arg.begin(), arg.end(), delimiterRegex, -1);
 
-            if (token == tokenizer.end()) {
+            if (token == endOfSequence) {
                 std::cerr << command << ": no scale given to \"--entropy-cutoff\".  "
                           << "lower cutoff is required." << std::endl;
                 failed = true;
             } else {
-                errno = 0;
-                EntropyLowerCutoff.set_value(strtod(token->c_str(), &tail));
-                if (errno == 0) {
-                    if (*tail == 0) {
+                try {
+                    EntropyLowerCutoff.set_value(std::stod(token->str(), &tail));
+                    if (tail == token->str().length()) {
                         EntropyLowerCutoff.set_percentage(false);
-                    } else if (strcmp(tail, "%") == 0) {
+                    } else if (token->str().substr(tail, 1) == "%") {
                         EntropyLowerCutoff.set_percentage(true);
                     } else {
                         std::cerr << command << ": unrecognized entropy's lower cutoff \""
-                                  << tail << "\" in \"" << *token << "\"" << std::endl;
+                                  << token->str().substr(tail) << "\" in \"" << token->str() << "\"" << std::endl;
                         failed = true;
                     }
-                } else {
+                } catch (std::invalid_argument) {
                     std::cerr << command << ": illegal numeric format \""
-                              << *token << "\" of entropy's lower cutoff: "
-                              << enblend::errorMessage(errno) << std::endl;
+                              << token->str() << "\" of entropy's lower cutoff" << std::endl;
                     failed = true;
                 }
                 ++token;
             }
 
-            if (token != tokenizer.end()) {
-                errno = 0;
-                EntropyUpperCutoff.set_value(strtod(token->c_str(), &tail));
-                if (errno == 0) {
-                    if (*tail == 0) {
+            if (token != endOfSequence) {
+                try {
+                    EntropyUpperCutoff.set_value(std::stod(token->str(), &tail));
+                    if (tail == token->str().length()) {
                         EntropyUpperCutoff.set_percentage(false);
-                    } else if (strcmp(tail, "%") == 0) {
+                    } else if (token->str().substr(tail, 1) == "%") {
                         EntropyUpperCutoff.set_percentage(true);
                     } else {
                         std::cerr << command << ": unrecognized entropy's upper cutoff \""
-                                  << tail << "\" in \"" << *token << "\"" << std::endl;
+                                  << token->str().substr(tail) << "\" in \"" << token->str() << "\"" << std::endl;
                         failed = true;
                     }
-                } else {
+                } catch (std::invalid_argument) {
                     std::cerr << command << ": illegal numeric format \""
-                              << *token << "\" of entropy's upper cutoff: "
-                              << enblend::errorMessage(errno) << std::endl;
+                              << token->str() << "\" of entropy's upper cutoff" << std::endl;
                     failed = true;
                 }
             }
 
-            if (token != tokenizer.end()) {
+            if (token != endOfSequence) {
                 std::cerr << command << ": warning: ignoring trailing garbage \""
-                          << *token << "\" in argument to \"--entropy-cutoff\"" << std::endl;
+                          << token->str() << "\" in argument to \"--entropy-cutoff\"" << std::endl;
             }
 
             optionSet.insert(EntropyCutoffOption);
@@ -1273,73 +1266,69 @@ process_options(int argc, char** argv)
         }
 
         case ExposureCutoffId: {
-            char* tail;
-            boost::char_separator<char> separator(NUMERIC_OPTION_DELIMITERS, "", boost::keep_empty_tokens);
+            std::string::size_type tail;
+            const std::regex delimiterRegex(NUMERIC_OPTION_DELIMITERS_REGEX);
             const std::string arg(optarg);
-            boost::tokenizer<boost::char_separator<char> > tokenizer(arg, separator);
-            boost::tokenizer<boost::char_separator<char> >::iterator token = tokenizer.begin();
+            const std::sregex_token_iterator endOfSequence;
+            std::sregex_token_iterator token(arg.begin(), arg.end(), delimiterRegex, -1);
 
-            if (token == tokenizer.end()) {
+            if (token == endOfSequence) {
                 std::cerr << command << ": no value given to \"--exposure-cutoff\";  "
                           << "lower cutoff is required." << std::endl;
                 failed = true;
             } else {
-                errno = 0;
-                ExposureLowerCutoff.set_value(strtod(token->c_str(), &tail));
-                if (errno == 0) {
-                    if (*tail == 0) {
+                try {
+                    ExposureLowerCutoff.set_value(std::stod(token->str(), &tail));
+                    if (tail == token->str().length()) {
                         ExposureLowerCutoff.set_percentage(false);
-                    } else if (strcmp(tail, "%") == 0) {
+                    } else if (token->str().substr(tail, 1) == "%") {
                         ExposureLowerCutoff.set_percentage(true);
                     } else {
                         std::cerr << command << ": unrecognized exposure's lower cutoff \""
-                                  << tail << "\" in \"" << *token << "\"" << std::endl;
+                                  << token->str().substr(tail) << "\" in \"" << token->str() << "\"" << std::endl;
                         failed = true;
                     }
-                } else {
+                } catch (std::invalid_argument) {
                     std::cerr << command << ": illegal numeric format \""
-                              << *token << "\" of exposure's lower cutoff: "
-                              << enblend::errorMessage(errno) << std::endl;
+                              << token->str() << "\" of exposure's lower cutoff" << std::endl;
                     failed = true;
                 }
                 ++token;
             }
 
-            if (token != tokenizer.end()) {
-                errno = 0;
-                ExposureUpperCutoff.set_value(strtod(token->c_str(), &tail));
-                if (errno == 0) {
-                    if (*tail == 0) {
+            if (token != endOfSequence) {
+                try {
+                    ExposureUpperCutoff.set_value(std::stod(token->str(), &tail));
+                    if (tail == token->str().length()) {
                         ExposureUpperCutoff.set_percentage(false);
-                    } else if (strcmp(tail, "%") == 0) {
+                    } else if (token->str().substr(tail, 1) == "%") {
                         ExposureUpperCutoff.set_percentage(true);
                     } else {
                         std::cerr << command << ": unrecognized exposure's upper cutoff \""
-                                  << tail << "\" in \"" << *token << "\"" << std::endl;
+                                  << token->str().substr(tail) << "\" in \"" << token->str() << "\"" << std::endl;
                         failed = true;
                     }
-                } else {
+                } catch (std::invalid_argument) {
                     std::cerr << command << ": illegal numeric format \""
-                              << *token << "\" of exposure's upper cutoff: "
-                              << enblend::errorMessage(errno) << std::endl;
+                              << token->str() << "\" of exposure's upper cutoff" << std::endl;
                     failed = true;
                 }
                 ++token;
             }
 
-            if (token != tokenizer.end()) {
-                ExposureLowerCutoffGrayscaleProjector = *token;
+            if (token != endOfSequence) {
+                ExposureLowerCutoffGrayscaleProjector = token->str();
                 ++token;
             }
 
-            if (token != tokenizer.end()) {
-                ExposureUpperCutoffGrayscaleProjector = *token;
+            if (token != endOfSequence) {
+                ExposureUpperCutoffGrayscaleProjector = token->str();
                 ++token;
             }
 
-            if (token != tokenizer.end()) {
+            if (token != endOfSequence) {
                 std::cerr << command << ": warning: ignoring trailing garbage \""
-                          << *token << "\" in argument to \"--exposure-cutoff\"" << std::endl;
+                          << token->str() << "\" in argument to \"--exposure-cutoff\"" << std::endl;
             }
 
             optionSet.insert(ExposureCutoffOption);
@@ -1531,31 +1520,31 @@ process_options(int argc, char** argv)
             break;
 
         case ExposureWeightFunctionId: {
+            const std::regex delimiterRegex(PATH_OPTION_DELIMITERS_REGEX);
             const std::string arg(optarg);
-            boost::char_separator<char> separator(PATH_OPTION_DELIMITERS);
-            boost::tokenizer<boost::char_separator<char> > tokenizer(arg, separator);
-            boost::tokenizer<boost::char_separator<char> >::iterator token = tokenizer.begin();
+            const std::sregex_token_iterator endOfSequence;
+            std::sregex_token_iterator token(arg.begin(), arg.end(), delimiterRegex, -1);
 
-            if (token == tokenizer.end()) {
+            if (token == endOfSequence) {
                 std::cerr << command
                           << ": option \"--exposure-weight-function\" requires an argument" << std::endl;
                 failed = true;
             } else {
-                ExposureWeightFunctionName = *token;
+                ExposureWeightFunctionName = token->str();
                 ++token;
 #ifdef _WIN32
                 // special handling of absolute filenames on Windows
-                if (ExposureWeightFunctionName.length() == 1U && arg.length() > 2U && arg[1] == ':' && token != tokenizer.end())
+                if (ExposureWeightFunctionName.length() == 1U && arg.length() > 2U && arg[1] == ':' && token != endOfSequence)
                 {
                     ExposureWeightFunctionName.append(":");
-                    ExposureWeightFunctionName.append(*token);
+                    ExposureWeightFunctionName.append(token->str());
                     ++token;
                 }
 #endif
             }
 
-            for (; token != tokenizer.end(); ++token) {
-                ExposureWeightFunctionArguments.push_back(*token);
+            for (; token != endOfSequence; ++token) {
+                ExposureWeightFunctionArguments.push_back(token->str());
             }
 
             optionSet.insert(ExposureWeightFunctionOption);
@@ -1746,22 +1735,22 @@ process_options(int argc, char** argv)
         }
 
         case ParameterId: {
-            boost::char_separator<char> separator(NUMERIC_OPTION_DELIMITERS, "", boost::keep_empty_tokens);
+            const std::regex delimiterRegex(NUMERIC_OPTION_DELIMITERS_REGEX);
             const std::string arg(optarg);
-            boost::tokenizer<boost::char_separator<char> > tokenizer(arg, separator);
-            boost::tokenizer<boost::char_separator<char> >::iterator token = tokenizer.begin();
+            const std::sregex_token_iterator endOfSequence;
+            std::sregex_token_iterator token(arg.begin(), arg.end(), delimiterRegex, -1);
 
-            for (auto token = tokenizer.begin(); token != tokenizer.end(); ++token) {
+            for (; token != endOfSequence; ++token) {
                 std::string key;
                 std::string value;
-                size_t delimiter = token->find_first_of(ASSIGNMENT_CHARACTERS);
+                size_t delimiter = token->str().find_first_of(ASSIGNMENT_CHARACTERS);
 
                 if (delimiter == std::string::npos) {
-                    key = *token;
+                    key = token->str();
                     value.assign("1");
                 } else {
-                    key = token->substr(0, delimiter);
-                    value = token->substr(delimiter + 1);
+                    key = token->str().substr(0, delimiter);
+                    value = token->str().substr(delimiter + 1);
                     if (value.empty()) {
                         std::cerr <<
                             command << ": parameter key \"" << key << "\" lacks a value;\n" <<
@@ -1784,13 +1773,13 @@ process_options(int argc, char** argv)
         }
 
         case NoParameterId: {
-            boost::char_separator<char> separator(NUMERIC_OPTION_DELIMITERS, "", boost::keep_empty_tokens);
+            const std::regex delimiterRegex(NUMERIC_OPTION_DELIMITERS_REGEX);
             const std::string arg(optarg);
-            boost::tokenizer<boost::char_separator<char> > tokenizer(arg, separator);
-            boost::tokenizer<boost::char_separator<char> >::iterator token = tokenizer.begin();
+            const std::sregex_token_iterator endOfSequence;
+            std::sregex_token_iterator token(arg.begin(), arg.end(), delimiterRegex, -1);
 
-            for (auto token = tokenizer.begin(); token != tokenizer.end(); ++token) {
-                std::string key(*token);
+            for (; token != endOfSequence; ++token) {
+                std::string key(token->str());
                 enblend::trim(key);
 
                 if (key == "*") {
