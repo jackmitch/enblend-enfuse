@@ -78,7 +78,7 @@ ${CMAKE_FUNCTION_EXISTS}
 #cmakedefine STRERROR_R_CHAR_P 1
 
 /* Define to 1 if std::as_const (C++ 17) is available */
-#cmakedefine HAVE_AS_CONST
+#cmakedefine HAVE_AS_CONST 1
 
 /* Define to 1 if <filesystem> is available */
 #cmakedefine HAVE_STD_FILESYSTEM 1
