@@ -122,7 +122,7 @@ CompactifiedAlternativePercentage ExposureUpperCutoff(100.0, true); //< default-
 std::string ExposureLowerCutoffGrayscaleProjector("anti-value"); //< default-exposure-lower-cutoff-projector anti-value
 std::string ExposureUpperCutoffGrayscaleProjector("value"); //< default-exposure-upper-cutoff-projector value
 double WContrast = 0.0;         //< default-weight-contrast 0.0
-double WSaturation = 0.2;       //< default-weight-saturation 0.2
+double WSaturation = 0.0;       //< default-weight-saturation 0.0
 double WEntropy = 0.0;          //< default-weight-entropy 0.0
 bool WSaturationIsDefault = true;
 int ContrastWindowSize = 5;     //< default-contrast-window-size 5

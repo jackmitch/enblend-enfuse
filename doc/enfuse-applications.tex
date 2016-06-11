@@ -104,20 +104,15 @@ When in doubt about what will work, try it, and judge for yourself.
 \mainpurpose{Reduce noise}
 
 With the default settings, \App{} computes a weighted average of the input pixels.  For a series
-of images, repeated with identical settings, this results in a reduction of (photon shot) noise.
-In other words, the dynamic range increases slightly, because the higher signal-to-noise ratio
-makes darker shades usable.  Furthermore, smooth or glossy surfaces get a ``cleaner'' look, and
-edges become visually sharper.  The nitty-gritty reportage look that sometimes stems from a high
-sensitivity setting disappears.
+of images, repeated with identical camera settings, this results in a reduction of photon~shot
+noise.  In other words, the dynamic range increases slightly, because the higher signal-to-noise
+ratio (\acronym{SNR}) makes darker shades usable.  Furthermore, smooth or glossy surfaces get a
+``cleaner'' look, and edges become visually sharper.  The nitty-gritty reportage look that
+sometimes stems from a high sensitivity setting disappears.
 
 Averaged images, and therefore low-noise images, are the base for a multitude of techniques
 like, for example, differences.  The most prominent method in this class is dark-frame
 subtraction.
-
-\App{} sets defaults for the exposure-weight to \val{val:default-weight-exposure}, for
-saturation-weight to \val{val:default-weight-saturation} and for all other weights to zero, a
-good combination for noise reduction.  Eliminating the saturation component with
-\option{--saturation\hyp weight=0.0} sometimes can be worth the extra run.
 
 
 \section[Exposure Series -- Dynamic Range Increase]{\label{sec:exposure-series--dynamic-range-increase}%
@@ -130,19 +125,21 @@ good combination for noise reduction.  Eliminating the saturation component with
 
 An exposure series is a set of images taken with identical parameters except for the exposure
 time.  Some cameras even provide special functions to automate recording exposure series.  See
-the instruction manual of your model for details.  Also check out the features that Magic
-Lantern offers to shoot \acronym{HDR}-series and to extend the dynamic range right in the
-camera.
+the instruction manual of your model for details.  Also check out the features that
+\uref{\magiclanternfm}{Magic Lantern} offers to shoot \acronym{HDR}-series and to extend the
+dynamic range right in the camera.
 
-\App{}'s defaults for exposure weight, \val{val:default-weight-exposure} and saturation weight,
-\val{val:default-weight-saturation} are well suited for fusion of \emph{color} images.  Remember
-that saturation weighting only works for \acronym{RGB} data.
-Option~\option{--saturation-weight} helps to control burnt-out highlights, as these are heavily
+\App{}'s defaults for $\mbox{exposure weight} = \val*{val:default-weight-exposure}$ and sets all
+other weights to zero which generally is well suited for fusion of \emph{color} and
+black-and-white images.
+
+Saturation weighting only works for \acronym{RGB}~data.  For color images,
+option~\option{--saturation-weight} helps to control burnt-out highlights, if they are heavily
 desaturated.  Alternatively, use option~\option{--exposure-cutoff} to suppress noise or
 blown-out highlights without altering the overall brightness too much.  If no image suffers from
 troublesome highlights, the relative saturation weight can be reduced and even be set to zero.
 
-For black and white images \sample{--entropy-weight} can be an alternative to
+For black-and-white images \sample{--entropy-weight} can be an alternative to
 \sample{--saturation-weight} because it suppresses overexposed pixels, as these contain little
 information.  However, entropy weighting is not limited to gray-scale data; it has been
 successfully applied to \acronym{RGB} images, too.  Note that entropy weighting considers
@@ -341,7 +338,6 @@ A bare bones call to \App{} for focus stacking could look like this.
 \begin{terminal}
   \$ enfuse \bslash \\
   ~~~~--exposure-weight=0 \bslash \\
-  ~~~~--saturation-weight=0 \bslash \\
   ~~~~--contrast-weight=1 \bslash \\
   ~~~~--hard-mask \bslash \\
   ~~~~\dots{} \bslash \\
@@ -355,10 +351,6 @@ Here is what each option causes:
 \item[--exposure-weight=0]\itemend
   Switch \strong{off} exposure based pixel selection.  The default weight is
   \val{val:default-weight-exposure}.
-
-\item[--saturation-weight=0]\itemend
-  Switch \strong{off} saturation based pixel selection.  The default weight is
-  \val{val:default-weight-saturation}.
 
 \item[--contrast-weight=1]\itemend
   Switch \strong{on} pixel selection based on local contrast.

@@ -13,6 +13,9 @@ Unreleased.  Current line of development.
   output mask file.  The common abbreviation `-' for `/dev/stdout' is
   understood.
 
+- Enfuse: The default saturation weight has been set to zero.  This
+  makes Enfuse's behavior more predictable.
+
 
 ** New Commandline Options
 
