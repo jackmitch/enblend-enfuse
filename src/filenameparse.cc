@@ -54,7 +54,7 @@ namespace enblend {
 bool
 isRelativePath(const std::string& aFilename)
 {
-#if defined HAVE_STD_FILESYSTEM || defined HAVE_BOOST_FILESYSTEM
+#if defined(HAVE_STD_FILESYSTEM)
     const basic_path path(aFilename);
     return !path.has_root_directory();
 #else
