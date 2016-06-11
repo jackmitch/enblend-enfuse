@@ -112,7 +112,7 @@ const int fineMaskVectorizeDistance = 20; //< fine-mask-vectorize-distance 20
 // Global values from command line parameters.
 std::string OutputFileName(DEFAULT_OUTPUT_FILENAME);
 std::optional<std::string> OutputMaskFileName;
-int Verbose = 1;                //< default-verbosity-level 1
+int Verbose = 0;                //< default-verbosity-level 0
 int ExactLevels = 0;            // 0 means: automatically calculate maximum
 bool OneAtATime = true;
 boundary_t WrapAround = OpenBoundaries;
