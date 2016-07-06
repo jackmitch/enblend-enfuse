@@ -45,10 +45,15 @@ namespace std
 #elif defined(HAVE_BOOST_OPTIONAL_HPP)
 
 #include <boost/optional.hpp>
+#include <boost/version.hpp>
 namespace std
 {
     template <typename t> using optional = ::boost::optional<t>;
+#if BOOST_VERSION >= 106000
+    const ::boost::none_t nullopt((::boost::none_t::init_tag()));
+#else
     constexpr ::boost::none_t nullopt;
+#endif
 }
 
 #else
