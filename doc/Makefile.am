@@ -15,6 +15,8 @@ LATEX_FLAGS = -file-line-error -halt-on-error -interaction nonstopmode
 ##    t    displays all *.tex files used
 TEXLOGANALYSER_FLAGS = $(if $(subst cat,,$(TEXLOGANALYSER)),-hrt,)
 
+GREP_LATEX_LOG_FLAGS = --quiet --fixed-strings
+
 MAKEINDEX_FLAGS = $(if $(subst false,,$(AM_V_P)),,-q)
 
 ## Papersize for some converters, usually:
@@ -229,8 +231,9 @@ SHOW_LATEX_LOG = \
 	@ max_iter=5; \
           iter=2; \
           while [ $$iter -le $$max_iter ] && \
-                $(GREP) '^LaTeX Warning: There were undefined references' $*.log >/dev/null && \
-                $(GREP) '^LaTeX Warning: Label(s) may have changed' $*.log >/dev/null; \
+                $(GREP) $(GREP_LATEX_LOG_FLAGS) \
+                    --regexp='LaTeX Warning: There were undefined references' \
+                    --regexp='LaTeX Warning: Label(s) may have changed' $*.log; \
           do \
             iter=$$((iter + 1)); \
             if $(AM_V_P); then :; else printf '  LATEX    [pass %d] %s\n' $$iter $@; fi; \
