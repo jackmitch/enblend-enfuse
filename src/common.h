@@ -958,7 +958,39 @@ strtok_r(char* str, const char* delim, char** save_ptr)
         return nullptr;
     }
 }
-#endif
+#endif // !HAVE_STRTOK_R
+
+
+#ifdef HAVE_EXIV2
+void
+copy_image_meta_data(Exiv2::Image* output_image_meta, const Exiv2::Image* input_image_meta)
+{
+    const Exiv2::ExifData& input_exif {input_image_meta->exifData()};
+    Exiv2::ExifData& output_exif {output_image_meta->exifData()};
+    output_exif.clear();
+    for (auto x : input_exif)
+    {
+        output_exif.add(x);
+    }
+
+    const Exiv2::IptcData& input_iptc {input_image_meta->iptcData()};
+    Exiv2::IptcData& output_iptc {output_image_meta->iptcData()};
+    output_iptc.clear();
+    for (auto x : input_iptc)
+    {
+        output_iptc.add(x);
+    }
+
+    const Exiv2::XmpData& input_xmp {input_image_meta->xmpData()};
+    Exiv2::XmpData& output_xmp {output_image_meta->xmpData()};
+    output_xmp.clear();
+    for (auto x : input_xmp)
+    {
+        output_xmp.add(x);
+    }
+}
+#endif // HAVE_EXIV2
+
 
 #endif /* __COMMON_H__ */
 

@@ -1251,6 +1251,23 @@ void enfuseMain(const FileNameList& anInputFileNameList,
 
     unsigned m = 0;
     FileNameList::const_iterator inputFileNameIterator(anInputFileNameList.begin());
+
+#ifdef HAVE_EXIV2
+    Exiv2::Image::AutoPtr input_image_meta {nullptr};
+    try {
+        input_image_meta = Exiv2::ImageFactory::open(*inputFileNameIterator);
+        if (input_image_meta.get() && input_image_meta->good()) {
+            input_image_meta->readMetadata();
+        }
+    }
+    catch (Exiv2::Error& e) {
+        std::cerr <<
+            command << ": warning: could not read meta-data of input image \"" <<
+            *inputFileNameIterator << "\"\n" <<
+            command << ": note: " << e.what() << "\n";
+    }
+#endif
+
     while (!imageInfoList.empty()) {
         vigra::Rect2D imageBB;
         std::pair<ImageType*, AlphaType*> imagePair =
@@ -1591,6 +1608,25 @@ void enfuseMain(const FileNameList& anInputFileNameList,
 
     delete outputPair.first;
     delete outputPair.second;
+
+#ifdef HAVE_EXIV2
+    if (input_image_meta.get() && input_image_meta->good() && OutputIsValid) {
+        Exiv2::Image::AutoPtr output_image_meta {nullptr};
+        try {
+            output_image_meta = Exiv2::ImageFactory::open(OutputFileName);
+            if (output_image_meta.get() && output_image_meta->good()) {
+                copy_image_meta_data(output_image_meta.get(), input_image_meta.get());
+                output_image_meta->writeMetadata();
+            }
+        }
+        catch (Exiv2::Error& e) {
+            std::cerr <<
+                command << ": warning: could not write meta-data to output image \"" <<
+                OutputFileName << "\"\n" <<
+                command << ": note: " << e.what() << "\n";
+        }
+    }
+#endif
 }
 
 } // namespace enblend

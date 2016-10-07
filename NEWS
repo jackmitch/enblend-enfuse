@@ -7,6 +7,9 @@ Unreleased.  Current line of development.
 - All deprecated options and features of version 4.2 have been
   removed.
 
+- Enblend and Enfuse transfer EXIF, IPTC, and XMP meta-data from the
+  input images to the output images.
+
 - Both Enblend and Enfuse can now send their output to files without a
   filename extension, which included devices, like e.g. "/dev/stdout".
   The output format is PNM (Portable aNyMap).  The same holds for the

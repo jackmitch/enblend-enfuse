@@ -70,6 +70,10 @@ extern "C" int optind;
 
 #include <regex>
 
+#ifdef HAVE_EXIV2
+#include <exiv2/image.hpp>
+#endif
+
 #include <gsl/gsl_version.h>    // GSL_VERSION
 
 #include <lcms2.h>

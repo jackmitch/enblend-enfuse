@@ -125,6 +125,7 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <vigra/imageinfo.hxx>]],
                AC_MSG_RESULT(yes),
                [AC_MSG_RESULT(no)
                 AC_MSG_ERROR([libvigraimpex is required to compile Enblend.])])
+AC_MSG_CHECKING([whether Vigra import/export-library is sufficiently recent])
 AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <vigra/imageinfo.hxx>
                                   #include <vigra/impexalpha.hxx>]],
                                 [[vigra::BRGBImage image;
@@ -135,6 +136,17 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <vigra/imageinfo.hxx>
                AC_MSG_RESULT(yes),
                [AC_MSG_RESULT(no)
                 AC_MSG_ERROR([Vigra was found, but it was not recent enough.])])
+
+AC_MSG_CHECKING([for Exiv2 library])
+SAVED_LIBS=$LIBS
+LIBS="$LIBS -lexiv2"
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <exiv2/image.hpp>]],
+                                [[Exiv2::Image* image {nullptr};
+                                  image->iptcData();]])],
+               [AC_MSG_RESULT(yes)
+                AC_DEFINE(HAVE_EXIV2, 1, [Define if you have the exiv2 library])],
+               [AC_MSG_RESULT(no)
+                LIBS="$SAVED_LIBS"])
 
 
 AC_MSG_CHECKING([for support of partially static linking])

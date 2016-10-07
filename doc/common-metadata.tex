@@ -1,0 +1,95 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\section{\label{sec:metadata}%
+  \genidx{metadata}%
+  \gensee{image metadata}{metadata}%
+  Image Metadata}
+
+\App{} transparently handles some image metadata.
+
+
+\subsection{\label{sec:metadata-exif-iptc-xmp}%
+  \genidx{metadata!EXIF@\acronym{EXIF}}%
+  \gensee{EXIF@\acronym{EXIF}}{metadata, \acronym{EXIF}}%
+  \genidx{metadata!IPTC@\acronym{IPTC}}%
+  \gensee{IPTC@\acronym{IPTC}}{metadata, \acronym{IPTC}}%
+  \genidx{metadata!XMP@\acronym{XMP}}%
+  \gensee{XMP@\acronym{XMP}}{metadata, \acronym{XMP}}%
+  \acronym{EXIF}, \acronym{IPTC}, and \acronym{XMP} Data}
+
+\App{} automatically copies selected photo metadata, this is
+
+\begin{itemize}
+\item
+  \acronym{EXIF} tags (see \uref{\exiforg}{Exchangeable Image Format}
+  and \appendixName~\fullref{sec:metadata-handling}),
+
+\item
+  \acronym{IPTC} tags (see \uref{\iptcorg}{International Press
+    Telecommunications Council}), and
+
+\item
+  \acronym{XMP} data (see \uref{\adobexmp}{Extensible Metadata
+    Platform})
+\end{itemize}
+
+\noindent of the first input image to the output image.  The metadata
+in all other input files is ignored.
+
+
+\subsection{\label{sec:metadata-icc}%
+  \genidx{metadata!\acronym{ICC} color profile}%
+  \gensee{ICC@\acronym{ICC} metadata}{metadata, \acronym{ICC}}%
+  \acronym{ICC} Color Profiles}
+
+For grayscale or color input images with \acronym{ICC} profiles
+attached (see also \sectionName~\fullref{sec:image-requirements} on
+the consistency of \acronym{ICC} metadata across the input images),
+\App{} honors the profiles in the whole \appisdoing{} process and
+writes the output using \acronym{ICC} profile of the first input image
+and well as attaching it to the output image.
+
+\App{} has no provisions to force a particular \acronym{ICC} profile
+for the output image if the input images contain profiles.  Use
+programs like for example
+\flexipageref{\command{tificc}}{app:littlecms} to apply profiles to
+\acronym{TIFF} images.
+
+For input images without color profiles see in particular
+options~\flexipageref{\option{--fall\shyp back-pro\shyp
+    file}}{opt:fallback-profile} and
+\flexipageref{\option{--blend-col\shyp or\shyp
+    space}}{opt:blend-colorspace}.
+
+\chapterName~\fullref{sec:color-spaces} discusses \acronym{ICC}
+profiles and color spaces in detail.
+
+
+\subsection[Format Specific]{\label{sec:metadata-specific}%
+  \genidx{metadata!image-format specific}%
+  \gensee{image-format specific metadata}{metadata, image-format specific}%
+  \gensee{format specific metadata}{metadata, image-format specific}%
+  Image-Format Specific}
+
+\genidx{metadata!image-format specific!pixel resolution}%
+\gensee{pixel resolution}{metadata, image-format specific, pixel resolution}%
+\gensee{resolution of pixels}{metadata, image-format specific, pixel resolution}%
+\genidx{metadata!image-format specific!image offset}%
+\gensee{image}{metadata, image-format specific, image offset}%
+\gensee{offset of image}{metadata, image-format specific, image offset}%
+Depending on the input-image type (\acronym{TIFF}, \acronym{PNG},
+\acronym{BMP}, \dots) the underlying image library,
+\uref{\hciiwrvigra}{\acronym{VIGRA}}, supplies both \App{} and
+\OtherApp{} with some metadata most notably the $x$- and
+$y$-resolutions and the $x$- and $y$-offset of the image with respect
+to the canvas.
+
+\App{} always honors this kind of metadata if it is available and will
+warn of inconsistencies in the input images.
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:

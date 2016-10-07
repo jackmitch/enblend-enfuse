@@ -70,6 +70,10 @@ extern "C" int optind;
 
 #include <regex>
 
+#ifdef HAVE_EXIV2
+#include <exiv2/image.hpp>
+#endif
+
 #include <lcms2.h>
 #if !defined(LCMS_VERSION) || LCMS_VERSION < 2050
 #error "Little CMS version 2.5 or later is required"
