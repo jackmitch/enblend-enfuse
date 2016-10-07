@@ -153,7 +153,7 @@ The above grammar might surprise the user in the some ways.
 
 \item[Image filenames cannot start with \code{\val{val:response-file-prefix-char}}]\itemend
   A \code{\val{val:response-file-prefix-char}}~sign invariably introduces a response file, even
-  if the filename's extension hints towards an image.
+  if the filename's extension hints toward an image.
 \end{description}
 
 \genidx{response file!force recognition of}%
@@ -258,7 +258,7 @@ all possible globbing algorithms.  To find out about the algorithms in your vers
     \begin{codelist}
       \genidx{globbing algorithm!\code{literal}}%
     \item[literal]\itemend
-      Do not glob.  Interpret all filenames in response files as literals. This is the default.
+      Do not glob.  Interpret all filenames in response files as literals.  This is the default.
 
       Please remember that white-space at both ends of a line in a response file \emph{always}
       gets discarded.
@@ -280,8 +280,7 @@ all possible globbing algorithms.  To find out about the algorithms in your vers
     \item[shell]\itemend
       The \code{shell} globbing algorithm works as \code{literal} does.  In addition, it
       interprets the wildcard characters~\sample{\{}, \sample{\atsign}, and \sample{\squiggle}.
-      This makes the expansion process behave more like common \acronym{UN*X}
-      shells.
+      This makes the expansion process act more like common \acronym{UN*X} shells.
 
       \genidx{globbing algorithm!\code{sh}}
     \item[sh]\itemend

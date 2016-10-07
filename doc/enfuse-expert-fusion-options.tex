@@ -25,7 +25,7 @@ cutoffs for entropy and exposure fusion.
   \gensee{LoG@\acronym{LoG}}{\propername{Laplacian}-of-\propername{Gaussian}}%
 \item[\itempar{--contrast-edge-scale=\metavar{EDGE-SCALE}\optional{:\feasiblebreak
       \metavar{LCE-SCALE}:\feasiblebreak\metavar{LCE-FACTOR}}}]\itemend
-  A non-zero value for \metavar{EDGE-SCALE} switches on the
+  A nonzero value for \metavar{EDGE-SCALE} switches on the
   \propername{Laplacian}\hyp{}of\hyp{}\propername{Gaussian} (\acronym{LoG}) edge detection
   algorithm.  \metavar{EDGE-SCALE} is the radius of the \propername{Gaussian} used in the search
   for edges.  Default: \val{val:default-edge-scale}~pixels.
@@ -177,7 +177,7 @@ enhanced :=
   the active exposure-weight function.
 
   For color images the values of \metalowercutoff{} and \metauppercutoff{} refer to the
-  gray-scale projection as selected with \metalowerprojector{} and \metaupperprojector.  This is
+  grayscale projection as selected with \metalowerprojector{} and \metaupperprojector.  This is
   similar to option~\option{--gray\hyp{}pro\shyp jec\shyp tor}.
 
   Append a \sample{\%}-sign to specify the cutoff relative to maximum pixel value in the source
@@ -228,12 +228,11 @@ enhanced :=
   \metalowercutoff{} and \metauppercutoff{} thresholds.
 
   This option can be helpful if the user wants to exclude underexposed or overexposed pixels
-  from the fusing process in \emph{all} of the input images.  The values of
-  \metalowercutoff{} and \metauppercutoff{} as well as the gray-scale projector
-  determine which pixels are considered ``underexposed'' or ``overexposed''.  As any change of
-  the exposure-weight curve this option changes the brightness of the resulting image:
-  increasing \metalowercutoff{} lightens the final image and lowering \metauppercutoff{}
-  darkens it.
+  from the fusing process in \emph{all} of the input images.  The values of \metalowercutoff{}
+  and \metauppercutoff{} as well as the grayscale projector determine which pixels are
+  considered ``underexposed'' or ``overexposed''.  As any change of the exposure-weight curve
+  this option changes the brightness of the resulting image: increasing \metalowercutoff{}
+  lightens the final image and lowering \metauppercutoff{} darkens it.
 
   Defaults: \val{val:default-exposure-lower-cutoff} for \metalowercutoff{} and
   \val{val:default-exposure-upper-cutoff} for \metauppercutoff, that is, all pixels' values are
@@ -241,7 +240,7 @@ enhanced :=
 
   \figureName~\ref{fig:exposure-cutoff} shows an example.
 
-  The gray-scale projectors \metalowerprojector{} and \metaupperprojector{} default to
+  The grayscale projectors \metalowerprojector{} and \metaupperprojector{} default to
   \sample{\val{val:default-exposure-lower-cutoff-projector}} and
   \sample{\val{val:default-exposure-upper-cutoff-projector}}, which are usually the best choices
   for effective cutoff operations on the respective ends.
@@ -385,7 +384,7 @@ enhanced :=
       \genidx{exposure weight function!fullsine}%
       \genidx{exposure weight function!full-sine}%
     \item[\itempar{fullsine \\ full-sine}]\itemend
-      Full sine-wave shifted upwards by one to give all positive weights; exactly zero outside.
+      Full sine-wave shifted upward by one to give all positive weights; exactly zero outside.
       \begin{equation}\label{equ:weight:fullsine}
       w_{\mathrm{exp}} =
       \left\{\begin{array}{cl}

@@ -110,9 +110,9 @@ ratio (\acronym{SNR}) makes darker shades usable.  Furthermore, smooth or glossy
 ``cleaner'' look, and edges become visually sharper.  The nitty-gritty reportage look that
 sometimes stems from a high sensitivity setting disappears.
 
+\genidx{dark-frame subtraction}%
 Averaged images, and therefore low-noise images, are the base for a multitude of techniques
-like, for example, differences.  The most prominent method in this class is dark-frame
-subtraction.
+like, for example, differences.  The most prominent one in this class is dark-frame subtraction.
 
 
 \section[Exposure Series -- Dynamic Range Increase]{\label{sec:exposure-series--dynamic-range-increase}%
@@ -141,7 +141,7 @@ troublesome highlights, the relative saturation weight can be reduced and even b
 
 For black-and-white images \sample{--entropy-weight} can be an alternative to
 \sample{--saturation-weight} because it suppresses overexposed pixels, as these contain little
-information.  However, entropy weighting is not limited to gray-scale data; it has been
+information.  However, entropy weighting is not limited to grayscale data; it has been
 successfully applied to \acronym{RGB} images, too.  Note that entropy weighting considers
 \emph{each} color channel of an \acronym{RGB} image separately and chooses the channel with the
 minimum entropy as representative for the whole pixel.
@@ -322,8 +322,8 @@ just well, but very well.  For optimum results the maximum control point distanc
 
 \genidx{signal-to-noise ratio}%
 \gensee{SNR@\acronym{SNR}}{signal-to-noise ratio}%
-As in all image fusion operations it is preferable to use 16~bit linear (i.e.\ $\mathrm{gamma} =
-1$) images throughout, but 8~bit gamma-encoded images will do.  Naturally, high signal-to-noise
+As in all image fusion operations it is preferable to use 16~bit linear, this is $\mathrm{gamma}
+= 1$ images throughout, but 8~bit gamma-encoded images will do.  Naturally, high signal-to-noise
 (\acronym{SNR}) ratio input data always is welcome.
 
 
@@ -535,8 +535,8 @@ local-contrast algorithm, but it has two shortcomings:
 \noindent The option~\option{--contrast-min-curvature} option helps to mitigate both flaws.
 
 The argument to \option{--contrast-min-curvature}=\metavar{CURVATURE} either is an absolute
-lightness value, e.g.\ 0\dots255 for 8~bit data and 0\dots65535 for 16~bit data, or, when given
-with a \sample{\%}-sign it is a relative lightness value ranging from 0\% to~100\%.
+lightness value, for example 0\dots255 for 8~bit data and 0\dots65535 for 16~bit data, or, when
+given with a \sample{\%}-sign it is a relative lightness value ranging from 0\% to~100\%.
 
 To suppress unreal edges or counter excessive noise, use the \option{--contrast\hyp min\hyp
   curvature}~option with a \emph{negative} curvature measure~\metavar{CURVATURE}.  This forces

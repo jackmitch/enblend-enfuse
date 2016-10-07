@@ -80,7 +80,7 @@ are used most often.  However, in fact, \App{} and \OtherApp{} do have these opt
   \item[Any other format.]\itemend
     Other formats do not accept a \metavar{COMPRESSION} setting.  However, the underlying
     \uref{\hciiwrvigra}{\acronym{VIGRA}} library automatically compresses \filename{png}-files
-    with the \propername{Deflate} method.  (\acronym{VIGRA} is the image manipulation library
+    with the \propername{Deflate} algorithm.  (\acronym{VIGRA} is the image manipulation library
     upon which \App{} is based.)
   \end{description}
 
@@ -174,15 +174,15 @@ are used most often.  However, in fact, \App{} and \OtherApp{} do have these opt
   image to be redirected or piped.
 
   \begin{geeknote}
-    We refrain from utilizing the \acronym{TIFF} as fallback output file type, because some of
-    the libraries which implement \acronym{TIFF} ``seek'' the output image file.  Technically,
-    this means they call fseek(3) or related functions, which would preclude, for example,
-    \filename{/dev/stdout} to be used as \metavar{FILE}.
+    \App{} refrains from utilizing the \acronym{TIFF} as fallback output file type, because some
+    of the libraries which implement \acronym{TIFF} ``seek'' the output image file.
+    Technically, this means they call fseek(3) or related functions, which would preclude, for
+    example, \filename{/dev/stdout} to be used as \metavar{FILE}.
 
     The \uref{\hciiwrvigra}{\acronym{VIGRA}} implementation of
     \val{val:default-fallback-output-file-type} does not seek.  Moreover, it is completely
     implemented inside of \acronym{VIGRA}, without referring to another library.  The format
-    supports 8, 16, and 32~bits per channel, gray-scale and color images.  The lack of alpha
+    supports 8, 16, and 32~bits per channel, grayscale and color images.  The lack of alpha
     channels can easily be compensated by adding
     option~\flexipageref{\option{--output-mask}}{opt:output-mask} to the \appcmd{}~command line.
   \end{geeknote}
@@ -211,7 +211,7 @@ are used most often.  However, in fact, \App{} and \OtherApp{} do have these opt
   Without an argument, increase the verbosity of progress reporting.  Giving more
   \option{--verbose}~options will make \App{} more verbose; see
   \sectionName~\fullref{sec:finding-out-details} for an exemplary output.  Directly set a
-  verbosity level with a non-negative integral~\metavar{LEVEL}.
+  verbosity level with a nonnegative integral~\metavar{LEVEL}.
   \tableName~\ref{tab:verbosity-levels} shows the messages available at a particular
   \metavar{LEVEL}.
 

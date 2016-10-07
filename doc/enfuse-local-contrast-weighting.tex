@@ -143,7 +143,7 @@ pixels in the local analysis window.  Analogously, the variance becomes
   \propername{Laplacian}-of-\propername{Gaussian} operator,
   \uref{\hciiwrvigracommonfilters}{\code{vigra::laplacianOfGaussian}} is part of the
   package~\uref{\hciiwrvigra}{\acronym{VIGRA}} that \App{} is built upon and is used for edge
-  detection if option~\option{--contrast-edge-scale} is non-zero and
+  detection if option~\option{--contrast-edge-scale} is nonzero and
   \option{--contrast-min-curvature} equal to or less than zero.
 \end{sloppypar}
 
@@ -227,11 +227,11 @@ option~\option{--contrast-min-curvature} to combine both algorithms.  In this mo
 \metavar{CURVATURE}, and the scaled \acronym{SDev} is used as weight.
 
 This technique merges the two edge detection methods where they are best.  The \acronym{LoG}
-excels with clear edges and cannot be fooled by strong but smooth gradients.  However, it is bad
-at detecting faint edges and it is susceptible to noise.  The \acronym{SDev} on the other hand
-shines with even the most marginal edges, and resists noise quite well.  Its weakness is that is
-is easily deceived by strong and smooth gradients.  Tuning \metavar{CURVATURE} the user can pick
-the best threshold for a given set of images.
+excels with clear edges and cannot be fooled by strong but smooth gradients.  However, it is
+inferior at detecting faint edges and it is susceptible to noise.  The \acronym{SDev} on the
+other hand shines with even the most marginal edges, and resists noise quite well.  Its weakness
+is that is is easily deceived by strong and smooth gradients.  Tuning \metavar{CURVATURE} the
+user can pick the best threshold for a given set of images.
 
 \begin{optionsummary}
 \item[--contrast-edge-scale] \sectionName~\fullref{opt:contrast-edge-scale}

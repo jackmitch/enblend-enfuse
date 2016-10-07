@@ -7,8 +7,8 @@
   \genidx{options!advanced}%
   Advanced Options\commonpart}
 
-Advanced options control e.g.\ the channel depth, color model, and the cropping of the output
-image.
+Advanced options control for example the channel depth, color model, and the cropping of the
+output image.
 
 \begin{codelist}
   \label{opt:blend-colorspace}%
@@ -19,7 +19,7 @@ image.
 \item[--blend-colorspace=\metavar{COLORSPACE}]\itemend
   Force blending in selected \metavar{COLORSPACE}.  Given well matched images this option should
   not change the output image much.  However, if \App{} must blend vastly different colors (as
-  e.g.\ anti-colors) the resulting image heavily depends on the \metavar{COLORSPACE}.
+  for example anti-colors) the resulting image heavily depends on the \metavar{COLORSPACE}.
 
   Usually, \App{} chooses defaults depending on the input images:
 
@@ -223,16 +223,16 @@ image.
   \gensee{associated alpha channel}{alpha channel, associated}%
   \gensee{unassociated alpha channel}{alpha channel, associated}%
 \item[-g]
-  Save alpha channel as ``associated''. See the
+  Save alpha channel as ``associated''.  See the
   \uref{\awaresystemsbeextrasamples}{\acronym{TIFF} documentation} for an explanation.
 
   \appidx{Gimp}%
   \appidx{Cinepaint}%
   \application{The Gimp} before version~2.0 and \application{CinePaint} (see
-  \appendixName~\fullref{sec:helpful-programs}) exhibit unusual behavior when loading images
-  with unassociated alpha channels.  Use option~\option{-g} to work around this problem.  With
-  this flag \App{} will create the output image with the ``associated alpha tag'' set, even
-  though the image is really unassociated alpha.
+  \appendixName~\fullref{sec:helpful-programs}) exhibit problems when loading images with
+  unassociated alpha channels.  Use option~\option{-g} to work around.  With this flag \App{}
+  will create the output image with the ``associated alpha tag'' set, even though the image is
+  really unassociated alpha.
 
 
   \label{opt:output-mask}%
@@ -249,7 +249,7 @@ image.
   and nevertheless the final mask is desired after \appisdoing.
 
   The output file itself always remains unaffected of this option.  In particular it gets its
-  alpha channel, i.e.\ its mask, whenever the output-file format supports one.  To mimick
+  alpha channel, this is its mask, whenever the output-file format supports one.  To mimick
   option~\option{--output-mask} with such formats, use for example
 
   \begin{literal}

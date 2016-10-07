@@ -15,9 +15,9 @@ command-line options and image filenames.
   \genidx{detailed configuration}%
   Finding Out Details About \app}
 
-An \appcmd{} binary can come in several configurations.  The exact name of the binary may vary
+An \appcmd{} binary can come in several configurations.  The exact name of the binary may vary,
 and it may or may not reflect the ``kind of \app''.  Therefore, \appcmd{} offers several options
-that allow the user to query exactly\dots
+to query exactly\dots
 
 \begin{compactitemize}
 \item
@@ -319,11 +319,11 @@ The provided per-channel depths range from just one, namely ``8~bits unsigned in
 prominent image formats.
 
 %% With the exception of TIFF, VIFF, PNG, and PNM all file types
-%% store only 1 byte (gray scale and mapped RGB) or 3 bytes (RGB)
+%% store only 1 byte (grayscale and mapped RGB) or 3 bytes (RGB)
 %% per pixel.
 %%
 %% PNG can store UInt8 and UInt16 values, and supports 1 and 3
-%% channel images. One additional alpha channel is also supported.
+%% channel images.  One additional alpha channel is also supported.
 %%
 %% PNM can store 1 and 3 channel images with UInt8, UInt16 and
 %% UInt32 values in each channel.
@@ -382,7 +382,7 @@ prominent image formats.
             formats themselves, not \App's.  The ``Mask''-column indicates whether the format
             supports an image mask (alpha-channel), see also
             \chapterName~\ref{sec:understanding-masks}.  Column~``Profile'' shows whether the
-            image format allows for \acronym{ICC}-profiles to be included; see also
+            image format allows for \acronym{ICC}~profiles to be included; see also
             \chapterName~\ref{sec:color-spaces}.}
 \end{table}
 
@@ -527,9 +527,9 @@ sends error and warning messages to Standard~Error.  The messages follow a fixed
 
   \genidx{message!foreign sources}%
 \item[Foreign Sources:] \appcmd{} depends on various foreign software components that issue
-  their own messages.  We try to catch them and press them in our category scheme, but some of
-  them invariably slip through.  The most prominent members of this rogue fraction are the
-  notices of \uref{\hciiwrvigra}{\acronym{VIGRA}} as e.g.
+  their own messages.  \App{} tries to catch them and press them in the category scheme, but
+  some of them invariably slip through.  The most prominent members of this rogue fraction are
+  the notices of \uref{\hciiwrvigra}{\acronym{VIGRA}} as for example
 
   \begin{literal}
     enfuse: an exception occurred \\
@@ -615,9 +615,9 @@ linked with \appcmd.
   \genidx{OpenMP@\acronym{OpenMP}}%
 \item[\envvar{OMP\_DYNAMIC}\xitemspace (implicit)\xitemspace
   \restrictednote{\acronym{OpenMP}-enabled versions only.}]\itemend
-  Control whether the \uref{\openmporg}{\acronym{OpenMP}} sub-system should parallelize nested
+  Control whether the \uref{\openmporg}{\acronym{OpenMP}} subsystem should parallelize nested
   parallel regions.  This environment variable will only have an effect is the \acronym{OpenMP}
-  sub-system is capable of dynamic adjustment of the number of threads (see explanations in
+  subsystem is capable of dynamic adjustment of the number of threads (see explanations in
   \sectionName~\fullref{sec:compiled-in-features}).
 
   \begin{geeknote}
@@ -632,7 +632,7 @@ linked with \appcmd.
 \item[\envvar{OMP\_NUM\_THREADS}\xitemspace (implicit)\xitemspace
   \restrictednote{\acronym{OpenMP}-enabled versions only.}]\itemend
   Control -- which typically means: reduce -- the number of threads under supervision of the
-  \uref{\openmporg}{\acronym{OpenMP}} sub-system.  By default \appcmd{} uses as many
+  \uref{\openmporg}{\acronym{OpenMP}} subsystem.  By default \appcmd{} uses as many
   \acronym{OpenMP}\hyp{}threads as there are \acronym{CPU}s.  Use this variable for example to
   free some \acronym{CPU}s for other processes than \appcmd.
 

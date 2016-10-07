@@ -34,7 +34,7 @@ from~1 to the number~$n$ of input images.
 
 \begin{itemize}
 \item
-  each $w$ is non-negative to yield a physical intensity and
+  each $w$ is nonnegative to yield a physical intensity and
 
 \item
   the sum of all $w$ is 1 to leave the total intensity unchanged.
@@ -64,9 +64,9 @@ sections.
   \gensee{weighted average}{average, weighted}%
   Weighted Average}
 
-By default, \App{} uses a weighted average, where \emph{each} pixel contributes as much as its
+By default \App{} uses a weighted average, where \emph{each} pixel contributes as much as its
 weight demands.  Of course the weights can be extreme, favoring only a few pixels or even only
-one pixel in the input stack.  Extremes are not typical, however.
+one pixel in the input stack.  However, such extremes are not typical.
 
 Equal weights are another extreme that turns \eqnref{equ:weight} into an arithmetic average.
 This is why we sometimes speak of the ``averaging property'' of this weighting algorithm, like
@@ -104,9 +104,9 @@ output.
   Single Criterion Fusing}
 
 \App{} allows the user to weight each pixel of an input image by up to four different criteria
-(see e.g.\ \chapterName~\fullref{sec:overview}).  However, it does not force the user to do so.
-For some applications and more often simply to gain further insight into the weighting and
-fusing process, looking at only a single criterion is the preferred way to work.
+(see for example \chapterName~\fullref{sec:overview}).  However, it does not force the user to
+do so.  For some applications and more often simply to gain further insight into the weighting
+and fusing process, looking at only a single criterion is the preferred way to work.
 
 \genidx{criteria!active}%
 \gensee{active criteria}{criteria, active}%

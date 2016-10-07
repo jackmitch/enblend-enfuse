@@ -124,10 +124,10 @@ These options control the generation and the usage of masks.
   \gensee{save mask}{mask, save}%
 \item[--save-masks\optional{=\metavar{IMAGE-TEMPLATE}}]\itemend
   Save the generated masks to \metavar{IMAGE-TEMPLATE}, which defaults to
-  \mbox{\sample{\val{val:default-mask-template}}}.  \App{} saves masks as 8~bit grayscale,
-  i.e.\ single channel images.  For accuracy we recommend to choose a lossless format.
+  \mbox{\sample{\val{val:default-mask-template}}}.  \App{} saves masks as 8~bit grayscale, this
+  is single channel images.  For accuracy we recommend to choose a lossless format.
 
-  Use this option if you wish to edit the location of the seam line by hand.  This will give you
+  Use this option if you want to edit the location of the seam line by hand.  This will give you
   images of the right sizes that you can edit to make your changes.  Later, use
   option~\flexipageref{\option{--load-masks}}{opt:load-masks} to blend the project with your
   custom seam lines.

@@ -50,7 +50,7 @@ exposure-weight function identified by \metavar{SYMBOL} from \metavar{OPENCL-SOU
 \end{literal}
 
 If \metavar{SYMBOL} is not found in \metavar{OPENCL-SOURCE} or does not define a suitable
-function, \App{} aborts with an extensive error message.  In
+function, \App{} terminates with an extensive error message.  In
 \exampleName~\ref{ex:opencl-userweight-error} we supply a wrong \metavar{SYMBOL} called
 \sample{foobar}, whereas \filename{variable\_power.cl} -- one of the supplied examples --
 actually defines \sample{weight}.
@@ -157,8 +157,8 @@ float weight(float y);
   \item[ENFUSE\_FWHM\_GAUSSIAN]\itemend
     Shorthand for the width of \App's first ever weight function, \sample{gauss} (see
     \sectionName~\ref{sec:built-in-functions}).  Use the value to rescale the width of the newly
-    written user function to make it behave like a predefined one with respect to the full-width
-    at half of the maximum.
+    written user function to make it act like a predefined one with respect to the full-width at
+    half of the maximum.
 
     The actual value, $2 \sqrt{2 \log(2)}$, is approximately 2.35482.
 

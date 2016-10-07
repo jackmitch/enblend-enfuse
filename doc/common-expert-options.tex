@@ -32,7 +32,7 @@
   \genidx{RGB-cube@\acronym{RGB}-cube}%
 \item[--fallback-profile=\metavar{PROFILE-FILENAME}]\itemend
   Use the \acronym{ICC} profile in \metavar{PROFILE-FILENAME} instead of the default
-  \acronym{sRGB}. This option only is effective if the input images come \emph{without} color
+  \acronym{sRGB}.  This option only is effective if the input images come \emph{without} color
   profiles \emph{and} blending is not performed in the trivial luminance interval or
   \acronym{RGB}-cube.
 
@@ -126,7 +126,7 @@
   \sample{--no-parameter}, which takes one or more \metavar{KEY}s and removes them from the list
   of defined parameters.  The special key~\sample{*} deletes all parameters at once.
 
-  Parameters allow the developers to change the internal workings of \App{} without the need to
+  Parameters enable the developers to change the internal workings of \App{} without the need to
   recompile or relink.
 
 \begin{sgquote}
@@ -150,7 +150,7 @@
   \item[\itempar{-a \\ --pre-assemble}]\itemend
     Pre-assemble non-overlapping images before each blending iteration.
 
-    This overrides the default behavior which is to blend the images sequentially in the order
+    This overrides the default procedure, which is to blend the images sequentially in the order
     given on the command line.  \App{} will use fewer blending iterations, but it will do more
     work in each iteration.
 
@@ -166,10 +166,9 @@
   \genidx{OpenCL!platform}%
 \item[--prefer-gpu=\optional{\metavar{PLATFORM}:}\metavar{DEVICE}
   \restrictednote{\acronym{OpenCL}-enabled versions only.}]\itemend
-  Direct \App{} towards a particular \acronym{OpenCL} \metavar{DEVICE} on the first
-  auto-detected \metavar{PLATFORM} or directly to the given \metavar{PLAT\shyp
-    FORM}\slash\metavar{DE\shyp VICE} combination.  Use the numbers of platform and
-  device found either with
+  Direct \App{} toward a particular \acronym{OpenCL} \metavar{DEVICE} on the first auto-detected
+  \metavar{PLATFORM} or directly to the given \metavar{PLAT\shyp FORM}\slash\metavar{DE\shyp
+    VICE} combination.  Use the numbers of platform and device found either with
 
   \begin{terminal}
     \$ \app{} --verbose --version

@@ -45,10 +45,10 @@ option~\option{--primary-seam-generator}=\metavar{ALGORITHM} to select one of th
 \genidx{seam generation!details}%
 The most significant difference between the two algorithms is the output mask gradation.
 \acronym{NFT} produces a coarse approximation of the seam, running as far away from the
-overlap-region borders as possible.  The resulting mask could then be blended as-is, however,
-\App{} by default runs image-content dependent optimizers to increase the mask gradation and for
-example omits the regions where the images differ.  The result is a finer seam line, which only
-loosely follows the shape of \acronym{NFT}'s primary seam.
+overlap-region borders as possible.  The resulting mask could then be blended as-is.  However,
+\App{} by default runs image-content dependent optimizers to increase the mask gradation, and
+for example omits the regions where the images differ.  The result is a finer seam line, which
+only loosely follows the shape of \acronym{NFT}'s primary seam.
 
 \genidx{graphcut!details}%
 Graph-Cut, on the other hand, is capable of producing the final mask in one pass without the

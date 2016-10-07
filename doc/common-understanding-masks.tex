@@ -15,8 +15,7 @@ processing, or ignored.  For a weight mask, the value of the mask determines how
 contributes, zero again meaning ``no contribution''.
 
 Masks arise in two places: as part of the input files and as separate files, showing the actual
-pixel weights prior to image blending or fusion.  We shall explore both occurrences in the next
-sections.
+pixel weights prior to image blending or fusion.  The following sections will expore both.
 
 
 \section[Masks In Input Files]{\label{sec:masks-in-input-files}%
@@ -122,7 +121,7 @@ The multitude of terms all describing the concept of a mask is confusing.
 
 \App{} and \OtherApp{} only consider pixels that have an associated mask value other than zero.
 If an input image does not have an alpha channel, \application{Enblend} warns and assumes a mask
-of all non-zero values, that is, it will use every pixel of the input image for fusion.
+of all nonzero values, that is, it will use every pixel of the input image for fusion.
 
 \prgidx{nona \textrm{(Hugin)}}%
 Stitchers like \command{nona} add a mask to their output images.

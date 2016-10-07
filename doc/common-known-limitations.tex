@@ -16,7 +16,7 @@ some of the known ones.
 
 \item
   Total size of \emph{any} -- even intermediate -- image is limited to $2^{31}$~pixels, this is
-  two giga-pixels.
+  two gigapixels.
 
 \ifenblend
   \genidx{blending!sequential}%
@@ -32,8 +32,8 @@ some of the known ones.
   \begin{geeknote}
     The overlap is exclusively defined by the masks of the overlapping images.  This is exactly
     what the input masks are built for.  Let $A$ be the number of pixels that overlap in both
-    masks.  We use $A$ as a measure of the overlap area -- something 2\hyp dimensional;
-    technically it is a pixel count.
+    masks.  \App{} uses $A$ as a measure of the overlap area -- something 2\hyp dimensional;
+    technically a pixel count.
 
     Construct the smallest circumscribed, par-axial rectangle of the overlap area.  The
     rectangle has a circumference
@@ -42,14 +42,16 @@ some of the known ones.
     \]
     which is of course 1-dimensional.  Internally $U$ again is a number of pixels just as $A$.
 
-    The threshold when we consider a pair of images sufficiently different is when $A$ is larger
-    than \val{val:overlap-check-threshold}~times the number of pixels on the circumference~$U$
-    \[
+    The threshold for \App{} to consider a pair of images sufficiently different is if $A$ is
+    larger than \val{val:overlap-check-threshold}~times the number of pixels on the
+    circumference~$U$
+    \begin{equation}\label{equ:overlap-threshold}
     A > \val{val:overlap-check-threshold} \times U.
-    \]
-    Avoiding the term ``fractal dimension'', we have constructed a simple measure of how 2\hyp
-    dimensional the overlap area is.  This way we steer clear of feeding later processing stages
-    with nearly 1\hyp dimensional overlap regions, something that wreaks havoc on them.
+    \end{equation}
+    Avoiding the term ``fractal dimension'', \eqnref{equ:overlap-threshold} is a simple measure
+    of how 2\hyp dimensional the overlap area is.  This way \App{} steers clear of feeding later
+    processing stages with nearly 1\hyp dimensional overlap regions, something that wreaks havoc
+    on them.
   \end{geeknote}
 
   \optidx{--wrap}%
@@ -75,7 +77,7 @@ some of the known ones.
     option~\flexipageref{\option{--blend-colorspace}}{opt:blend-colorspace}.
 
   \item
-    Use linear (i.e.\ $\mathrm{gamma} = 1$) color profiles in the input images.  Also see
+    Use linear, this is $\mathrm{gamma} = 1$, color profiles in the input images.  Also see
     \chapterName~\fullref{sec:color-spaces} on ``Color Spaces And Color Profiles''.
   \end{enumerate}
 \end{itemize}

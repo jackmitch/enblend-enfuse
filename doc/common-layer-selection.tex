@@ -6,10 +6,10 @@
   \genidx[\rangebeginlocation]{layer!selection}%
   Layer Selection\commonpart}
 
-Some image formats, like for example \acronym{TIFF}, allow for storing more than one image in a
+Some image formats, like for example \acronym{TIFF}, permit to store more than one image in a
 single file, where all the contained images can have different sizes, number of channels,
-resolutions, compression schemes, etc.  The file there acts as a container for an \emph{ordered}
-set of images.
+resolutions, compression schemes, and so on.  The file there acts as a container for an
+\emph{ordered} set of images.
 
 \genidx[\defininglocation]{file!multi-page}%
 \gensee{multi-page file}{file, multi-page}%
@@ -38,7 +38,7 @@ numbers.
 
 To give the user the same flexibility in specifying and ordering images as with single-layer
 images, both \App{} and \OtherApp{} offer a special syntax to select layers in multi-page files
-by appending a \metavar{layer-specification} to the image file name.
+by appending a \metavar{layer-specification} to the image filename.
 \tableName~\ref{tab:layer-selection-grammar} defines the grammar of
 \metavar{layer-specification}\/s.
 
@@ -73,7 +73,7 @@ in Response Files; see \sectionName~\ref{sec:response-files}.
 
 The simplest \metavar{layer-specification} are the layer-\metavar{index}es.  The first layer
 gets index~1, the second layer~2, and so on.  Zero never is a valid index!  For convenience
-indexing backwards\footnotemark{} is also possible. This means by prefixing an index with a
+indexing backward\footnotemark{} is also possible.  This means by prefixing an index with a
 minus-sign~(\sample{-}) counting will start with the last layer of the \emph{associated}
 multi-page image, such that the last layer always has index~\code{-1}, the next to last
 index~\code{-2} and so on.  Out-of-range indexes are silently ignored whether forward or
@@ -87,7 +87,7 @@ The single layer of a single-layer file always can be accessed either with index
 
 Select a contiguous \metavar{range} of indexes with the range
 operator~\sample{\val{val:layer-range-separator}}, where the \metavar{range-bound}\/s are
-forward or backward indices.  Leaving out a bound or substituting the open-range
+forward or backward indexes.  Leaving out a bound or substituting the open-range
 indicator~\sample{\val{val:layer-range-empty-index-symbol}} means a maximal range into the
 respective direction.
 
@@ -117,7 +117,7 @@ Examples for an image with 8~layers.
 
 \item[\lspec{2 :\ 4 :\ 5}] Select only layers~2, 4, and~5 in this order.
 
-\item[\lspec{2 :\ -4 :\ -3}] Like before, but with some backwards-counting indices.
+\item[\lspec{2 :\ -4 :\ -3}] Like before, but with some backward-counting indexes.
 
 \item[\lspec{1 \val*{val:layer-range-separator}\ 4}] Layers 1~to 4, this is 1, 2, 3, and~4 in
   this order.
@@ -149,9 +149,9 @@ Examples for an image with 8~layers.
 \end{codelist}
 
 \begin{geeknote}
-  Shell expansion will not work anymore with a file name terminated by a layer specification
-  expression (or anything else), because to the shell it is not a file name anymore.  Work
-  around with, for example,
+  Shell expansion will not work anymore with a filename terminated by a layer specification
+  expression (or anything else), because to the shell it is not a filename anymore.  Work around
+  with, for example,
 
   \begin{terminal}
     \$ \app{} `for x in image-??.tif; do echo \$x[2]; done`
@@ -163,7 +163,7 @@ Examples for an image with 8~layers.
     \$ \app{} \$(ls -1 image-??.tif | sed -e 's/\$/[2]/')
   \end{terminal}
 
-  The order of the indices determines the order of the layers, this is, the images.  An index
+  The order of the indexes determines the order of the layers, this is, the images.  An index
   can occur multiple times, which causes layer to be considered \emph{again}.  Consequently,
   this will lead to an error with \application{Enblend}, but may be desired with
   \application{Enfuse} in \code{soft-mask}~mode to give the image more weight by mentioning it
@@ -204,8 +204,8 @@ helpful utilities check out \appendixName~\fullref{sec:helpful-programs}.
     \textrm{(ImageMagick)}}\command{display} use a
   \uref{\imagemagickorgcommandlineprocessinginput}{similar syntax} as \App{} to select layers
   (which in \application{ImageMagick} parlance are called ``frames'') in multi-page files.
-  Please note that \application{ImageMagick} tools start indexing at zero, whereas we start at
-  one.
+  Please note that \application{ImageMagick} tools start indexing at zero, whereas \App{} starts
+  counting at one.
 
 \item
   \App{} and \OtherApp{} by default apply the \sample{\val{val:layer-selector}} selector (see

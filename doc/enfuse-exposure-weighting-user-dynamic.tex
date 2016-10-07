@@ -203,12 +203,12 @@ Between chair and keyboard:
   \begin{sloppypar}
     Derive the weight function from the supplied C++ base-class~\code{ExposureWeight}, which is
     defined in header file~\filename{exposure\_weight\_base.h}.  It resides in the
-    \filename{src}~sub-directory of the source distribution and -- for a correctly installed
+    \filename{src}~subdirectory of the source distribution and -- for a correctly installed
     package -- in directory \filename{\val*{val:DOCDIR}\slash examples\slash enfuse}.
   \end{sloppypar}
 
 \item
-  At least override method~\code{weight}.
+  At least override member function~\code{weight}.
 
   \begin{itemize}
   \item
@@ -241,8 +241,8 @@ Between chair and keyboard:
 
   Technically, the functors which the user-defined weight functions are part of are
   copy-constructed for each \acronym{OpenMP} worker thread.  Thus, there is no contention within
-  the \code{ExposureWeight} sub-classes.  Although, if \code{normalize} or \code{weight} access
-  a shared resource these accesses must be protected by serialization instructions.  One
+  the derived classes of \code{ExposureWeight}.  Although, if \code{normalize} or \code{weight}
+  access a shared resource these accesses must be protected by serialization instructions.  One
   solution is to use \acronym{OpenMP} directives, like for example,
 
   \begin{cxxlisting}
@@ -253,8 +253,8 @@ Between chair and keyboard:
   \end{cxxlisting}
 
   Experienced hackers will recognize occasions when to prefer other constructs, like, for
-  example \code{\#pragma omp atomic} or simply an atomic data-type (e.g.~\code{sig\_atomic\_t}
-  from \filename{signal.h}).
+  example \code{\#pragma omp atomic} or simply an atomic data-type (for example
+  \code{sig\_atomic\_t} from \filename{signal.h}).
 
   Remember to compile all modules that use \acronym{OpenMP} directives with the
   (compiler-specific) flags that turn on \acronym{OpenMP}.  For \command{g++} this is
@@ -266,17 +266,18 @@ Between chair and keyboard:
   \begin{literal}
     ExposureWeight::error(const std::string\& message)
   \end{literal}
-  \App{} catches these exceptions at an enclosing scope, displays \metavar{message}, and aborts.
+  \App{} catches these exceptions at an enclosing scope, displays \metavar{message}, and
+  terminates.
 
 \item
   Define an object of the derived class.  This creates the \metavar{SYMBOL} to refer to at the
   \App{} command line.
 
   The actual signature of the constructor (default, two-argument, \dots) does not matter,
-  because \App{} \emph{always} invokes \code{initialize} before calling any other method of a
-  user-defined \code{ExposureWeight} sub-class.  Method~\code{initialize} sets (read:
-  overwrites) \metavar{optimum} and \metavar{width} and ensures they are within the required
-  parameter range.
+  because \App{} \emph{always} invokes \code{initialize} before calling any other member
+  function of a user-defined, derived class of \code{ExposureWeight}.  Member
+  function~\code{initialize} sets (read: overwrites) \metavar{optimum} and \metavar{width} and
+  ensures they are within the required parameter range.
 \end{enumerate}
 
 \exampleName~\ref{ex:simple-dynamic-exposure-weight-function} shows the C++-code of a suitable
@@ -316,9 +317,9 @@ Linear linear;
   \caption[Simple dynamic exposure weight function]%
           {\label{ex:simple-dynamic-exposure-weight-function}%
             A dynamic exposure weight function that defines a ``roof-top''.  The natural width
-            is exactly one, so we override method~\code{initialize} to rescale \metavar{WIDTH},
-            passed in as \code{width\_parameter}, by multiplying with \code{FWHM\_GAUSSIAN} to
-            get the same width as the predefined Gaussian.}
+            is exactly one, so we override member function~\code{initialize} to rescale
+            \metavar{WIDTH}, passed in as \code{width\_parameter}, by multiplying with
+            \code{FWHM\_GAUSSIAN} to get the same width as the predefined Gaussian.}
 \end{exemplar}
 
 
@@ -433,11 +434,11 @@ VariablePower vpower;
   \genidx{performance considerations}%
   Performance Considerations}
 
-Exposure weighting objects are created and destroyed only $O(1)$~times.  Thus,
-method~\code{initialize} could be used to perform all kinds of computationally expensive tasks.
-In contrast, methods~\code{normalize} and \code{weight} are called for \emph{every} pixel in
-\emph{each} of the input images.  Therefore, if performance of the weight function is a problem,
-these two functions are the prime candidates for optimization.
+Exposure weighting objects are created and destroyed only $O(1)$~times.  Thus, member
+function~\code{initialize} could be used to perform all kinds of computationally expensive
+tasks.  In contrast, methods~\code{normalize} and \code{weight} are called for \emph{every}
+pixel in \emph{each} of the input images.  Therefore, if performance of the weight function is a
+problem, these two functions are the prime candidates for optimization.
 
 
 \subsubsection[Compiling, Linking, and Loading]{\label{sec:compiling-linking-loading}%
