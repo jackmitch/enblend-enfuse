@@ -71,17 +71,19 @@ exportImagePreferablyWithAlpha(const ImageType* image,
         vigra::exportImageAlpha(srcImageRange(*image),
                                 srcIter(mask->upperLeft(), mask_accessor),
                                 outputImageInfo);
-        // if (optionSet.count(OutputMaskOption))
-        // {
-        //     std::cerr << command <<
-        //         ": warning: option \"--output-mask\" given, but output image type supports alpha channel\n" <<
-        //         ": info: write image with alpha channel and no separate mask file\n";
-        // }
     }
     catch (std::exception& e)
     {
-        std::cerr << command <<
-            ": warning: must fall back to export image without alpha channel" << std::endl;
+        std::cerr <<
+            command << ": warning: must fall back to export image without alpha channel\n" <<
+            command << ": note: output image type (" << enblend::getFileType(OutputFileName) <<
+            ") does not support an alpha channel" << std::endl;
+        if (!OutputMaskFileName)
+        {
+            std::cerr <<
+                command << ": note: use option \"--output-mask\" to save a mask file of the alpha channel" <<
+                std::endl;
+        }
 #ifdef DEBUG
         {
             std::cerr << "+ exportImagePreferablyWithAlpha: exception description follows...\n";
