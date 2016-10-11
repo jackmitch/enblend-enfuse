@@ -19,6 +19,8 @@
  */
 
 
+#include <memory>
+
 #include "metadata.h"
 
 
@@ -30,7 +32,10 @@ namespace metadata
     {
         for (auto x : input_exif)
         {
-            output_exif.add(x);
+            if (output_exif.findKey(Exiv2::ExifKey(x.key())) == output_exif.end())
+            {
+                output_exif.add(x);
+            }
         }
     }
 
@@ -40,7 +45,10 @@ namespace metadata
     {
         for (auto x : input_iptc)
         {
-            output_iptc.add(x);
+            if (output_iptc.findKey(Exiv2::IptcKey(x.key())) == output_iptc.end())
+            {
+                output_iptc.add(x);
+            }
         }
     }
 
@@ -50,7 +58,10 @@ namespace metadata
     {
         for (auto x : input_xmp)
         {
-            output_xmp.add(x);
+            if (output_xmp.findKey(Exiv2::XmpKey(x.key())) == output_xmp.end())
+            {
+                output_xmp.add(x);
+            }
         }
     }
 
@@ -61,6 +72,27 @@ namespace metadata
         copy_exif(some_output_metadata->exifData(), some_input_metadata->exifData());
         copy_iptc(some_output_metadata->iptcData(), some_input_metadata->iptcData());
         copy_xmp(some_output_metadata->xmpData(), some_input_metadata->xmpData());
+    }
+
+
+#if defined(ENBLEND_SOURCE)
+#define PROCESSING_SOFTWARE "enblend"
+#elif defined(ENFUSE_SOURCE)
+#define PROCESSING_SOFTWARE "enfuse"
+#else
+#error "Neither ENBLEND_SOURCE nor ENFUSE_SOURCE are defined."
+#endif
+
+
+    static void
+    augment(Exiv2::Image* some_output_metadata)
+    {
+        Exiv2::ExifData& output_exif {some_output_metadata->exifData()};
+
+        std::unique_ptr<Exiv2::AsciiValue>
+            processing_software {new Exiv2::AsciiValue(PROCESSING_SOFTWARE " " VERSION)};
+
+        output_exif.add(Exiv2::ExifKey("Exif.Image.ProcessingSoftware"), processing_software.get());
     }
 
 
@@ -87,6 +119,7 @@ namespace metadata
             output_meta.get() && output_meta->good())
         {
             copy(output_meta.get(), some_input_metadata.get());
+            augment(output_meta.get());
             output_meta->writeMetadata();
         }
     }

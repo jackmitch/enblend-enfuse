@@ -9,6 +9,17 @@
 
 \App{} transparently handles some image metadata.
 
+See \sectionName~\ref{sec:compiled-in-features} on how to check whether your \App{} has been
+compiled with this feature.
+
+\begin{geeknote}
+  \genidx{Harvey@\propername{Phil Harvey}}%
+  \propername{Phil Harvey}, the author of \uref{\snophyqueensucaexiftool}{EXIFTool} collects an
+  intimidating number of \uref{\snophyqueensucaexiftooltagnames}{tag names} not only for
+  \acronym{EXIF} on his website.  Furthermore, the \uref{\exiviiorg}{Exiv2}~project hosts
+  some extensive \uref{\exiviiorgtags}{metadata reference tables}.
+\end{geeknote}
+
 
 \subsection{\label{sec:metadata-exif-iptc-xmp}%
   \genidx{metadata!EXIF@\acronym{EXIF}}%
@@ -36,8 +47,10 @@
 \noindent of the first input image to the output image.  The metadata in all other input files
 is ignored.
 
-See \sectionName~\ref{sec:compiled-in-features} on how to check whether your \App{} has been
-compiled with this feature.
+\genidx{metadata!EXIF@\acronym{EXIF}!tag~\code{ProcessingSoftware}}%
+This version of \App{} adds only one entry to the \acronym{EXIF}~tags, namely
+\code{Exif.Image.ProcessingSoftware}.  The tag value holds the application name and its exact
+version number.
 
 
 \subsection{\label{sec:metadata-icc}%
