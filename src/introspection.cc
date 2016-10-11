@@ -56,7 +56,7 @@ namespace introspection
     {
         std::cout << command << " " << VERSION << "\n\n";
 
-        if (Verbose >= VERBOSE_VERSION_REPORTING)
+        if (Verbose)
         {
 #ifdef ENFUSE_SOURCE
             {
