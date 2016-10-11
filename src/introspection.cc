@@ -108,6 +108,14 @@ namespace introspection
 #else
             std::cout << "Extra feature: OpenCL: no\n";
 #endif
+
+            std::cout << "Extra feature: metadata (EXIF, IPTC, XMP) transfer: ";
+#ifdef HAVE_EXIV2
+            std::cout << "yes\n";
+#else
+            std::cout << "no\n";
+#endif
+
             std::cout << "\n";
         }
 

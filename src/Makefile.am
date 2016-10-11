@@ -23,6 +23,7 @@ enblend_SOURCES = fillpolygon.hxx functoraccessor.hxx rect2d.hxx stride.hxx \
                   filespec.h filespec.cc \
                   introspection.h introspection.cc \
                   mersenne.h mersenne.cc \
+                  metadata.h metadata.cc \
                   parameter.h parameter.cc \
                   self_test.h self_test.cc \
                   tiff_message.h tiff_message.cc \
@@ -55,6 +56,7 @@ enfuse_SOURCES = functoraccessor.hxx rect2d.hxx stride.hxx \
                  filespec.h filespec.cc \
                  introspection.h introspection.cc \
                  mersenne.h mersenne.cc \
+                 metadata.h metadata.cc \
                  parameter.h parameter.cc \
                  self_test.h self_test.cc \
                  tiff_message.h tiff_message.cc \

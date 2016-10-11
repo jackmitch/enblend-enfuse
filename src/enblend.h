@@ -38,6 +38,7 @@
 #include "opencl.h"
 #include "openmp_def.h"
 #include "openmp_vigra.h"
+#include "metadata.h"
 #include "numerictraits.h"
 #include "fixmath.h"
 #include "assemble.h"
@@ -100,10 +101,7 @@ void enblendMain(const FileNameList& anInputFileNameList,
 #ifdef HAVE_EXIV2
     Exiv2::Image::AutoPtr input_image_meta {nullptr};
     try {
-        input_image_meta = Exiv2::ImageFactory::open(*inputFileNameIterator);
-        if (input_image_meta.get() && input_image_meta->good()) {
-            input_image_meta->readMetadata();
-        }
+        input_image_meta = metadata::read(*inputFileNameIterator);
     }
     catch (Exiv2::Error& e) {
         std::cerr <<
@@ -539,13 +537,8 @@ void enblendMain(const FileNameList& anInputFileNameList,
 
 #ifdef HAVE_EXIV2
     if (input_image_meta.get() && input_image_meta->good() && OutputIsValid) {
-        Exiv2::Image::AutoPtr output_image_meta {nullptr};
         try {
-            output_image_meta = Exiv2::ImageFactory::open(OutputFileName);
-            if (output_image_meta.get() && output_image_meta->good()) {
-                copy_image_meta_data(output_image_meta.get(), input_image_meta.get());
-                output_image_meta->writeMetadata();
-            }
+            metadata::write(OutputFileName, input_image_meta);
         }
         catch (Exiv2::Error& e) {
             std::cerr <<
