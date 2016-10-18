@@ -122,4 +122,7 @@ ${CMAKE_FUNCTION_EXISTS}
 #define DEBUG 1
 #endif
 
+/* Defined if exiv2 library is available for metadata transfer */
+#cmakedefine HAVE_EXIV2 1
+
 #endif

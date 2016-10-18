@@ -286,6 +286,15 @@ ELSE(OPENEXR_FOUND)
   MESSAGE(STATUS "OpenEXR support disabled")
 ENDIF(OPENEXR_FOUND)
 
+FIND_PACKAGE(EXIV2)
+IF(EXIV2_FOUND)
+  SET(HAVE_EXIV2 ON)
+  list(APPEND common_libs ${EXIV2_LIBRARIES})
+  include_directories(${EXIV2_INCLUDE_DIR})
+ELSE()
+  SET(HAVE_EXIV2 OFF)
+ENDIF()
+
 # Now that packages are / are not detected, handle config options
 
 IF(ENABLE_OPENMP)
@@ -467,6 +476,7 @@ IF(ENABLE_OPENCL)
     MESSAGE(STATUS "OpenCL sources:          Use build-in strings")
   ENDIF()
 ENDIF()
+MESSAGE(STATUS "Metadata transfer:       ${HAVE_EXIV2}")
 MESSAGE(STATUS "Build documentation:     ${DOC}")
 MESSAGE(STATUS "")
 MESSAGE(STATUS "Image Formats Enabled:")

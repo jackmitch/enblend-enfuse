@@ -50,7 +50,8 @@ ENDIF()
 
 include_directories(${TOP_SRC_DIR}/src)
 set(ENBLEND_SOURCES 
-    fillpolygon.hxx functoraccessor.hxx rect2d.hxx stride.hxx 
+    fillpolygon.hxx functoraccessor.hxx rect2d.hxx stride.hxx
+    allocate.h 
     anneal.h assemble.h blend.h bounds.h
     common.h enblend.h enblend.cc fixmath.h
     global.h graphcut.h
@@ -65,6 +66,7 @@ set(ENBLEND_SOURCES
     filespec.h filespec.cc
     introspection.h introspection.cc
     mersenne.h mersenne.cc
+    metadata.h metadata.cc
     parameter.h parameter.cc
     self_test.h self_test.cc
     tiff_message.h tiff_message.cc
@@ -75,6 +77,7 @@ set(ENBLEND_SOURCES
 )
 set(ENFUSE_SOURCES 
     functoraccessor.hxx rect2d.hxx stride.hxx
+    allocate.h
     assemble.h blend.h bounds.h common.h
     exposure_weight_base.h
     exposure_weight.h exposure_weight.cc
@@ -90,6 +93,7 @@ set(ENFUSE_SOURCES
     filespec.h filespec.cc
     introspection.h introspection.cc
     mersenne.h mersenne.cc
+    metadata.h metadata.cc
     parameter.h parameter.cc
     self_test.h self_test.cc
     tiff_message.h tiff_message.cc
