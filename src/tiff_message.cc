@@ -19,6 +19,7 @@
  */
 
 
+#include <array>
 #include <cstdio>              // fflush(), vsnprintf()
 #include <cstring>
 #include <iostream>
@@ -97,12 +98,26 @@ tiff_warning(const char* module, const char* format, va_list arguments)
 }
 
 
+static const std::array<std::string, 2> benign_error_messages {
+    "Deflate compression support is not configured",
+    "OJPEG encoding not supported; use new-style JPEG compression instead"
+};
+
+
 static bool
 is_benign(const char* format, va_list arguments)
 {
     const std::string message(interpolate_format(format, arguments));
 
-    return message == "OJPEG encoding not supported; use new-style JPEG compression instead";
+    for (auto benign_error_message : benign_error_messages)
+    {
+        if (message.find(benign_error_message) != std::string::npos)
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 
