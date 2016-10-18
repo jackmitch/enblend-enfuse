@@ -58,6 +58,7 @@
 #define VERBOSE_COLOR_CONVERSION_MESSAGES   3
 #define VERBOSE_DIFFERENCE_STATISTICS       3
 #define VERBOSE_LAYER_SELECTION             3
+#define VERBOSE_METADATA                    3
 #define VERBOSE_RESPONSE_FILES              3
 
 #define VERBOSE_ABB_MESSAGES                4

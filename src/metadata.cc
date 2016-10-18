@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2016 Christoph L. Spiel
+ * Copyright (C) 2016 Christoph L. Spiel
  *
  * This file is part of Enblend.
  *
@@ -19,7 +19,9 @@
  */
 
 
+#include <cassert>
 #include <memory>
+#include <sstream>
 
 #include "metadata.h"
 
@@ -104,23 +106,51 @@ namespace metadata
         if (meta.get() && meta->good())
         {
             meta->readMetadata();
+            return meta;
         }
-
-        return meta;
+        else
+        {
+            return Exiv2::Image::AutoPtr(nullptr);
+        }
     }
 
 
-    void
-    write(const std::string& an_image_filename, const Exiv2::Image::AutoPtr some_input_metadata)
+    named_meta_array::const_iterator
+    write(const std::string& an_image_filename,
+          named_meta_array::const_iterator some_named_meta_begin,
+          named_meta_array::const_iterator some_named_meta_end)
     {
         Exiv2::Image::AutoPtr output_meta {Exiv2::ImageFactory::open(an_image_filename)};
 
-        if (some_input_metadata.get() && some_input_metadata->good() &&
-            output_meta.get() && output_meta->good())
+        if (output_meta.get() && output_meta->good())
         {
-            copy(output_meta.get(), some_input_metadata.get());
+            assert(some_named_meta_begin != some_named_meta_end);
+
+            named_meta_array::const_iterator
+                desired_meta(std::find_if(some_named_meta_begin, some_named_meta_end,
+                                          [](const Named& named){return named.is_desired();}));
+            named_meta_array::const_iterator safe_meta(desired_meta == some_named_meta_end ?
+                                                       some_named_meta_begin :
+                                                       desired_meta);
+
+            copy(output_meta.get(), safe_meta->meta());
             augment(output_meta.get());
             output_meta->writeMetadata();
+
+            if (desired_meta == some_named_meta_end)
+            {
+                std::stringstream message;
+                message <<
+                    "could not use metadata of selected image \"" << desired_meta->filename() <<
+                    "\" - have used \"" << safe_meta->filename() << "\" instead";
+                throw Warning(message.str());
+            }
+
+            return safe_meta;
+        }
+        else
+        {
+            throw Warning("initial output metadata is not valid");
         }
     }
 #endif // HAVE_EXIV2

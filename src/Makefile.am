@@ -9,6 +9,7 @@ bin_PROGRAMS = enblend enfuse
 
 enblend_SOURCES = fillpolygon.hxx functoraccessor.hxx rect2d.hxx stride.hxx \
                   \
+                  allocate.h \
                   anneal.h assemble.h blend.h bounds.h \
                   common.h enblend.h enblend.cc fixmath.h \
                   global.h graphcut.h \
@@ -41,6 +42,7 @@ enblend_CXXFLAGS = -DENBLEND_SOURCE $(AM_CXXFLAGS) $(GSL_CFLAGS) \
 
 enfuse_SOURCES = functoraccessor.hxx rect2d.hxx stride.hxx \
                  \
+                 allocate.h \
                  assemble.h blend.h bounds.h common.h \
                  exposure_weight_base.h \
                  exposure_weight.h exposure_weight.cc \

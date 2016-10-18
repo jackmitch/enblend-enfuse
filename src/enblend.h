@@ -34,6 +34,7 @@
 
 #include "rect2d.hxx"
 
+#include "allocate.h"
 #include "common.h"
 #include "opencl.h"
 #include "openmp_def.h"
@@ -99,15 +100,26 @@ void enblendMain(const FileNameList& anInputFileNameList,
     FileNameList::const_iterator inputFileNameIterator(anInputFileNameList.begin());
 
 #ifdef HAVE_EXIV2
-    Exiv2::Image::AutoPtr input_image_meta {nullptr};
-    try {
-        input_image_meta = metadata::read(*inputFileNameIterator);
-    }
-    catch (Exiv2::Error& e) {
-        std::cerr <<
-            command << ": warning: could not read meta-data of input image \"" <<
-            *inputFileNameIterator << "\"\n" <<
-            command << ": note: " << e.what() << "\n";
+    typedef allocate::array<Exiv2::Image::AutoPtr> metadata_array;
+    metadata_array input_metadata(anInputFileNameList.size());
+    {
+        FileNameList::const_iterator filename(anInputFileNameList.begin());
+        metadata_array::pointer metadata {input_metadata.begin()};
+
+        while (filename != anInputFileNameList.end()) {
+            try {
+                new (metadata) metadata_array::value_type(metadata::read(*filename));
+                input_metadata.mark_as_initialized(metadata - input_metadata.begin());
+            }
+            catch (Exiv2::Error& e) {
+                std::cerr <<
+                    command << ": warning: could not read metadata of input image \"" <<
+                    *inputFileNameIterator << "\"\n" <<
+                    command << ": note: " << e.what() << "\n";
+            }
+            ++filename;
+            ++metadata;
+        }
     }
 #endif
 
@@ -536,15 +548,46 @@ void enblendMain(const FileNameList& anInputFileNameList,
     delete blackPair.second;
 
 #ifdef HAVE_EXIV2
-    if (input_image_meta.get() && input_image_meta->good() && OutputIsValid) {
-        try {
-            metadata::write(OutputFileName, input_image_meta);
+    if (OutputIsValid) {
+        const size_t metadata_source_image_index =
+            std::min(static_cast<size_t>(parameter::as_unsigned("metadata-source-image-index", 0)),
+                     input_metadata.size() - 1);
+
+        metadata::named_meta_array valid_named_metadata;
+
+        FileNameList::const_iterator filename(anInputFileNameList.begin());
+        for (size_t i = 0; i != input_metadata.size(); ++i) {
+            if (input_metadata.is_initialized(i) && input_metadata[i].get() && input_metadata[i]->good()) {
+                valid_named_metadata.push_back(metadata::Named(*filename,
+                                                               input_metadata[i].get(),
+                                                               i == metadata_source_image_index));
+            }
+            ++filename;
         }
-        catch (Exiv2::Error& e) {
-            std::cerr <<
-                command << ": warning: could not write meta-data to output image \"" <<
-                OutputFileName << "\"\n" <<
-                command << ": note: " << e.what() << "\n";
+
+        if (valid_named_metadata.empty()) {
+            std::cerr << command << ": warning: none of the input images contained valid metadata";
+        } else {
+            try {
+                metadata::named_meta_array::const_iterator
+                    input_meta(metadata::write(OutputFileName,
+                                               valid_named_metadata.begin(),
+                                               valid_named_metadata.end()));
+                if (Verbose >= VERBOSE_METADATA) {
+                    std::cerr <<
+                        command << ": info: attach metadata of input image \"" <<
+                        input_meta->filename() << "\" to output image \"" << OutputFileName << "\"\n";
+                }
+            }
+            catch (Exiv2::Error& e) {
+                std::cerr <<
+                    command << ": warning: could not write metadata to output image \"" <<
+                    OutputFileName << "\"\n" <<
+                    command << ": note: " << e.what() << "\n";
+            }
+            catch (metadata::Warning& w) {
+                std::cerr << command << ": warning: " << w.what() << "\n";
+            }
         }
     }
 #endif
