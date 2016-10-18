@@ -143,8 +143,8 @@ std::string LoadMaskTemplate(SaveMaskTemplate);
 std::string VisualizeTemplate("vis-%n.tif"); //< default-visualize-template vis-%n.tif
 bool VisualizeSeam = false;
 std::pair<double, double> OptimizerWeights =
-    std::make_pair(8.0,      //< default-optimizer-weight-distance 8.0
-                   1.0);     //< default-optimizer-weight-mismatch 1.0
+    std::make_pair(12.0,        //< default-optimizer-weight-distance 12.0
+                   1.0);        //< default-optimizer-weight-mismatch 1.0
 anneal_para_t AnnealPara = {
     32,                         //< default-anneal-kmax 32
     0.75,                       //< default-anneal-tau 0.75
