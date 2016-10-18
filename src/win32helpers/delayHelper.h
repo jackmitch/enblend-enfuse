@@ -32,6 +32,9 @@
 #define VC_EXTRALEAN
 #include <windows.h>
 #undef DIFFERENCE
+// with Visual Studio 2015 Update 3 the hooks have become const
+// force currently the old non-const behaviour
+#define DELAYIMP_INSECURE_WRITABLE_HOOKS
 #include <delayimp.h>
 static char* openclLib = "opencl.dll";
 
