@@ -1009,9 +1009,7 @@ process_options(int argc, char** argv)
             if (optarg != nullptr && *optarg != 0) {
                 std::string upper_opt(optarg);
                 enblend::to_upper(upper_opt);
-                if (upper_opt == "NONE") {
-                    ;           // stick with default
-                } else if (upper_opt == "DEFLATE" || upper_opt == "LZW" || upper_opt == "PACKBITS") {
+                if (upper_opt == "NONE " || upper_opt == "DEFLATE" || upper_opt == "LZW" || upper_opt == "PACKBITS") {
                     OutputCompression = upper_opt;
                 } else if (upper_opt.find_first_not_of("0123456789") == std::string::npos) {
                     OutputCompression = "JPEG QUALITY=" + upper_opt;
