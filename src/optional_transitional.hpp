@@ -34,7 +34,7 @@
 #include <optional.hpp>
 #endif
 
-#if __cplusplus < 201701L
+#if __cplusplus < 201500L
 namespace std
 {
     template <typename t> using optional = ::std::experimental::optional<t>;
@@ -49,7 +49,7 @@ namespace std
 namespace std
 {
     template <typename t> using optional = ::boost::optional<t>;
-#if BOOST_VERSION >= 106000
+#if defined(BOOST_VERSION) && (BOOST_VERSION >= 106000)
     const ::boost::none_t nullopt((::boost::none_t::init_tag()));
 #else
     constexpr ::boost::none_t nullopt;
