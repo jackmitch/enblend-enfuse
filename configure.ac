@@ -137,17 +137,23 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <vigra/imageinfo.hxx>
                [AC_MSG_RESULT(no)
                 AC_MSG_ERROR([Vigra was found, but it was not recent enough.])])
 
-AC_MSG_CHECKING([for Exiv2 library])
-SAVED_LIBS=$LIBS
-LIBS="$LIBS -lexiv2"
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <exiv2/image.hpp>]],
-                                [[Exiv2::Image* image {nullptr};
-                                  image->iptcData();]])],
-               [AC_MSG_RESULT(yes)
-                AC_DEFINE(HAVE_EXIV2, 1, [Define if you have the exiv2 library])],
-               [AC_MSG_RESULT(no)
-                LIBS="$SAVED_LIBS"])
-
+use_exiv2=no
+AC_ARG_WITH([exiv2],
+            [AS_HELP_STRING([--with-exiv2], [use Exiv2 library @<:@default=check@:>@])],
+            [],
+            [with_exiv2=check])
+AS_IF([test "$with_exiv2" = check -o "$with_exiv2" = yes],
+      [AC_MSG_CHECKING([for Exiv2 library])
+       SAVED_LIBS=$LIBS
+       LIBS="$LIBS -lexiv2"
+       AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <exiv2/image.hpp>]],
+                                       [[Exiv2::Image* image {nullptr};
+                                         image->iptcData();]])],
+                      [AC_MSG_RESULT(yes)
+                       use_exiv2=yes
+                       AC_DEFINE(HAVE_EXIV2, 1, [Define if you have the exiv2 library])],
+                      [AC_MSG_RESULT(no)
+                       LIBS="$SAVED_LIBS"])])
 
 AC_MSG_CHECKING([for support of partially static linking])
 original_LIBS="${LIBS}"
@@ -608,5 +614,6 @@ AC_MSG_RESULT([
    OpenEXR image format            ${have_exr}
    use OpenMP:                     ${enable_openmp}
    use OpenCL:                     ${enable_opencl} (search path: $opencl_path)
+   use Exiv2:                      ${use_exiv2}
    use TCMalloc:                   ${use_tcmalloc}
 ${warnings}])

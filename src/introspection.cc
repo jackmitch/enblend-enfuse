@@ -31,6 +31,10 @@
 #include <config.h>
 #endif
 
+#ifdef HAVE_EXIV2
+#include <exiv2/exiv2.hpp>
+#endif
+
 #include "filespec.h"
 #include "global.h"
 #include "signature.h"
@@ -259,6 +263,9 @@ namespace introspection
 #endif // OPENCL
 
         std::cout << "Libraries\n" <<
+#ifdef HAVE_EXIV2
+            "  Exif2:      " << EXIV2_MAJOR_VERSION << '.' << EXIV2_MINOR_VERSION << '.' << EXIV2_PATCH_VERSION << "\n" <<
+#endif
             "  GSL:        " << GSL_VERSION << "\n" <<
             //"  JPEG:       " << "\n" <<
             "  Little CMS: " << LCMS_VERSION / 1000 << '.' << (LCMS_VERSION / 10) % 100 << '.' << LCMS_VERSION % 10 << "\n" <<

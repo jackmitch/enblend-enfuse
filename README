@@ -196,6 +196,13 @@ argument "check", test for POSIX-compatible dynamic-loader (dl) and if
 unsuccessful for GLib implementation (gmodule).
 
 
+** --with-exiv2=CHECK/yes/no
+
+Use Exiv2 library for meta-data transfer of the input images to the
+result.  Without this library Enblend or Enfuse will not copy any EXIF
+meta data.
+
+
 ** --with-tcmalloc=CHECK/yes/no
    -DENABLE_TCMALLOC=OFF/on    (CMake)
 
