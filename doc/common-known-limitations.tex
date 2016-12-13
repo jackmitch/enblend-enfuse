@@ -80,6 +80,36 @@ some of the known ones.
     Use linear, this is $\mathrm{gamma} = 1$, color profiles in the input images.  Also see
     \chapterName~\fullref{sec:color-spaces} on ``Color Spaces And Color Profiles''.
   \end{enumerate}
+
+\genidx{images!non-overlapping}%
+\gensee{non-overlapping images}{images, non-overlapping}%
+\item
+  No image contributing: If at a particular pixel or set of pixels the input images do not
+  overlap at all, the output image will have a hole.  Such a non-overlapping area either occurs
+
+  \begin{compactitemize}
+  \item
+    naturally, this is, it is induced by the images' geometries and positions, or
+
+  \item
+    artificially by manually manipulating the masks of the input images for example to mask out
+    moving objects.
+  \end{compactitemize}
+
+  Neither \App{} nor \OtherApp{} will even try to fill the hole by ``dreaming up'' pixels.
+
+  For output image formats that support masks, the mask will have zero values at the hole.
+  Output formats without masks will set all pixels of the hole to pure black.  Note that in any
+  case an output mask reflecting the hole can be requested with
+  option~\flexipageref{\option{--output-mask}}{opt:output-mask}.
+
+\item
+  Just a single image contributing: If at a particular pixel or set of pixels the input images
+  do not really overlap, but only a single image covers the region (for the same reasons as
+  mentioned in the previous item), \App{} and \OtherApp{} simply copy the pixels of this region
+  to the output image as there is nothing to \appdoes{} nor \otherappdoes.
+
+  Neither \App{} nor \OtherApp{} will adjust any property of these copied pixels.
 \end{itemize}
 
 \genidx[\rangeendlocation]{known limitations}
