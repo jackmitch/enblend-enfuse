@@ -104,12 +104,33 @@ some of the known ones.
   option~\flexipageref{\option{--output-mask}}{opt:output-mask}.
 
 \item
-  Just a single image contributing: If at a particular pixel or set of pixels the input images
-  do not really overlap, but only a single image covers the region (for the same reasons as
-  mentioned in the previous item), \App{} and \OtherApp{} simply copy the pixels of this region
-  to the output image as there is nothing to \appdoes{} nor \otherappdoes.
+  Just a single image contributing: If at a particular set of pixels the input images do not
+  overlap, but only a single image covers the region (for the same reasons as mentioned in the
+  previous item), \App{} and \OtherApp{} simply copy the pixels of this region to the output
+  image if they are away far enough from the overlap area.
 
-  Neither \App{} nor \OtherApp{} will adjust any property of these copied pixels.
+  \begin{geeknote}
+    If the \propername{Laplacian} pyramids do not contain ``interesting'' information, this is,
+    they have been built from only one image, only the \propername{Gaussian} pyramids are
+    totaled and scaled up until reaching the original image's scale.  That way the possibly
+    sharp seam between the images gets smoothed out pyramid level by pyramid level and thus the
+    transition between the images is softly feathered.
+
+    For a quantitative estimate of how far away of the overlap boundary the non-overlapping
+    parts are influenced look for the message
+
+    \begin{literal}
+      \app: info: using $N$ blending levels
+    \end{literal}
+
+    which is available at verbosity level~\val{val:verbosity-level-pyramid} and higher.  Here,
+    $N$ is the number of pyramid levels.  Non-overlapping parts more than approximately
+    $2^N$~pixels away from the image intersection bounding box will be unaffected by the blend
+    process and pixels within this distance are influenced by the overlap.
+
+    The location and size of the ``image intersection bounding box'' is available from verbosity
+    level~\val{val:verbosity-level-ibb} on.
+  \end{geeknote}
 \end{itemize}
 
 \genidx[\rangeendlocation]{known limitations}

@@ -326,7 +326,7 @@
 %% Literal text as e.g. the contents of a text file.
 \newenvironment{literal}%
 {\pagebreak[1]\begin{divstyle}{literal}%
-    \begin{trivlist}{}{\ifhevea\relax\else\topsep=0pt\fi}\item\relax
+    \begin{trivlist}{}{\ifhevea\relax\else\topsep=0pt\partopsep=0pt\fi}\item\relax
       \RaggedRight\frenchspacing\ttfamily}%
 {\end{trivlist}\end{divstyle}}
 

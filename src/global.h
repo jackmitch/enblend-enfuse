@@ -43,35 +43,36 @@
 
 // Defines to control how many -v flags are required for each type
 // of message to be produced on stdout.
-#define VERBOSE_ASSEMBLE_MESSAGES           1
-#define VERBOSE_CHECKPOINTING_MESSAGES      1
-#define VERBOSE_OPENCL_MESSAGES             1 // ANTICIPATED CHANGE: raise level when we are done with debugging
+#define VERBOSE_ASSEMBLE_MESSAGES           1 //< verbosity-level-assemble 1
+#define VERBOSE_CHECKPOINTING_MESSAGES      1 //< verbosity-level-checkpoint 1
+// ANTICIPATED CHANGE: Raise VERBOSE_OPENCL_MESSAGES level when we are done with debugging.
+#define VERBOSE_OPENCL_MESSAGES             1 //< verbosity-level-opencl 1
 
-#define VERBOSE_BLEND_MESSAGES              2
-#define VERBOSE_MASK_MESSAGES               2
-#define VERBOSE_NFT_MESSAGES                2
-#define VERBOSE_PYRAMID_MESSAGES            2
-#define VERBOSE_SIGNATURE_REPORTING         2
-#define VERBOSE_TIFF_MESSAGES               2
-#define VERBOSE_VERSION_REPORTING           2
+#define VERBOSE_BLEND_MESSAGES              2 //< verbosity-level-blend 2
+#define VERBOSE_MASK_MESSAGES               2 //< verbosity-level-mask 2
+#define VERBOSE_NFT_MESSAGES                2 //< verbosity-level-nft 2
+#define VERBOSE_PYRAMID_MESSAGES            2 //< verbosity-level-pyramid 2
+#define VERBOSE_SIGNATURE_REPORTING         2 //< verbosity-level-signature 2
+#define VERBOSE_TIFF_MESSAGES               2 //< verbosity-level-tiff 2
+#define VERBOSE_VERSION_REPORTING           2 //< verbosity-level-version-report 2
 
-#define VERBOSE_COLOR_CONVERSION_MESSAGES   3
-#define VERBOSE_DIFFERENCE_STATISTICS       3
-#define VERBOSE_LAYER_SELECTION             3
-#define VERBOSE_METADATA                    3
-#define VERBOSE_RESPONSE_FILES              3
+#define VERBOSE_COLOR_CONVERSION_MESSAGES   3 //< verbosity-level-color-conversion 3
+#define VERBOSE_DIFFERENCE_STATISTICS       3 //< verbosity-level-difference-statistics 3
+#define VERBOSE_LAYER_SELECTION             3 //< verbosity-level-layer-selection 3
+#define VERBOSE_METADATA                    3 //< verbosity-level-metadata 3
+#define VERBOSE_RESPONSE_FILES              3 //< verbosity-level-response-files 3
 
-#define VERBOSE_ABB_MESSAGES                4
-#define VERBOSE_IBB_MESSAGES                4
-#define VERBOSE_INPUT_IMAGE_INFO_MESSAGES   4
-#define VERBOSE_INPUT_UNION_SIZE_MESSAGES   4
-#define VERBOSE_ROIBB_SIZE_MESSAGES         4
-#define VERBOSE_UBB_MESSAGES                4
+#define VERBOSE_ABB_MESSAGES                4 //< verbosity-level-abb 4
+#define VERBOSE_IBB_MESSAGES                4 //< verbosity-level-ibb 4
+#define VERBOSE_INPUT_IMAGE_INFO_MESSAGES   4 //< verbosity-level-input-image-info 4
+#define VERBOSE_INPUT_UNION_SIZE_MESSAGES   4 //< verbosity-level-input-union-size 4
+#define VERBOSE_ROIBB_SIZE_MESSAGES         4 //< verbosity-level-roibb-size 4
+#define VERBOSE_UBB_MESSAGES                4 //< verbosity-level-ubb 4
 
-#define VERBOSE_CFI_MESSAGES                5
-#define VERBOSE_GDA_MESSAGES                5
+#define VERBOSE_CFI_MESSAGES                5 //< verbosity-level-cfi 5
+#define VERBOSE_GDA_MESSAGES                5 //< verbosity-level-gda 5
 
-#define VERBOSE_MEMORY_ESTIMATION_MESSAGES  6
+#define VERBOSE_MEMORY_ESTIMATION_MESSAGES  6 //< verbosity-level-memory-estimate 6
 
 
 //< default-output-filename a.tif
