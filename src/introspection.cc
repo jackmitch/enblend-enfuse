@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015, 2016 Christoph L. Spiel
+ * Copyright (C) 2015-2017 Christoph L. Spiel
  *
  * This file is part of Enblend.
  *
@@ -125,7 +125,7 @@ namespace introspection
 
         std::cout <<
             "Copyright (C) 2004-2009 Andrew Mihal.\n" <<
-            "Copyright (C) 2009-2016 Christoph Spiel.\n" <<
+            "Copyright (C) 2009-2017 Christoph Spiel.\n" <<
             "\n" <<
             "License GPLv2+: GNU GPL version 2 or later <http://www.gnu.org/licenses/gpl.html>\n" <<
             "This is free software: you are free to change and redistribute it.\n" <<

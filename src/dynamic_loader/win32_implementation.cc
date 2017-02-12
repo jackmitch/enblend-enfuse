@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015, 2016 Thomas Modes
+ * Copyright (C) 2015-2017 Thomas Modes
  *
  * This file is part of Enblend.
  *
