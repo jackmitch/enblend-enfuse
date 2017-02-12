@@ -1270,20 +1270,49 @@ public:
 #endif // LOG_COLORSPACE_CONVERSION
 
         assert(!std::isnan(luv[0]) && luv[0] >= 0.0);
-        const Luv2XYZFunctor::result_type xyz {luv2xyz(luv)};
+        Luv2XYZFunctor::result_type xyz {luv2xyz(luv)};
         double rgb[3];
 
         cmsDoTransform(XYZToInputTransform, &xyz[0], rgb, 1U);
 
         if (EXPECT_RESULT(is_below_threshold(rgb), false))
         {
-            // Optimization Possibility: If XYZ2LabFunctor is instantiated with `double':
-            //     union {
-            //         XYZ2LabFunctor::result_type lab_array;
-            //         cmsCIELab lab_struct;
-            //     };
-            const XYZ2LabFunctor::result_type lab_vector {xyz2lab(xyz)};
-            const cmsCIELab lab {lab_vector[0], lab_vector[1], lab_vector[2]};
+            XYZ2LabFunctor::result_type lab_vector {xyz2lab(xyz)};
+            cmsCIELab lab {lab_vector[0], lab_vector[1], lab_vector[2]};
+
+            if (EXPECT_RESULT(std::isnan(lab.a) || std::isnan(lab.b), false))
+            {
+#ifdef LOG_COLORSPACE_OPTIMIZATION
+#ifdef OPENMP
+#pragma omp critical
+#endif // LOG_COLORSPACE_CONVERSION
+                std::cout <<
+                    "+ ConvertLuvPyramidToVectorFunctor::operator(): initial XYZ = " << xyz << "\n"
+                    "              Lab = (" << lab.L << ", " << lab.a << ", " << lab.b << "), "
+                    "RGB = (" << rgb[0] << ", " << rgb[1] << ", " << rgb[2] << ")\n";
+#endif
+                xyz[0] = std::max(xyz[0], 0.0);
+                xyz[1] = std::max(xyz[1], 0.0);
+                xyz[2] = std::max(xyz[2], 0.0);
+
+                cmsDoTransform(XYZToInputTransform, &xyz[0], rgb, 1U);
+                lab_vector = xyz2lab(xyz);
+
+                lab.L = lab_vector[0];
+                lab.a = lab_vector[1];
+                lab.b = lab_vector[2];
+
+#ifdef LOG_COLORSPACE_OPTIMIZATION
+#ifdef OPENMP
+#pragma omp critical
+#endif
+                std::cout <<
+                    "+ ConvertLuvPyramidToVectorFunctor::operator(): fixed XYZ = " << xyz << "\n"
+                    "              Lab = (" << lab.L << ", " << lab.a << ", " << lab.b << "), "
+                    "RGB = (" << rgb[0] << ", " << rgb[1] << ", " << rgb[2] << ")\n";
+#endif // LOG_COLORSPACE_CONVERSION
+            }
+
             polish_rgb(&lab, rgb);
         }
 
