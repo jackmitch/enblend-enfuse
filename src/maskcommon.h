@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2016 Andrew Mihal, Mikolaj Leszczynski
+ * Copyright (C) 2004-2017 Andrew Mihal, Mikolaj Leszczynski
  *
  * This file is part of Enblend.
  *
