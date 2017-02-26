@@ -548,7 +548,7 @@ void enblendMain(const FileNameList& anInputFileNameList,
     delete blackPair.second;
 
 #ifdef HAVE_EXIV2
-    if (OutputIsValid) {
+    if (OutputIsValid && parameter::as_boolean("metadata-pass-through", true)) {
         const size_t metadata_source_image_index =
             std::min(static_cast<size_t>(parameter::as_unsigned("metadata-source-image-index", 0)),
                      input_metadata.size() - 1);
