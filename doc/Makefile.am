@@ -113,7 +113,7 @@ enfuse: enfuse.ps enfuse.html
 
 .PHONY: clean-local
 clean-local:
-	- rm -f *.eps *.png *.pstex *.gp
+	- rm -f *.eps *.png *.pstex
 	- rm -f *.{g,o,p,a}nd *.{g,o,p,a}dx
 	- rm -f *.idx *.ilg *.ind *.lo{a,f,t,x} *.toc
 	- rm -f *.aux *.log *.dvi *.ps *.pdf
