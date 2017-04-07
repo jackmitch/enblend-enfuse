@@ -143,7 +143,7 @@ checkpoint(const std::pair<ImageType*, AlphaType*>& p,
     AlphaType* mask = p.second;
 
     vigra_ext::ReadFunctorAccessor<vigra::Threshold<AlphaPixelType, ImagePixelComponentType>, AlphaAccessor>
-        ata(vigra::Threshold<AlphaPixelType, ImagePixelComponentType>
+        threshing_alpha_accessor(vigra::Threshold<AlphaPixelType, ImagePixelComponentType>
             (AlphaTraits<AlphaPixelType>::zero(),
              AlphaTraits<AlphaPixelType>::zero(),
              AlphaTraits<ImagePixelComponentType>::max(),
@@ -177,7 +177,7 @@ checkpoint(const std::pair<ImageType*, AlphaType*>& p,
 #ifdef DEBUG
             std::cerr << "+ checkpoint: leaving channel width alone" << std::endl;
 #endif
-            exportImagePreferablyWithAlpha(image, mask, ata, outputImageInfo);
+            exportImagePreferablyWithAlpha(image, mask, threshing_alpha_accessor, outputImageInfo);
         } else {
             const std::string pixel_type(enblend::to_lower_copy(std::string(outputImageInfo.getPixelType())));
             std::cerr << command
@@ -191,7 +191,7 @@ checkpoint(const std::pair<ImageType*, AlphaType*>& p,
                                                                  ImagePixelType(inputMax),
                                                                  ImagePixelType(outputRange.first),
                                                                  ImagePixelType(outputRange.second)));
-            exportImagePreferablyWithAlpha(&lowDepthImage, mask, ata, outputImageInfo);
+            exportImagePreferablyWithAlpha(&lowDepthImage, mask, threshing_alpha_accessor, outputImageInfo);
         }
     } else {
         const std::string pixel_type(enblend::to_lower_copy(std::string(outputImageInfo.getPixelType())));
@@ -206,7 +206,7 @@ checkpoint(const std::pair<ImageType*, AlphaType*>& p,
         IMAGETYPE<IntegralPixelType> integralImage(image->width(), image->height());
 
         vigra_ext::ReadFunctorAccessor<vigra::Threshold<AlphaPixelType, IntegralPixelComponentType>, AlphaAccessor>
-            ata(vigra::Threshold<AlphaPixelType, IntegralPixelComponentType>
+            threshing_alpha_accessor(vigra::Threshold<AlphaPixelType, IntegralPixelComponentType>
                 (AlphaTraits<AlphaPixelType>::zero(),
                  AlphaTraits<AlphaPixelType>::zero(),
                  AlphaTraits<IntegralPixelComponentType>::max(),
@@ -219,7 +219,7 @@ checkpoint(const std::pair<ImageType*, AlphaType*>& p,
                                                              ImagePixelType(inputMax),
                                                              IntegralPixelType(outputRange.first),
                                                              IntegralPixelType(outputRange.second)));
-        exportImagePreferablyWithAlpha(&integralImage, mask, ata, outputImageInfo);
+        exportImagePreferablyWithAlpha(&integralImage, mask, threshing_alpha_accessor, outputImageInfo);
     }
 }
 
@@ -232,31 +232,42 @@ import(const vigra::ImageImportInfo& info,
        const std::pair<AlphaIterator, AlphaAccessor>& alpha)
 {
     typedef typename DestIterator::PixelType ImagePixelType;
-    typedef typename EnblendNumericTraits<ImagePixelType>::ImagePixelComponentType
-        ImagePixelComponentType;
+    typedef typename EnblendNumericTraits<ImagePixelType>::ImagePixelComponentType ImagePixelComponentType;
     typedef typename AlphaIterator::PixelType AlphaPixelType;
 
-    const vigra::Diff2D extent = vigra::Diff2D(info.width(), info.height());
-    const std::string pixelType = info.getPixelType();
-    const range_t inputRange = enblend::rangeOfPixelType(pixelType);
+    const vigra::Diff2D extent(info.width(), info.height());
+    const std::string pixelType {info.getPixelType()};
+    const range_t inputRange {enblend::rangeOfPixelType(pixelType)};
 
-    if (info.numExtraBands() > 0) {
+    if (info.numExtraBands() >= 1) {
         // Threshold the alpha mask so that all pixels are either
         // contributing or not contributing.
         vigra_ext::WriteFunctorAccessor<vigra::Threshold<ImagePixelComponentType, AlphaPixelType>, AlphaAccessor>
-            ata(vigra::Threshold<ImagePixelComponentType, AlphaPixelType>
-                (inputRange.second / 2,
-                 inputRange.second,
+            threshing_alpha_accessor(vigra::Threshold<ImagePixelComponentType, AlphaPixelType>
+                (static_cast<ImagePixelComponentType>(parameter::as_double("import-alpha-lower-threshold",
+                                                                           inputRange.second / 2.0)),
+                 static_cast<ImagePixelComponentType>(parameter::as_double("import-alpha-upper-threshold",
+                                                                           inputRange.second)),
                  AlphaTraits<AlphaPixelType>::zero(),
                  AlphaTraits<AlphaPixelType>::max()),
                 alpha.second);
 
-        vigra::importImageAlpha(info, image, vigra::destIter(alpha.first, ata));
+        vigra::importImageAlpha(info, image, vigra::destIter(alpha.first, threshing_alpha_accessor));
+
+        if (parameter::as_boolean("import-alpha-save-threshed", false)) {
+            static unsigned index {0};
+            std::ostringstream mask_image_name;
+
+            mask_image_name << "threshed-import-alpha-" << index << ".tif";
+            vigra::exportImage(vigra::srcIterRange(alpha.first, alpha.first + extent, alpha.second),
+                               vigra::ImageExportInfo(mask_image_name.str().c_str()).setPixelType(pixelType.c_str()));
+            ++index;
+        }
     } else {
         // Import image without alpha.  Initialize the alpha image to 100%.
-        importImage(info, image.first, image.second);
-        initImage(srcIterRange(alpha.first, alpha.first + extent, alpha.second),
-                  AlphaTraits<AlphaPixelType>::max());
+        vigra::importImage(info, image.first, image.second);
+        vigra::initImage(vigra::srcIterRange(alpha.first, alpha.first + extent, alpha.second),
+                         AlphaTraits<AlphaPixelType>::max());
     }
 
     // Performance Optimization: Transform only if ranges do not
