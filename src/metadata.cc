@@ -19,9 +19,15 @@
  */
 
 
+#include <algorithm>
+#include <array>
 #include <cassert>
 #include <memory>
+#include <regex>
 #include <sstream>
+#include <vector>
+
+#include "parameter.h"
 
 #include "metadata.h"
 
@@ -98,6 +104,71 @@ namespace metadata
     }
 
 
+    static const std::array<const char*, 1> static_blacklist_keys
+    {
+        R"(Exif\.Image\.[XY]Resolution)"
+    };
+
+
+    using regexp_list = std::vector<std::regex>;
+
+
+    static void
+    compile_blacklist(std::back_insert_iterator<regexp_list> a_blacklist)
+    {
+        const std::regex::flag_type regex_flags {std::regex::icase | std::regex::nosubs};
+
+        // Static part.
+        for (auto x : static_blacklist_keys)
+        {
+            *a_blacklist++ = std::regex(x, regex_flags);
+        }
+
+        // Dynamic part.
+        const std::regex delimiter {R"(\s*[,;:]\s*)"};
+        const std::string dynamic_keys {parameter::as_string("blacklist-exif-keys", "")};
+        std::sregex_token_iterator
+            dynamic_key_iterator(dynamic_keys.begin(), dynamic_keys.end(), delimiter, -1);
+        while (dynamic_key_iterator != std::sregex_token_iterator())
+        {
+            const std::string key {dynamic_key_iterator->str()};
+            if (!key.empty())
+            {
+                *a_blacklist++ = std::regex(key, regex_flags);
+            }
+            ++dynamic_key_iterator;
+        }
+    }
+
+
+    static void
+    enforce_blacklist(Exiv2::Image* some_output_metadata,
+                      regexp_list::const_iterator a_blacklist_begin,
+                      regexp_list::const_iterator a_blacklist_end)
+    {
+        Exiv2::ExifData& output_exif {some_output_metadata->exifData()};
+
+        auto exif_datum = output_exif.begin();
+        while (exif_datum != output_exif.end())
+        {
+            for (auto x = a_blacklist_begin; x != a_blacklist_end; ++x)
+            {
+                if (std::regex_match(exif_datum->key(), *x))
+                {
+#ifdef DEBUG_METADATA
+                    std::cout << "+ EXIF key `" << exif_datum->key() << "' is blacklisted -- not copied\n";
+#endif
+                    exif_datum = output_exif.erase(exif_datum);
+                }
+                else
+                {
+                    ++exif_datum;
+                }
+            }
+        }
+    }
+
+
     Exiv2::Image::AutoPtr
     read(const std::string& an_image_filename)
     {
@@ -135,6 +206,11 @@ namespace metadata
 
             copy(output_meta.get(), safe_meta->meta());
             augment(output_meta.get());
+            {
+                regexp_list blacklist;
+                compile_blacklist(std::back_inserter(blacklist));
+                enforce_blacklist(output_meta.get(), blacklist.begin(), blacklist.end());
+            }
             output_meta->writeMetadata();
 
             if (desired_meta == some_named_meta_end)
