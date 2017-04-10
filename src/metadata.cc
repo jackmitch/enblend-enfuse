@@ -148,10 +148,10 @@ namespace metadata
     {
         Exiv2::ExifData& output_exif {some_output_metadata->exifData()};
 
-        auto exif_datum = output_exif.begin();
-        while (exif_datum != output_exif.end())
+        for (auto x = a_blacklist_begin; x != a_blacklist_end; ++x)
         {
-            for (auto x = a_blacklist_begin; x != a_blacklist_end; ++x)
+            auto exif_datum = output_exif.begin();
+            while (exif_datum != output_exif.end())
             {
                 if (std::regex_match(exif_datum->key(), *x))
                 {
