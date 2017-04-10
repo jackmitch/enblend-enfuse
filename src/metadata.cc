@@ -104,9 +104,11 @@ namespace metadata
     }
 
 
-    static const std::array<const char*, 1> static_blacklist_keys
+    static const std::array<const char*, 3> static_blacklist_keys
     {
-        R"(Exif\.Image\.[XY]Resolution)"
+        R"(Exif\.Image\.[XY]Resolution)",
+        R"(Exif\.Image\.0x011[ef])",   // [XY]Position
+        R"(Exif\.Image\.0x821[45])"    // Image Full Width and Height
     };
 
 
