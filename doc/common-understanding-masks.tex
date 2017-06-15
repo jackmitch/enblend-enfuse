@@ -120,8 +120,9 @@ The multitude of terms all describing the concept of a mask is confusing.
 \end{description}
 
 \App{} and \OtherApp{} only consider pixels that have an associated mask value other than zero.
-If an input image does not have an alpha channel, \application{Enblend} warns and assumes a mask
-of all nonzero values, that is, it will use every pixel of the input image for fusion.
+If an input image does not have an alpha channel, \application{Enfuse} warns and assumes a mask
+of all nonzero values, that is, it will use every pixel of the input image for fusion;
+\application{Enblend} immediately stops and complains about the lack of an alpha channel.
 
 \prgidx{nona \textrm{(Hugin)}}%
 Stitchers like \command{nona} add a mask to their output images.
