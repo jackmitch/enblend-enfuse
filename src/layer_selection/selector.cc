@@ -481,11 +481,11 @@ namespace selector
                     "\" after integer " << n << "\n";
             }
         }
-        catch (std::invalid_argument)
+        catch (std::invalid_argument&)
         {
             std::cerr << command << ": invalid integer \"" << a_token << "\"\n";
         }
-        catch (std::out_of_range)
+        catch (std::out_of_range&)
         {
             std::cerr << command << ": number " << a_token << " is outside of the range of integers\n";
         }

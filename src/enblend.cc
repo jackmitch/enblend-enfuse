@@ -1115,7 +1115,7 @@ process_options(int argc, char** argv)
                         std::cerr << command << ": luminance weight must be non-negative" << std::endl;
                         failed = true;
                     }
-                } catch (std::invalid_argument) {
+                } catch (std::invalid_argument&) {
                     std::cerr << command << ": illegal numeric format \""
                               << token->str() << "\" of luminance weight" << std::endl;
                     failed = true;
@@ -1135,7 +1135,7 @@ process_options(int argc, char** argv)
                         std::cerr << command << ": chrominance weight must be non-negative" << std::endl;
                         failed = true;
                     }
-                } catch (std::invalid_argument) {
+                } catch (std::invalid_argument&) {
                     std::cerr << command << ": illegal numeric format \""
                               << token->str() << "\" of chrominance weight" << std::endl;
                     failed = true;
@@ -1179,7 +1179,7 @@ process_options(int argc, char** argv)
                             failed = true;
                         }
                     }
-                } catch (std::invalid_argument) {
+                } catch (std::invalid_argument&) {
                     std::cerr << command
                         << ": option \"--anneal\": illegal numeric format \""
                         << token->str() << "\" of tau" << std::endl;
@@ -1213,7 +1213,7 @@ process_options(int argc, char** argv)
                             << token->str() << "\"" << std::endl;
                         failed = true;
                     }
-                } catch (std::invalid_argument) {
+                } catch (std::invalid_argument&) {
                     std::cerr << command << ": option \"--anneal\": illegal numeric format \""
                               << token->str() << "\" of deltaE_max" << std::endl;
                     failed = true;
@@ -1238,7 +1238,7 @@ process_options(int argc, char** argv)
                             << token->str() << "\"" << std::endl;
                         failed = true;
                     }
-                } catch (std::invalid_argument) {
+                } catch (std::invalid_argument&) {
                     std::cerr << command
                               << ": option \"--anneal\": illegal numeric format \""
                               << token->str() << "\" of deltaE_min" << std::endl;
@@ -1272,7 +1272,7 @@ process_options(int argc, char** argv)
                         failed = true;
                     }
 
-                } catch (std::invalid_argument) {
+                } catch (std::invalid_argument&) {
                     std::cerr << command
                               << ": option \"--anneal\": illegal numeric format \""
                               << token->str() << "\" of k_max" << std::endl;

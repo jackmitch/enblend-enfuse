@@ -1151,7 +1151,7 @@ process_options(int argc, char** argv)
                                   << token->str() << "\" for edge scale." << std::endl;
                         failed = true;
                     }
-                } catch (std::invalid_argument) {
+                } catch (std::invalid_argument&) {
                     std::cerr << command << ": illegal numeric format \""
                               << token->str() << "\" for edge scale" << std::endl;
                     failed = true;
@@ -1172,7 +1172,7 @@ process_options(int argc, char** argv)
                             failed = true;
                         }
                     }
-                } catch (std::invalid_argument) {
+                } catch (std::invalid_argument&) {
                     std::cerr << command << ": illegal numeric format \""
                               << token->str() << "\" for LCE-Scale" << std::endl;
                     failed = true;
@@ -1193,7 +1193,7 @@ process_options(int argc, char** argv)
                             failed = true;
                         }
                     }
-                } catch (std::invalid_argument) {
+                } catch (std::invalid_argument&) {
                     std::cerr << command << ": illegal numeric format \""
                               << token->str() << "\" for LCE-factor" << std::endl;
                     failed = true;
@@ -1233,7 +1233,7 @@ process_options(int argc, char** argv)
                                   << token->str().substr(tail) << "\" in \"" << token->str() << "\"" << std::endl;
                         failed = true;
                     }
-                } catch (std::invalid_argument) {
+                } catch (std::invalid_argument&) {
                     std::cerr << command << ": illegal numeric format \""
                               << token->str() << "\" of entropy's lower cutoff" << std::endl;
                     failed = true;
@@ -1253,7 +1253,7 @@ process_options(int argc, char** argv)
                                   << token->str().substr(tail) << "\" in \"" << token->str() << "\"" << std::endl;
                         failed = true;
                     }
-                } catch (std::invalid_argument) {
+                } catch (std::invalid_argument&) {
                     std::cerr << command << ": illegal numeric format \""
                               << token->str() << "\" of entropy's upper cutoff" << std::endl;
                     failed = true;
@@ -1292,7 +1292,7 @@ process_options(int argc, char** argv)
                                   << token->str().substr(tail) << "\" in \"" << token->str() << "\"" << std::endl;
                         failed = true;
                     }
-                } catch (std::invalid_argument) {
+                } catch (std::invalid_argument&) {
                     std::cerr << command << ": illegal numeric format \""
                               << token->str() << "\" of exposure's lower cutoff" << std::endl;
                     failed = true;
@@ -1312,7 +1312,7 @@ process_options(int argc, char** argv)
                                   << token->str().substr(tail) << "\" in \"" << token->str() << "\"" << std::endl;
                         failed = true;
                     }
-                } catch (std::invalid_argument) {
+                } catch (std::invalid_argument&) {
                     std::cerr << command << ": illegal numeric format \""
                               << token->str() << "\" of exposure's upper cutoff" << std::endl;
                     failed = true;
