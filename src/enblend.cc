@@ -2097,7 +2097,7 @@ int main(int argc, char** argv)
 
     // Switch to fine mask, if the smallest coarse mask would be less
     // than 64 pixels wide or high.
-    if (minDim / 8 < 64 && CoarseMask) {
+    if (minDim / CoarsenessFactor < 64 && CoarseMask) {
         std::cerr << command
                   << ": warning: input images too small for coarse mask\n"
                   << command << ": note: switching to fine mask"
