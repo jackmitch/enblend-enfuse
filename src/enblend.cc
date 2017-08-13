@@ -2103,7 +2103,7 @@ int main(int argc, char** argv)
                   << command << ": note: switching to fine mask"
                   << std::endl;
         CoarseMask = false;
-        if (MainAlgorithm == GraphCut) {
+        if (MainAlgorithm == GraphCut && OptimizeMask) {
             std::cerr << command
                       << ": warning: fine mask combined with graphcut incompatible with mask optimization\n"
                       << command << ": note: defaulting to no optimization"
