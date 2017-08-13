@@ -48,6 +48,12 @@ Unreleased.  Current line of development.
           https://github.com/akrzemi1/Optional
   where only "optional.hpp" is needed.
 
+- The environment variable SOURCE_DATE_EPOCH overrides the build
+  timestamp as recorded by the signatures.  See
+          https://reproducible-builds.org/specs/source-date-epoch/
+  for details.
+
+
 
 * Version 4.2  "Compressor Road"
 

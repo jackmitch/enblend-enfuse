@@ -109,9 +109,10 @@ sub monthnames {my $self = shift;  return [qw(Jan Feb Mar Apr May Jun Jul Aug Se
 sub update_date_and_time {
     my $self = shift;
 
+    my $now = $ENV{SOURCE_DATE_EPOCH} || time;
     my ($second, $minute, $hour,
         $day_of_month, $month, $year,
-        $day_of_week) = $self->is_using_gmt() ? gmtime : localtime;
+        $day_of_week) = $self->is_using_gmt() ? gmtime($now) : localtime($now);
 
     $self->{DATE} = $self->format_date($day_of_month, $month, $year + 1900, $day_of_week,
                                        $self->weekdays->[$day_of_week],
