@@ -2038,12 +2038,7 @@ int main(int argc, char** argv)
                 }
             }
 
-            if (inputInfo->width() < minDim) {
-                minDim = inputInfo->width();
-            }
-            if (inputInfo->height() < minDim) {
-                minDim = inputInfo->height();
-            }
+            minDim = std::min(minDim, std::min(inputInfo->width(), inputInfo->height()));
         }
 
         ++layer;
@@ -2097,7 +2092,7 @@ int main(int argc, char** argv)
 
     // Switch to fine mask, if the smallest coarse mask would be less
     // than 64 pixels wide or high.
-    if (minDim / CoarsenessFactor < 64 && CoarseMask) {
+    if (minDim / CoarsenessFactor < parameter::as_unsigned("smallest-coarse-mask-size", 64) && CoarseMask) {
         std::cerr << command
                   << ": warning: input images too small for coarse mask\n"
                   << command << ": note: switching to fine mask"
