@@ -27,7 +27,7 @@
 
 #define NOMINMAX
 
-#include <Windows.h>
+#include <windows.h>
 
 #include "dynamic_loader_implementation.h"
 

@@ -34,7 +34,7 @@
 #include <time.h>        // clock_t, clock(); timespec, clock_gettime()
 
 #ifdef WIN32
-#include <Windows.h>
+#include <windows.h>
 #endif
 
 
