@@ -24,12 +24,12 @@ IF (NOT WIN32 OR MINGW)
   PKGCONFIG(OpenEXR _OpenEXRIncDir _OpenEXRLinkDir _OpenEXRLinkFlags _OpenEXRCflags)
 ENDIF (NOT WIN32 OR MINGW)
   FIND_PATH(OPENEXR_INCLUDE_DIR ImfRgbaFile.h
-     ${_OpenEXRIncDir}
-     ${_OpenEXRIncDir}/OpenEXR/
-     /usr/include
-     /usr/local/include
-     ${SOURCE_BASE_DIR}/Deploy/include
-     ${SOURCE_BASE_DIR}/Deploy/include/OpenEXR
+     PATH_SUFFIXES OpenEXR
+     PATHS
+       ${_OpenEXRIncDir}
+       /usr/include
+       /usr/local/include
+       ${SOURCE_BASE_DIR}/Deploy/include
   )
   
   include(FindLibraryWithDebug)
