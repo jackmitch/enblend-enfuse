@@ -2114,7 +2114,7 @@ int main(int argc, char** argv)
     }
 
     // Create the Info for the output file.
-    vigra::ImageExportInfo outputImageInfo(OutputFileName.c_str());
+    vigra::ImageExportInfo outputImageInfo(OutputFileName.c_str(), parameter::as_boolean("export-bigtiff", false) ? "w8" : "w");
 
     if (!enblend::has_known_image_extension(OutputFileName)) {
         std::string fallback_output_file_type {parameter::as_string("fallback-output-file-type",
