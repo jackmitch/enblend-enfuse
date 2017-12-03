@@ -55,48 +55,6 @@ namespace GPU
 #endif
 
 
-// Nicol N. Schraudolph
-// "A Fast, Compact Approximation of the Exponential Function"
-// Neural Computation, vol. 11, pages 853--862, 1999.
-#define SCHRAUDOLPH_EXPONENT_A (1048576.0 / M_LN2)
-#define SCHRAUDOLPH_EXPONENT_A_INT 1512775
-
-inline static double
-schraudolph_exp(double x)
-{
-    if (EXPECT_RESULT(x > 709.0, false)) // log(std::numeric_limits<double>::max()) = 709.783
-    {
-        return std::numeric_limits<double>::infinity();
-    }
-    else if (EXPECT_RESULT(x < -708.0, false)) // log(std::numeric_limits<double>::min()) = -708.396
-    {
-        return double();
-    }
-    else
-    {
-        union schraudolph
-        {
-            double floating_point_value;
-            struct
-            {
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-                unsigned least_significant_part;
-                int most_significant_part;
-#else
-                int most_significant_part;
-                unsigned least_significant_part;
-#endif
-            } integral_decomposition;
-        } s;
-
-        s.integral_decomposition.least_significant_part = 0U;
-        s.integral_decomposition.most_significant_part = SCHRAUDOLPH_EXPONENT_A * x + (0x3ff00000 - 60801);
-
-        return s.floating_point_value;
-    }
-}
-
-
 namespace enblend {
 
 inline static vigra::Diff2D
@@ -422,7 +380,7 @@ protected:
                     const double ej = E[j];
                     for (unsigned i = j + 1U; i < localK; ++i) {
                         const double piT = (*stateProbabilities)[i] + piTj;
-                        double piTAn = piT / (1.0 + schraudolph_exp(ej - E[i]));
+                        double piTAn = piT / (1.0 + std::exp(ej - E[i]));
                         if (EXPECT_RESULT(std::isnan(piTAn), false)) {
                             // exp term is infinity or zero.
                             piTAn = ej > E[i] ? 0.0 : piT;
