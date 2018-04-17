@@ -46,7 +46,11 @@
 
 #ifdef HAVE_STD_FILESYSTEM
 #include <filesystem>
+#if defined _MSC_VER && _MSC_VER>=1912
+typedef std::experimental::filesystem::path basic_path; 
+#else
 typedef std::tr2::sys::path basic_path;
+#endif
 #endif
 
 namespace enblend {
