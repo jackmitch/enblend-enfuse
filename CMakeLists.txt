@@ -6,7 +6,7 @@
 #                  , Harry van der Wolf <hvdwolf@gmail.com>
 # Original file from lyx-project, heavily modified
 #
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.8)
 
 set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS true)
 
@@ -122,15 +122,13 @@ ELSE(NOT WIN32)
   SET(ENABLE_DMALLOC_FUNC_CHECK OFF CACHE INTERNAL "")
 ENDIF(NOT WIN32)
 
-# Compiler specific tweaks and optimizations
-# Microsoft Visual C++ compiler does not need any addtional switches for C++11
-# so check only other compilers
-IF (NOT MSVC)
-  FIND_PACKAGE(CXX11Compiler)
-  IF(NOT CXX11COMPILER_FOUND)
-    MESSAGE(FATAL_ERROR "A C++11 compatible compiler is required.")
-  ENDIF()
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX11_FLAG}")
+# Check CXX17 compiler
+SET(CMAKE_CXX_STANDARD 17)
+SET(CMAKE_CXX_STANDARD_REQUIRED ON)
+# MSVC 2017 has removed some deprecated functions with C++17
+# but there are still used by vigra, so bring they back for now
+IF(MSVC_VERSION GREATER 1900)
+   ADD_DEFINITIONS(-D_HAS_AUTO_PTR_ETC=1)
 ENDIF()
 
 IF(CMAKE_COMPILER_IS_GNUCXX)
