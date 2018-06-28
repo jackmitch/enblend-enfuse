@@ -122,13 +122,22 @@ ELSE(NOT WIN32)
   SET(ENABLE_DMALLOC_FUNC_CHECK OFF CACHE INTERNAL "")
 ENDIF(NOT WIN32)
 
-# Check CXX17 compiler
-SET(CMAKE_CXX_STANDARD 17)
-SET(CMAKE_CXX_STANDARD_REQUIRED ON)
-# MSVC 2017 has removed some deprecated functions with C++17
-# but there are still used by vigra, so bring they back for now
-IF(MSVC_VERSION GREATER 1900)
-   ADD_DEFINITIONS(-D_HAS_AUTO_PTR_ETC=1)
+IF(MSVC)
+  # Check CXX17 compiler
+  # MSVC needs c++17 switch for some constructs
+  SET(CMAKE_CXX_STANDARD 17)
+  SET(CMAKE_CXX_STANDARD_REQUIRED ON)
+  # MSVC 2017 has removed some deprecated functions with C++17
+  # but there are still used by vigra, so bring they back for now
+  IF(MSVC_VERSION GREATER 1900)
+     ADD_DEFINITIONS(-D_HAS_AUTO_PTR_ETC=1)
+  ENDIF()
+ELSE()
+  # other compiler e.g. gcc complain about some constructs 
+  # in depended libs when compiled with C++17
+  # so for now keep at C++11
+  SET(CMAKE_CXX_STANDARD 11)
+  SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 ENDIF()
 
 IF(CMAKE_COMPILER_IS_GNUCXX)
