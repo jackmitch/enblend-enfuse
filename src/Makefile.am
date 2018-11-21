@@ -53,8 +53,7 @@ enfuse_SOURCES = functoraccessor.hxx rect2d.hxx stride.hxx \
                  timer.h timer.cc \
                  minimizer.h muopt.h
 enfuse_LDFLAGS = $(AM_LDFLAGS)
-enfuse_LDADD = dynamic_loader/libdynamic_loader.a \
-	       layer_selection/liblayersel.a \
+enfuse_LDADD = layer_selection/liblayersel.a \
                $(GSL_LIBS) $(STATIC_LIBS) \
                @EXTRA_LIBS@
 enfuse_CXXFLAGS = $(AM_CXXFLAGS) $(GSL_CFLAGS) \

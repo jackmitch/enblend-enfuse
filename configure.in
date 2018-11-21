@@ -103,7 +103,6 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <math.h>]],
                 partially_static_linking_support=no])
 LIBS="${original_LIBS}"
 
-STATIC_LIBS=""
 partially_static_linking=no
 AC_ARG_ENABLE([partially-static-linking],
               AC_HELP_STRING([--enable-partially-static-linking],
@@ -111,25 +110,26 @@ AC_ARG_ENABLE([partially-static-linking],
               [partially_static_linking=$enableval],
               [partially_static_linking=no])
 
+AC_F77_FUNC(sgemm)
+
 if test "$partially_static_linking_support" = yes && test "$partially_static_linking" = yes; then
   dnl https://www.gnu.org/software/gsl/manual/html_node/Linking-with-an-alternative-BLAS-library.html
-  AC_CHECK_LIB(atlas, ATL_cputime, [], [])
-  AC_CHECK_LIB(cblas, cblas_dgemm, [have_cblas=true], [have_cblas=false], [-latlas])
+  AC_CHECK_LIB(openblas, $sgemm, [], [])
+  AC_CHECK_LIB(cblas, cblas_dgemm, [have_cblas=true], [have_cblas=false], [-lopenblas])
   if $have_cblas; then
-    STATIC_LIBS="-lcblas -latlas ${STATIC_LIBS}"
-    AC_CHECK_LIB(gsl, gsl_blas_dgemm, [STATIC_LIBS="-lgsl ${STATIC_LIBS}"], [], [-lcblas -latlas])
+    LIBS="-lcblas -lopenblas ${LIBS}"
+    AC_CHECK_LIB(gsl, gsl_blas_dgemm, [LIBS="-lgsl ${LIBS}"], [], [-lcblas -lopenblas])
   else
-    AC_CHECK_LIB(gslcblas, cblas_dgemm, [STATIC_LIBS="-lgslcblas ${STATIC_LIBS}"])
-    AC_CHECK_LIB(gsl, gsl_blas_dgemm, [STATIC_LIBS="-lgsl ${STATIC_LIBS}"], [], [-lgslcblas])
+    AC_CHECK_LIB(gslcblas, cblas_dgemm, [LIBS="-lgslcblas ${LIBS}"])
+    AC_CHECK_LIB(gsl, gsl_blas_dgemm, [LIBS="-lgsl ${LIBS}"], [], [-lgslcblas])
   fi
 
-  AC_CHECK_LIB(lcms2, cmsCreateTransform, [STATIC_LIBS="-llcms2 ${STATIC_LIBS}"])
-  AC_SUBST(STATIC_LIBS, ["-Wl,-Bstatic ${STATIC_LIBS} -Wl,-Bdynamic"])
+  AC_CHECK_LIB(lcms2, cmsCreateTransform, [LIBS="-llcms2 ${LIBS}"])
 else
   AC_CHECK_LIB(gslcblas, cblas_dgemm)
   AC_CHECK_LIB(gsl, gsl_blas_dgemm)
   AC_CHECK_LIB(lcms2, cmsCreateTransform)
-  AC_SUBST(STATIC_LIBS)
+  AC_SUBST(LIBS)
 fi
 
 # Memory allocation debug support
@@ -571,7 +571,6 @@ AC_MSG_RESULT([
    CXXFLAGS:                       ${CXXFLAGS:-<none required>}
    LDFLAGS:                        ${LDFLAGS:-<none required>}
    LIBS:                           ${LIBS:-<none required>}
-   STATIC_LIBS:                    ${STATIC_LIBS:-<none defined>}
    EXTRA_LIBS (optional):          ${EXTRA_LIBS:-<none selected>}
 
  raster subdirectory:              ${RASTER_DIR}
