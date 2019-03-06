@@ -232,7 +232,6 @@ void dump_global_variables(const char* file, unsigned line,
         "+ WrapAround = " << enblend::stringOfWraparound(WrapAround) << ", option \"--wrap\"\n" <<
         "+ GimpAssociatedAlphaHack = " << enblend::stringOfBool(GimpAssociatedAlphaHack) <<
         ", option \"-g\"\n" <<
-        "+ UseCIECAM = " << UseCIECAM << ", option \"--ciecam\"\n" <<
         "+ FallbackProfile = " << (FallbackProfile ? enblend::profileDescription(FallbackProfile) : "[none]") <<
         ", option \"--fallback-profile\"\n" <<
         "+ OutputSizeGiven = " << enblend::stringOfBool(OutputSizeGiven) << ", option \"-f\"\n" <<
